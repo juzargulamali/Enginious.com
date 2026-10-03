@@ -5,5 +5,6 @@ export default function robots(): MetadataRoute.Robots {
   if (process.env.ALLOW_INDEXING !== "true") {
     return { rules: { userAgent: "*", disallow: "/" } };
   }
-  return { rules: { userAgent: "*", allow: "/", disallow: ["/setup-check"] } };
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://enginious-com.vercel.app";
+  return { rules: { userAgent: "*", allow: "/", disallow: ["/setup-check", "/api/"] }, sitemap: `${base}/sitemap.xml` };
 }
