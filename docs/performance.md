@@ -63,3 +63,31 @@ NODE_PATH=$(npm root -g) node scripts/perf/measure.cjs --base http://localhost:3
 NODE_PATH=$(npm root -g) node scripts/perf/hero-test.cjs http://localhost:3300   # behavioural checks
 ```
 Options: `--view mobile`, `--dpr 2`, `--only home,gallery,showroom,routes`, `--css file.css` / `--init file.js` for controlled experiments (`docs/perf/exp-*.json` are those experiments).
+
+
+---
+
+# Revision 3: showreel homepage (measured performance, reported separately from visual approval)
+
+**What this does and does not cover.** The build environment cannot reach YouTube, so *the real showreel was never loaded*. Numbers below are for (a) the page with the video layer absent (YouTube blocked: poster/stage only) and (b) a self-hosted `<video>` playing a generated 4 s test clip, as a proxy for the page cost of a playing file. **The cost of the YouTube player itself (third-party scripts, decoding) is not measured and must be tested on the deployed preview.** Same harness, same conditions as the earlier sections (software rendering, CPU x4 throttle ~ a modest laptop/phone).
+
+## Homepage, three generations (desktop, CPU x4)
+| Scenario | Original canvas hero | Kinetic Tower hero (rev 2) | Showreel + connected scenes (rev 3, video absent) |
+|---|---|---|---|
+| Idle 5 s | 78.5% busy, 60.2 fps, 0 slow frames | 7.8% busy, 60.2 fps, 0 slow frames | 11% busy, 60 fps, 0 slow frames |
+| Pointer sweep 4 s | 82.7% busy, 59.2 fps, 1 slow frames | 20.9% busy, 60.1 fps, 0 slow frames | 29.5% busy, 59.9 fps, 0 slow frames |
+| Scroll whole page | 33.6% busy, 60.1 fps, 0 slow frames | 38% busy, 54.9 fps, 3 slow frames | 44.5% busy, 51 fps, 6 slow frames |
+| Route transitions (median hop) | 165 ms | 158 ms | 156 ms |
+
+Other conditions for rev 3: Retina (DPR 2) idle **10.9% busy, 60 fps, 0 slow frames**; phone viewport (390 px, DPR 2) idle **12.3% busy, 60.2 fps, 0 slow frames**, pointer/touch sweep 28% busy, 60.1 fps, 0 slow frames, scroll 50.7% busy, 56.1 fps, 3 slow frames. (Original canvas hero on the same phone viewport: idle 99.3% busy, 47.2 fps, 14 slow frames.)
+
+With a playing self-hosted video (test clip), desktop CPU x4: idle 11.2% busy, 60 fps, 0 slow frames, pointer sweep 22.3% busy, 60.1 fps, 0 slow frames, scroll 42% busy, 51.3 fps, 6 slow frames; at normal speed idle 3.3%. Video decode is largely off the main thread, so a self-hosted file costs little here; a real H.264 1080p file on real hardware will be hardware-decoded.
+
+## What the measurements say
+- **Idle and pointer interaction stay light**: ~11% / ~29.5% main-thread at 4x, 60 fps, zero slow frames, on desktop, Retina and phone viewports. The original canvas hero was at 78% to 100% busy in the same conditions.
+- **The neon light is not free.** Controlled experiment (4x): with every travelling light hidden, idle load fell from 10.2% to 3.7% (style work 114.4 ms to 0 ms per 5 s). That is the price of the effect the brief asks for; it is paused offscreen and removed for reduced motion. At normal speed the whole page idles at ~3%.
+- **Scrolling is the weak spot and it is not fixed.** At 4x with a 5,000 px/s scripted scroll of a 6,600 px page, 6 frames exceed 33 ms (worst ~100 ms). Isolating suspects did not find one cause: hiding the spine (6 slow frames), hiding all neon light (5), hiding the five heaviest scenes (4) or disabling `content-visibility` (5, and idle load jumps to 36.2%) each moved it by 1 to 3 frames at most. The cost is first-time layout and style of each scene as it enters view. Layer-promotion and containment changes I tried afterwards did **not** help (7 slow frames) and are kept only because they are harmless. A real wheel or touch scroll is slower than this stress test and GPUs rasterise far faster than this software renderer, but that is not demonstrated here.
+- **Route transitions are unchanged** (~156 ms median at 4x; one ~89 ms long task on the first hop).
+- **Not measured at all:** the YouTube player, real devices, real networks, GPU paint cost.
+
+Reproduce: `scripts/perf/measure.cjs` (see section 5 above); behavioural checks `scripts/perf/home-test.cjs` (YouTube stubbed, 25 checks; `file` mode, 8 checks) and `scripts/perf/site-test.cjs`.

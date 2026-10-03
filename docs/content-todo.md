@@ -25,3 +25,10 @@
 - **Work:** all projects require client approval; blank client = not named in the profile.
 - **Contact:** KSA contact (Lubna) and numbers from the profile; Poland has none (falls back to the general contact); attachments and email notification not yet live.
 - **Europe:** no Europe-delivered project is listed; Poland city, address, staff, stock and local capabilities are unconfirmed and not claimed.
+
+## Showreel revision notes (internal)
+- Showreel `https://www.youtube.com/watch?v=OtAjMig32ZE` and second film `YYEiNgZXd3w` could NOT be opened from the build environment (YouTube is blocked): neither the footage nor its titles were reviewed. Confirm they are the intended, approved videos and that the embed is permitted.
+- The second film is labelled generically ("Watch more from Enginious") until its content is confirmed.
+- Embedded YouTube (privacy-enhanced domain) loads third-party player code after first paint when motion is acceptable; decide on a consent approach before enabling analytics.
+- The People stage shows disciplines, not people; the two leaders appear by initials only. Leadership portraits/messages are still outstanding.
+- `juzargulamali.com` (private repo) was read for interaction patterns only; none of its preview renders are used.

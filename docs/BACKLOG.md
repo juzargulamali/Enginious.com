@@ -15,6 +15,13 @@ Home + Living Canvas, technologies showroom + Tri-Helix page, Work index + WHX c
   - [ ] Work index/case studies and Insights/Careers in the same language.
   - [ ] Apply the same perf rules (no canvas loops, direct transforms, no backdrop/filter) and re-measure each page.
 
+## Homepage revision 3 (this round): showreel + connected world
+- [x] Showreel hero (file + YouTube modes, poster, controls, lightbox, phone composition, reduced motion, Save-Data).
+- [x] Neon system (edges, routed traces, spine) and the seven scenes.
+- [ ] Awaiting visual approval before extending the direction to People, Technologies, Regions, Contact, Work.
+- [ ] Replace the YouTube background with the supplied file when available.
+- [ ] Test the deployed preview on real desktop and phone devices (not possible from the build environment).
+
 ## Milestone 2
 - [ ] CMS: Supabase content tables, draft/published, RLS, editor auth (cms_admins), admin UI, preview, slugs, ordering, alt text, SEO fields, redirects.
 - [ ] Storage buckets + validated uploads (media, downloads); enquiry/application attachments.

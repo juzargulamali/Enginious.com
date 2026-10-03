@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MAP } from "@/content/map";
+import { Trace } from "@/components/neon/Trace";
 
 const P = MAP.points;
 
@@ -8,15 +9,15 @@ const P = MAP.points;
  * profile records delivered projects are small hollow rings. Static SVG: no JS, no runtime cost beyond three CSS pings.
  */
 export function WorldMap() {
-  const arc = (a: { x: number; y: number }, b: { x: number; y: number }, lift: number) =>
-    `M${a.x} ${a.y} Q${(a.x + b.x) / 2} ${(a.y + b.y) / 2 - lift} ${b.x} ${b.y}`;
+  // Circuit-style route between the offices (orthogonal with 45-degree bends), lit by a travelling pulse.
+  const route: [number, number][] = [
+    [P.dubai.x, P.dubai.y], [P.riyadh.x, P.riyadh.y], [P.riyadh.x - 44, P.riyadh.y - 44], [P.poland.x + 60, P.riyadh.y - 44], [P.poland.x, P.riyadh.y - 104], [P.poland.x, P.poland.y],
+  ];
   return (
+    <div className="map-wrap">
     <svg className="map" viewBox={`0 0 ${MAP.width} ${MAP.height}`} role="img" aria-label="Map of Europe and the Middle East: Enginious headquarters in Dubai, a branch in Riyadh, Saudi Arabia, and a branch in Poland serving Europe. Delivered projects also appear in Jeddah, Madinah, Qatar, Oman and Bahrain.">
       <image href="/art/map-land.svg" width={MAP.width} height={MAP.height} />
 
-      <path className="route" d={arc(P.dubai, P.poland, 120)} />
-      <path className="route" d={arc(P.riyadh, P.poland, 90)} />
-      <path className="route" d={arc(P.dubai, P.riyadh, 18)} />
 
       {(["jeddah", "madinah", "qatar", "oman", "bahrain"] as const).map((k) => (
         <circle key={k} className="proj" cx={P[k].x} cy={P[k].y} r="5.5" />
@@ -33,7 +34,7 @@ export function WorldMap() {
         <g className="office">
           <circle className="halo" cx={P.riyadh.x} cy={P.riyadh.y} r="6" />
           <circle className="core" cx={P.riyadh.x} cy={P.riyadh.y} r="6" />
-          <text x={P.riyadh.x - 16} y={P.riyadh.y - 18} textAnchor="end">Saudi Arabia</text>
+          <text x={P.riyadh.x - 18} y={P.riyadh.y + 34} textAnchor="end">Saudi Arabia</text>
         </g>
       </Link>
       <Link href="/europe" aria-label="Poland: branch serving Europe">
@@ -44,5 +45,7 @@ export function WorldMap() {
         </g>
       </Link>
     </svg>
+    <Trace points={route} w={MAP.width} h={MAP.height} duration={7000} nodes={[1, 5]} className="map-trace" />
+    </div>
   );
 }

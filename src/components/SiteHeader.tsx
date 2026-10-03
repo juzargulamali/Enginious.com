@@ -15,6 +15,15 @@ export function SiteHeader() {
   const open = openFor === pathname;
   const setOpen = (v: boolean | ((o: boolean) => boolean)) => setOpenFor((cur) => ((typeof v === "function" ? v(cur === pathname) : v) ? pathname : null));
   const btn = useRef<HTMLButtonElement>(null);
+  const home = pathname === "/";
+  const [solid, setSolid] = useState(false);
+  useEffect(() => {
+    let raf = 0;
+    const on = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; setSolid(window.scrollY > 48); }); };
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => { window.removeEventListener("scroll", on); cancelAnimationFrame(raf); };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -31,7 +40,7 @@ export function SiteHeader() {
   const active = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <header className="site-header">
+    <header className="site-header" data-home={home || undefined} data-solid={solid || undefined}>
       <div className="container bar">
         <Logo />
         <nav className="nav-links" aria-label="Primary">
