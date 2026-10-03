@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CanvasBoundary } from "@/components/CanvasBoundary";
 import { LivingCanvas } from "@/components/LivingCanvas";
 import { Placeholder } from "@/components/Placeholder";
 import { ReviewNote } from "@/components/ReviewNote";
@@ -39,7 +40,9 @@ export default function Home() {
               <li>AI activations · AR/VR · Robotics · Bespoke applications</li>
             </ul>
           </div>
-          <LivingCanvas />
+          <CanvasBoundary>
+            <LivingCanvas />
+          </CanvasBoundary>
         </div>
       </section>
 
