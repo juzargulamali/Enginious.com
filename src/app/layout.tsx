@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const indexable = process.env.VERCEL_ENV === "production";
+const indexable = process.env.ALLOW_INDEXING === "true";
 
 export const metadata: Metadata = {
   title: "Enginious",

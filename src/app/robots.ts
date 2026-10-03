@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 
-// Only the production deployment is indexable; previews and local dev are blocked.
+// Indexing is opt-in: set ALLOW_INDEXING=true on the real production site only.
 export default function robots(): MetadataRoute.Robots {
-  if (process.env.VERCEL_ENV !== "production") {
+  if (process.env.ALLOW_INDEXING !== "true") {
     return { rules: { userAgent: "*", disallow: "/" } };
   }
   return { rules: { userAgent: "*", allow: "/", disallow: ["/setup-check"] } };

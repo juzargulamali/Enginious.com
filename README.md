@@ -8,9 +8,9 @@ npm install && npm run dev
 ```
 
 - `/setup-check` shows environment/connection status (token-gated in production).
-- Non-production deployments send `noindex` headers and `Disallow: /` in robots.txt.
+- Unless `ALLOW_INDEXING=true`, the site sends `noindex` headers and `Disallow: /` in robots.txt.
 
 ## Deployment
 
-Hosted on Vercel (project `enginious-com`). Only `VERCEL_ENV=production` is indexable;
-every other deployment is `noindex`. Supabase env vars are added per-environment in Vercel settings.
+Hosted on Vercel (project `enginious-com`). Everything is `noindex` unless `ALLOW_INDEXING=true`
+is set (do this only at public launch). Supabase env vars are added per-environment in Vercel settings.
