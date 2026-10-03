@@ -8,9 +8,9 @@ const initials = (name: string) => name.split(" ").map((w) => w[0]).slice(0, 2).
 
 export function PortraitPlaceholder({ name, big = false }: { name: string; big?: boolean }) {
   return (
-    <div className="portrait" data-big={big} role="img" aria-label={`Portrait placeholder for ${name}`}>
+    <div className="portrait" data-big={big} aria-hidden="true">
       <span className="mono">{initials(name)}</span>
-      <span className="pending">Portrait pending</span>
+      
     </div>
   );
 }
@@ -73,10 +73,14 @@ export function TeamGallery() {
               aria-current={off === 0}
               onClick={() => { if (!drag.current?.moved) setActive(i); }}
               onPointerMove={(e) => {
-                if (off !== 0) return;
-                const r = e.currentTarget.getBoundingClientRect();
-                e.currentTarget.style.setProperty("--tx", `${(((e.clientY - r.top) / r.height) * 2 - 1) * -6}deg`);
-                e.currentTarget.style.setProperty("--ty", `${(((e.clientX - r.left) / r.width) * 2 - 1) * 8}deg`);
+                if (off !== 0 || e.pointerType !== "mouse") return;
+                const t = e.currentTarget;
+                const r = t.getBoundingClientRect();
+                const tx = (((e.clientY - r.top) / r.height) * 2 - 1) * -6;
+                const ty = (((e.clientX - r.left) / r.width) * 2 - 1) * 8;
+                // one write per frame
+                cancelAnimationFrame(Number(t.dataset.raf || 0));
+                t.dataset.raf = String(requestAnimationFrame(() => { t.style.setProperty("--tx", `${tx.toFixed(2)}deg`); t.style.setProperty("--ty", `${ty.toFixed(2)}deg`); }));
               }}
               onPointerLeave={(e) => { e.currentTarget.style.setProperty("--tx", "0deg"); e.currentTarget.style.setProperty("--ty", "0deg"); }}
               style={{

@@ -3,6 +3,18 @@
 ## Milestone 1 (review): done
 Home + Living Canvas, technologies showroom + Tri-Helix page, Work index + WHX case study, team gallery + leadership, Europe, contact + enquiry API/migration, noindex/robots/sitemap.
 
+## Design revision (current): homepage benchmark
+- [x] Profiling harness + before/after report (`docs/performance.md`).
+- [x] Kinetic Tower hero, idea-to-experience story, evidence reel, real-geography map, routes, closing CTA.
+- [x] Public review notes / placeholder labels removed (internal notes in `docs/content-todo.md`).
+- [ ] **Awaiting visual approval of the homepage before rolling out:**
+  - [ ] People: large-scale perspective gallery (transform-only motion, receding neighbours, swipe/keyboard).
+  - [ ] Technologies: showroom using the distinct `TechForm` exhibits on a lit floor; per-technology pages.
+  - [ ] Regions (UAE / Saudi Arabia / Europe) with the map and honest service lists.
+  - [ ] Contact: stage-by-stage project-planning journey tied to the shortlist.
+  - [ ] Work index/case studies and Insights/Careers in the same language.
+  - [ ] Apply the same perf rules (no canvas loops, direct transforms, no backdrop/filter) and re-measure each page.
+
 ## Milestone 2
 - [ ] CMS: Supabase content tables, draft/published, RLS, editor auth (cms_admins), admin UI, preview, slugs, ordering, alt text, SEO fields, redirects.
 - [ ] Storage buckets + validated uploads (media, downloads); enquiry/application attachments.

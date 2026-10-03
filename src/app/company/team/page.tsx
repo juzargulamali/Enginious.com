@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Placeholder } from "@/components/Placeholder";
 import { ReviewNote } from "@/components/ReviewNote";
 import { PortraitPlaceholder, TeamGallery, TeamList } from "@/components/TeamGallery";
-import { LEADER_DRAFTS, PEOPLE } from "@/content/team";
+import { PEOPLE } from "@/content/team";
 import { REGIONS } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -43,11 +43,6 @@ export default function TeamPage() {
               <div className="stack" style={{ ["--stack" as string]: "0.7rem", flex: "1 1 240px" }}>
                 <h3>{l.name}</h3>
                 <p className="accent">{l.role}</p>
-                <p className="muted"><strong style={{ color: "#fff" }}>Responsibilities:</strong> {LEADER_DRAFTS[l.id].responsibilities}</p>
-                <blockquote style={{ margin: 0, paddingLeft: 14, borderLeft: "2px solid var(--brand)" }}>
-                  <span className="draft-badge">Draft for review · not an approved statement</span>
-                  <p style={{ marginTop: 8 }}>&ldquo;{LEADER_DRAFTS[l.id].message}&rdquo;</p>
-                </blockquote>
               </div>
             </article>
           ))}

@@ -74,18 +74,30 @@ export function Showroom() {
   useEffect(() => {
     const el = stage.current;
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // One style write per animation frame (pointermove can fire 120+ times a second).
+    let raf = 0;
+    let ry = 0, rx = 16;
+    const flush = () => {
+      raf = 0;
+      el.style.setProperty("--ry", `${ry.toFixed(2)}deg`);
+      el.style.setProperty("--rx", `${rx.toFixed(2)}deg`);
+    };
     const move = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
       const r = el.getBoundingClientRect();
-      el.style.setProperty("--ry", `${(((e.clientX - r.left) / r.width) * 2 - 1) * 7}deg`);
-      el.style.setProperty("--rx", `${16 - (((e.clientY - r.top) / r.height) * 2 - 1) * 3}deg`);
+      ry = (((e.clientX - r.left) / r.width) * 2 - 1) * 7;
+      rx = 16 - (((e.clientY - r.top) / r.height) * 2 - 1) * 3;
+      if (!raf) raf = requestAnimationFrame(flush);
     };
     const leave = () => {
-      el.style.setProperty("--ry", "0deg");
-      el.style.setProperty("--rx", "16deg");
+      ry = 0;
+      rx = 16;
+      if (!raf) raf = requestAnimationFrame(flush);
     };
-    el.addEventListener("pointermove", move);
+    el.addEventListener("pointermove", move, { passive: true });
     el.addEventListener("pointerleave", leave);
     return () => {
+      cancelAnimationFrame(raf);
       el.removeEventListener("pointermove", move);
       el.removeEventListener("pointerleave", leave);
     };
@@ -153,7 +165,7 @@ export function Showroom() {
                 {chosen.detailed ? (
                   <Link href={`/technologies/${chosen.slug}`} className="btn">Open details →</Link>
                 ) : (
-                  <span className="muted" style={{ fontSize: "0.85rem" }}>Detail page in preparation</span>
+                  null
                 )}
                 <AddToBrief slug={chosen.slug} name={chosen.name} />
               </div>
@@ -192,7 +204,6 @@ export function Showroom() {
                 <button type="button" className="chip" aria-pressed={brief.has(t.slug)} onClick={() => brief.toggle(t.slug)}>
                   {brief.has(t.slug) ? "✓ In brief" : "+ Brief"}
                 </button>
-                {!t.detailed && <span className="muted" style={{ fontSize: "0.78rem" }}>Page in preparation</span>}
               </div>
             </li>
           ))}

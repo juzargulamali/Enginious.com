@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
 
-/** Internal review notes. Rendered on previews only; hidden once ALLOW_INDEXING=true (public launch). */
-export function ReviewNote({ children }: { children: ReactNode }) {
-  if (process.env.ALLOW_INDEXING === "true") return null;
-  return (
-    <p className="review-note" role="note">
-      <strong>REVIEW:</strong> {children}
-    </p>
-  );
+/**
+ * Content-approval notes are INTERNAL: they live in docs/content-todo.md, never on public pages.
+ * Kept as a no-op so existing call sites render nothing; remove the calls as pages are redesigned.
+ */
+export function ReviewNote({ children }: { children?: ReactNode }) {
+  void children;
+  return null;
 }

@@ -52,11 +52,7 @@ export function WorkBrowser() {
               </p>
             )}
             <div style={{ marginTop: "auto", paddingTop: 14 }}>
-              {p.caseStudy ? (
-                <Link href={`/work/${p.slug}`} className="accent">Read case study →</Link>
-              ) : (
-                <span className="muted" style={{ fontSize: "0.8rem" }}>Case study in preparation</span>
-              )}
+              {p.caseStudy && <Link href={`/work/${p.slug}`} className="accent">Read case study →</Link>}
             </div>
           </li>
         ))}
