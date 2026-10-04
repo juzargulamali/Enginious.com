@@ -20,6 +20,13 @@ export interface Technology {
   projects: string[];
   /** Full page exists. Others are listed with a "page in preparation" state. */
   detailed?: boolean;
+  /** CMS-only fields. */
+  description?: string;
+  useCases?: string[];
+  specs?: { label: string; value: string }[];
+  media?: string[];
+  featured?: boolean;
+  seo?: import("@/lib/content/types").SeoFields;
 }
 
 export const TECHNOLOGIES: Technology[] = [

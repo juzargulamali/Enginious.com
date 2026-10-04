@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { Edge } from "@/components/neon/Edge";
 import { TechForm } from "@/components/TechForm";
-import { projectBySlug } from "@/content/projects";
 import type { Testimonial } from "@/content/testimonials";
-import { techBySlug } from "@/content/technologies";
+import { useContent } from "@/components/ContentProvider";
 
 const subscribe = () => () => {};
 const wantsSamples = () => new URLSearchParams(window.location.search).get("samples") === "1";
@@ -19,6 +18,7 @@ const wantsSamples = () => new URLSearchParams(window.location.search).get("samp
  */
 export function Testimonials({ published, samples: sampleList }: { published: Testimonial[]; samples: Testimonial[] }) {
   // `samples` is empty on production builds (decided on the server), so fictional text is not even shipped there.
+  const { projectBySlug, techBySlug } = useContent();
   const samples = useSyncExternalStore(subscribe, wantsSamples, () => false);
   const list = samples && sampleList.length ? sampleList : published;
   const [i, setI] = useState(0);

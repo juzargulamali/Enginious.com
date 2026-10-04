@@ -6,22 +6,22 @@ import { reducedMotion, useScrollProgress } from "@/lib/scrollBus";
 import "./people.css";
 import { Photo } from "@/components/Photo";
 import { TechForm } from "@/components/TechForm";
-import { IMAGES, imageFor } from "@/content/images";
-import { LEADERS } from "@/content/leaders";
-import { DEPTS, DEPT_BLURB, PEOPLE, type Dept } from "@/content/team";
+import { useContent } from "@/components/ContentProvider";
+import { DEPTS, DEPT_BLURB, type Dept } from "@/content/team";
 
 const FORM: Record<Dept, string> = { leadership: "mark", engineering: "robotic-arm", creative: "immersive-room", software: "touch-and-throw", delivery: "circular-dial", business: "ai-assistant" };
 const initials = (n: string) => n.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 // Stock preview portraits stand in for two cards. They are shown by ROLE only (never with an employee's name) and labelled "Preview".
 const PREVIEW: Record<string, string> = { "syed-tibyan": "previewMale", "zainab-jebur": "previewFemale" };
-const isPreview = (id: string) => !!PREVIEW[id] && !!imageFor(PREVIEW[id]);
-const ORDER = [...PEOPLE].sort((a, b) => (a.dept === "leadership" ? 0 : 1) - (b.dept === "leadership" ? 0 : 1));
 
 /**
  * ONE representation of the team. Gallery by default (selected card forward, neighbours receding in perspective; drag, swipe,
  * arrow keys, buttons, department filters); the same people as a simple list on request. Never rotates by itself.
  */
 export function TeamGallery({ showLink = false, depth = false }: { showLink?: boolean; depth?: boolean }) {
+  const { people: PEOPLE, leaders: LEADERS, imageById, imageForSlot } = useContent();
+  const isPreview = (id: string) => !!PREVIEW[id] && !!imageForSlot(PREVIEW[id]);
+  const ORDER = useMemo(() => [...PEOPLE].sort((a, b) => (a.dept === "leadership" ? 0 : 1) - (b.dept === "leadership" ? 0 : 1)), [PEOPLE]);
   const wrap = useRef<HTMLDivElement>(null);
   const lift = useRef<HTMLDivElement>(null);
   // Restrained depth transition on arrival: the gallery rises and settles. Never rotates the people by itself.
@@ -36,10 +36,10 @@ export function TeamGallery({ showLink = false, depth = false }: { showLink?: bo
   const [dept, setDept] = useState<Dept | "all">("all");
   const [mode, setMode] = useState<"gallery" | "list">("gallery");
   const [active, setActive] = useState(0);
-  const people = useMemo(() => ORDER.filter((p) => dept === "all" || p.dept === dept), [dept]);
+  const people = useMemo(() => ORDER.filter((p) => dept === "all" || p.dept === dept), [ORDER, dept]);
   const idx = Math.min(active, people.length - 1);
   const person = people[idx];
-  const leader = LEADERS[person.id];
+  const leader = person ? LEADERS[person.id] : undefined;
   const drag = useRef<{ x: number; moved: boolean } | null>(null);
   const go = (d: number) => setActive((a) => (Math.min(a, people.length - 1) + d + people.length) % people.length);
   const onKey = (e: React.KeyboardEvent) => {
@@ -49,10 +49,12 @@ export function TeamGallery({ showLink = false, depth = false }: { showLink?: bo
     else if (e.key === "End") { e.preventDefault(); setActive(people.length - 1); }
   };
 
+  if (!person) return <p className="muted">The team will appear here soon.</p>;
+
   const face = (p: (typeof ORDER)[number]) => {
     const l = LEADERS[p.id];
     if (isPreview(p.id)) return <Photo slot={PREVIEW[p.id]} sizes="(max-width: 760px) 58vw, 340px" />;
-    const asset = l?.photo ? IMAGES[l.photo] : undefined;
+    const asset = l?.photo ? imageById(l.photo) : undefined;
     return asset ? <Photo id={asset.id} sizes="(max-width: 760px) 58vw, 340px" /> : (
       <span className="tg-mono" aria-hidden="true"><TechForm slug={FORM[p.dept]} size={240} /><b>{initials(p.name)}</b></span>
     );

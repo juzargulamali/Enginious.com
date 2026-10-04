@@ -6,6 +6,7 @@ export interface LeaderInfo {
   /** Shown publicly ONLY when approved is true. Drafts for approval are in docs/leadership-drafts.md. */
   message?: string;
   approved: boolean;
+  bio?: string;
 }
 
 export const LEADERS: Record<string, LeaderInfo> = {

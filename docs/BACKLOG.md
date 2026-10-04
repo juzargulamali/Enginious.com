@@ -29,16 +29,20 @@ Home + Living Canvas, technologies showroom + Tri-Helix page, Work index + WHX c
 - [ ] Reduce scroll cost (see docs/performance.md, revision 4).
 - [ ] Brief uploads (storage + validation); Poland city; real leadership messages.
 
-## Milestone 2
-- [ ] CMS: Supabase content tables, draft/published, RLS, editor auth (cms_admins), admin UI, preview, slugs, ordering, alt text, SEO fields, redirects.
-- [ ] Storage buckets + validated uploads (media, downloads); enquiry/application attachments.
-- [ ] Remaining pages: Solutions (full), UAE, Saudi Arabia, Company story/process, Insights (+categories, authors), Careers, FAQs, profile download, privacy notice (legal).
-- [ ] All remaining technology pages and case studies as content arrives.
-- [ ] Enquiry notifications (provider + recipients), rate limiting, spam review workflow, careers applications.
-- [ ] Real media integration (video via an appropriate delivery service).
-- [ ] i18n scaffold (next-intl, hreflang, RTL), structured data with verified facts, migration inventory and URL map from enginious.ae.
-- [ ] Analytics with consent (enquiries, technology interest, case-study engagement, downloads), no personal data.
-- [ ] Accessibility audit with assistive tech; performance budget on real devices.
+## Milestone 2 (preview built; awaiting owner setup and review)
+- [x] CMS: roles, invite-only access, content engine (draft/publish/unpublish/archive, revisions, slugs, redirects, ordering, featured), 13 content types, admin UI, import of the existing approved content.
+- [x] Public site powered by the CMS with starter-content fallback; regions, Insights, Careers, FAQs, Solutions, Privacy (provisional), 404/error pages.
+- [x] Media library (validated uploads, derivatives, private originals, picker, delete protection), company-profile PDF.
+- [x] Enquiries: inbox, notes, triage, rate limiting, private attachments, notification adapter with retry (tested only against a local stand-in).
+- [x] SEO infrastructure, indexing safeguards, structured data, redirects; consent-gated analytics integration point; i18n plan.
+- [ ] **Owner:** apply migrations, bootstrap the first administrator, Supabase auth settings, SMTP, env vars (`docs/cms-setup.md`).
+- [ ] **Owner:** approve content (see `docs/content-todo.md`), supply media (`docs/asset-handoff.md`), provide the old-site URL export (`docs/url-migration.md`), decide retention (`docs/privacy-retention.md`).
+- [ ] Verify against the real Supabase project and a real email provider (stand-ins only so far).
+- [ ] Larger uploads (signed direct-to-storage uploads; today limited to 4 MB by the hosting body cap) and video delivery service.
+- [ ] Full Content-Security-Policy, MFA for CMS users, attachment malware scanning (`docs/security.md`).
+- [ ] Per-locale content and language switching (`docs/i18n-plan.md`): only when Arabic content is ready.
+- [ ] Accessibility audit with assistive technology; real-device performance review (see `docs/performance.md`).
+- [ ] Remaining technology pages and case studies as content arrives (add them in the CMS: no code needed).
 
 ## Later
 - [ ] Experience composer (3D) only after core launch.

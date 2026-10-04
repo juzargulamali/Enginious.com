@@ -13,6 +13,9 @@ export interface Client {
   /** Image id of an approved logo (src/content/images.ts). Omit until supplied. */
   logo?: string;
   projects: string[];
+  /** Approved attribution wording (CMS). Shown only for a direct or agency relationship. */
+  attribution?: string;
+  website?: string;
 }
 
 export const CLIENTS: Client[] = [

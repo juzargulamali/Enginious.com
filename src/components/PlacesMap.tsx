@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { MAP } from "@/content/map";
 import { OFFICES, PLACES_DATA, PROJECT_PLACES, type Place } from "@/content/places";
-import { projectBySlug } from "@/content/projects";
+import { useContent } from "./ContentProvider";
 import { Trace } from "@/components/neon/Trace";
 
 type ViewKey = "world" | "gulf" | "europe";
@@ -28,6 +28,7 @@ const P = (id: string): [number, number] => {
  * Intro: offices appear first, then project locations, once, when the map scrolls into view; then it is all user control.
  */
 export function PlacesMap() {
+  const { projectBySlug } = useContent();
   const root = useRef<HTMLDivElement>(null);
   const [sel, setSel] = useState("dubai");
   const [view, setView] = useState<ViewKey>("world");

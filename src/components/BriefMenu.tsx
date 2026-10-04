@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { techBySlug } from "@/content/technologies";
+import { useContent } from "./ContentProvider";
 import { useBrief } from "./BriefProvider";
 
 /**
@@ -11,6 +11,7 @@ import { useBrief } from "./BriefProvider";
  */
 export function BriefMenu() {
   const { items, remove, clear } = useBrief();
+  const { techBySlug } = useContent();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);

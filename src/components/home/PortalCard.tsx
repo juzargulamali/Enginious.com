@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { Edge, type EdgeVariant } from "@/components/neon/Edge";
-import { Photo, hasPhoto } from "@/components/Photo";
+import { useContent } from "@/components/ContentProvider";
+import { Photo } from "@/components/Photo";
 import { TechForm } from "@/components/TechForm";
 import { useReached } from "@/lib/scrollBus";
 
@@ -14,6 +15,7 @@ import { useReached } from "@/lib/scrollBus";
  * Without JavaScript everything is visible (the dim state is only applied once the page is running).
  */
 export function PortalCard({ title, blurb, tags, form, href, edge, n, slot }: { title: string; blurb: string; tags: string[]; form: string; href: string; edge: EdgeVariant; n: string; slot?: string }) {
+  const { imageForSlot } = useContent();
   const card = useRef<HTMLAnchorElement>(null);
   const inner = useRef<HTMLSpanElement>(null);
   const spot = useRef<HTMLSpanElement>(null);
@@ -43,7 +45,7 @@ export function PortalCard({ title, blurb, tags, form, href, edge, n, slot }: { 
   return (
     <Link ref={card} href={href} className="pc2" data-reached={reached || undefined} data-trace-scope>
       <span ref={inner} className="pc2-in">
-        {slot && hasPhoto(slot) && <span className="pc2-photo"><Photo slot={slot} sizes="(max-width: 900px) 100vw, 33vw" /></span>}
+        {slot && imageForSlot(slot) && <span className="pc2-photo"><Photo slot={slot} sizes="(max-width: 900px) 100vw, 33vw" /></span>}
         <span ref={spot} className="pc2-spot" aria-hidden="true" />
         {reached && <Edge variant={edge} duration={7} />}
         <span className="pc2-n">{n}</span>

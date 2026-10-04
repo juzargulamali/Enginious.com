@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { AddToBrief } from "@/components/AddToBrief";
 import { TechForm } from "@/components/TechForm";
-import { TECH_CATEGORIES, TECHNOLOGIES } from "@/content/technologies";
+import { TECH_CATEGORIES } from "@/content/technologies";
+import { useContent } from "@/components/ContentProvider";
 import { isNarrow, reducedMotion, useScrollProgress } from "@/lib/scrollBus";
 
 /**
@@ -15,18 +16,21 @@ import { isNarrow, reducedMotion, useScrollProgress } from "@/lib/scrollBus";
  * directly on the DOM (no React render per change), and no inherited `color` is transitioned (that restyled every SVG
  * shape in every exhibit on each frame). Only opacity/transform change, which the compositor handles.
  */
-const EXHIBITS = ["touch-and-throw", "holofan", "tri-helix", "robotic-arm", "ai-photobooth", "circular-dial"];
-const POS = [
-  { x: 9, z: 0.82 }, { x: 24, z: 0.94 }, { x: 41, z: 1.12 }, { x: 59, z: 1.12 }, { x: 76, z: 0.94 }, { x: 91, z: 0.82 },
-];
+const ALL_EXHIBITS = ["touch-and-throw", "holofan", "tri-helix", "robotic-arm", "ai-photobooth", "circular-dial"];
+// Positions for the exhibits that are actually published (the CMS may hide some), spread evenly with the centre nearest.
+const posFor = (n: number) => Array.from({ length: n }, (_, i) => { const t = n === 1 ? 0.5 : i / (n - 1); return { x: 9 + t * 82, z: 0.82 + 0.3 * (1 - Math.abs(t - 0.5) * 2) }; });
 
 export function ShowroomTeaser() {
+  const { technologies: TECHNOLOGIES } = useContent();
+  const EXHIBITS = ALL_EXHIBITS.filter((s) => TECHNOLOGIES.some((t) => t.slug === s));
+  const POS = posFor(EXHIBITS.length);
+  const MID = Math.min(2, Math.max(0, EXHIBITS.length - 1));
   const root = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const far = useRef<HTMLDivElement>(null);
   const near = useRef<HTMLDivElement>(null);
   const manual = useRef(false);
-  const current = useRef(2);
+  const current = useRef(MID);
 
   const activate = (i: number) => {
     if (i === current.current && root.current?.dataset.ready) return;
@@ -65,6 +69,7 @@ export function ShowroomTeaser() {
     return () => { el.removeEventListener("pointermove", move); cancelAnimationFrame(raf); };
   }, []);
 
+  if (EXHIBITS.length === 0) return null;
   return (
     <div ref={root} className="sr" data-front>
       <div ref={stage} className="sr-stage" data-trace-scope>
@@ -79,9 +84,9 @@ export function ShowroomTeaser() {
                 key={slug}
                 type="button"
                 role="option"
-                aria-selected={i === 2}
+                aria-selected={i === MID}
                 className="sr-ex"
-                data-on={i === 2}
+                data-on={i === MID}
                 style={{ left: `${p.x}%`, ["--z" as string]: p.z }}
                 onMouseEnter={() => activate(i)}
                 onFocus={() => choose(i)}
@@ -100,7 +105,7 @@ export function ShowroomTeaser() {
           const t = TECHNOLOGIES.find((x) => x.slug === slug)!;
           const cat = TECH_CATEGORIES.find((c) => c.key === t.category)!;
           return (
-            <div key={slug} className="sr-i" hidden={i !== 2}>
+            <div key={slug} className="sr-i" hidden={i !== MID}>
               <p className="eyebrow">{cat.label}</p>
               <h3>{t.name}</h3>
               <p>{t.summary}</p>

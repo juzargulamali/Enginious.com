@@ -1,0 +1,3 @@
+old_url,old_title,new_path,status,notes
+# Fill after the export described in docs/url-migration.md. Example (not real):,,,,
+# https://www.enginious.ae/about,About us,/company,301,

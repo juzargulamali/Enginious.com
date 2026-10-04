@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Edge } from "@/components/neon/Edge";
-import { BUDGETS, GENERAL_CONTACT, PROJECT_TYPES, REGIONS, type RegionKey } from "@/content/site";
-import { techBySlug } from "@/content/technologies";
+import { BUDGETS, PROJECT_TYPES, type RegionKey } from "@/content/site";
 import { useBrief } from "./BriefProvider";
+import { useContent } from "./ContentProvider";
 
 type Errors = Record<string, string>;
-type State = { s: "idle" } | { s: "sending" } | { s: "error"; message: string } | { s: "done"; reference: string };
+type State = { s: "idle" } | { s: "sending" } | { s: "error"; message: string } | { s: "done"; reference: string; attach?: { stored: number; failed: string[] } };
+const MAX_FILES = 3;
+const MAX_TOTAL = 4 * 1024 * 1024;
+const ALLOWED_EXT = /\.(pdf|jpe?g|png|webp)$/i;
 const isRegion = (v: string | null): v is RegionKey => v === "uae" || v === "ksa" || v === "europe";
 
 const LABEL: Record<RegionKey, string> = { uae: "Global Headquarters", ksa: "Saudi Arabia Branch", europe: "Branch serving Europe" };
@@ -23,10 +26,12 @@ const SHARDS: Record<RegionKey, React.ReactNode> = {
 export function EnquiryForm() {
   const params = useSearchParams();
   const brief = useBrief();
+  const { regions: REGIONS, general: GENERAL_CONTACT, techBySlug } = useContent();
   const [picked, setPicked] = useState<RegionKey | null>(null);
   const [projectType, setProjectType] = useState<string>("event");
   const [errors, setErrors] = useState<Errors>({});
   const [state, setState] = useState<State>({ s: "idle" });
+  const [files, setFiles] = useState<File[]>([]);
   const idRef = useRef<string | null>(null);
   const form = useRef<HTMLFormElement>(null);
   const status = useRef<HTMLDivElement>(null);
@@ -56,9 +61,28 @@ export function EnquiryForm() {
       const res = await fetch("/api/enquiries", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok && data.reference) {
-        setState({ s: "done", reference: data.reference });
+        // The enquiry is stored. Attachments (optional) are sent separately so a file problem can never lose the enquiry.
+        let attach: { stored: number; failed: string[] } | undefined;
+        if (files.length && data.reference !== "ENQ-00000000") {
+          try {
+            const up = new FormData();
+            up.set("reference", data.reference); up.set("submissionId", body.submissionId);
+            files.forEach((f) => up.append("files", f));
+            const ar = await fetch("/api/enquiries/attachments", { method: "POST", body: up });
+            const ad = await ar.json().catch(() => ({}));
+            const results: { name: string; ok: boolean; error?: string }[] = ad.results ?? [];
+            attach = { stored: ad.stored ?? 0, failed: results.filter((x) => !x.ok).map((x) => `${x.name}: ${x.error}`) };
+            if (!results.length && !ar.ok) attach = { stored: 0, failed: [ad.message ?? "The files could not be attached."] };
+          } catch { attach = { stored: 0, failed: ["The files could not be attached (network problem)."] }; }
+        }
+        setFiles([]);
+        setState({ s: "done", reference: data.reference, attach });
         brief.clear();
         requestAnimationFrame(() => status.current?.focus());
+        return;
+      }
+      if (res.status === 429) {
+        setState({ s: "error", message: `You have sent several enquiries in a short time. Please wait a little, or email ${email} directly. Your details are still here.` });
         return;
       }
       if (res.status === 400 && data.errors) {
@@ -130,6 +154,8 @@ export function EnquiryForm() {
             <p className="eyebrow">Enquiry received</p>
             <h2>Thank you. We have your enquiry.</h2>
             <p className="lede">Your reference is <strong className="accent" style={{ fontFamily: "var(--font-code)" }}>{state.reference}</strong>. Keep it if you contact us about this project.</p>
+            {state.attach && state.attach.stored > 0 && <p className="muted">{state.attach.stored} file{state.attach.stored === 1 ? "" : "s"} attached and stored privately.</p>}
+            {state.attach && state.attach.failed.length > 0 && <p className="err" role="alert">Your enquiry was received, but not every file could be attached: {state.attach.failed.join(" ")} You can email them to {email}, quoting the reference.</p>}
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <Link href="/work" className="btn">Explore our work</Link>
               <button type="button" className="btn" onClick={() => { idRef.current = null; setState({ s: "idle" }); }}>Send another enquiry</button>
@@ -155,6 +181,20 @@ export function EnquiryForm() {
               <div className="field"><label htmlFor="budget">Budget range (optional)</label><select id="budget" name="budget" className="select" defaultValue="" {...inv("budget")}><option value="">Select a range</option>{BUDGETS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}</select>{fe("budget")}</div>
             </div>
             <div className="field"><label htmlFor="message">What are you planning? <span className="req">*</span></label><textarea id="message" name="message" className="textarea" style={{ minHeight: 120 }} required minLength={10} maxLength={5000} placeholder="Your goals, location, dates, and any experiences you have in mind." {...inv("message")} />{fe("message")}</div>
+            <div className="field">
+              <label htmlFor="files">Attach a brief (optional)</label>
+              <input id="files" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" className="input" aria-describedby="files-help files-err"
+                onChange={(e) => {
+                  const picked = Array.from(e.target.files ?? []);
+                  const bad = picked.find((f) => !ALLOWED_EXT.test(f.name));
+                  const err = bad ? `${bad.name}: only PDF, JPEG, PNG or WebP files can be attached.` : picked.length > MAX_FILES ? `Attach at most ${MAX_FILES} files.` : picked.reduce((n, f) => n + f.size, 0) > MAX_TOTAL ? "The files total more than 4 MB. Attach smaller files, or email them to us." : "";
+                  setErrors((x) => ({ ...x, files: err }));
+                  setFiles(err ? [] : picked);
+                  if (err) e.target.value = "";
+                }} />
+              <p id="files-help" className="muted" style={{ fontSize: "0.82rem" }}>Up to {MAX_FILES} files, 4 MB in total: PDF, JPEG, PNG or WebP. Stored privately; only our team can open them.</p>
+              <p id="files-err" className="err" role="alert" style={errors.files ? undefined : { display: "none" }}>{errors.files}</p>
+            </div>
             <div id="brief">{exp()}</div>
             <div aria-hidden="true" style={{ position: "absolute", left: "-9999px" }}><label>Leave this empty<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
             <div aria-live="assertive">{state.s === "error" && <p className="err" role="alert">{state.message}</p>}</div>

@@ -1,12 +1,17 @@
-import { IMAGES, imageFor, type ImageAsset, type SlotName } from "@/content/images";
+"use client";
+
+import type { ImageAsset } from "@/content/images";
+import { useContent } from "./ContentProvider";
 
 /**
  * Renders a registered photo, or nothing (so the caller's designed fallback shows) when the slot is empty.
- * Focal point drives object-position, so any crop keeps the subject. Stock imagery gets a discreet
+ * Focal point drives object-position, so any crop keeps the subject. Stock and concept imagery gets a discreet
  * "Illustrative image" label; preview portraits are labelled "Preview"; real photos carry no label.
+ * Assets come from the CMS media library (or the built-in registry) through the site content context.
  */
-export function Photo({ slot, id, sizes = "100vw", priority = false, className = "", label = true, style }: { slot?: SlotName; id?: string; sizes?: string; priority?: boolean; className?: string; label?: boolean; style?: React.CSSProperties }) {
-  const a: ImageAsset | undefined = id ? IMAGES[id] : slot ? imageFor(slot) : undefined;
+export function Photo({ slot, id, sizes = "100vw", priority = false, className = "", label = true, style }: { slot?: string; id?: string; sizes?: string; priority?: boolean; className?: string; label?: boolean; style?: React.CSSProperties }) {
+  const { imageById, imageForSlot } = useContent();
+  const a: ImageAsset | undefined = id ? imageById(id) : slot ? imageForSlot(slot) : undefined;
   if (!a) return null;
   const set = a.widths.map((w) => `${a.src}-${w}.webp ${w}w`).join(", ");
   const largest = a.widths[a.widths.length - 1];
@@ -31,5 +36,3 @@ export function Photo({ slot, id, sizes = "100vw", priority = false, className =
     </>
   );
 }
-
-export const hasPhoto = (slot: SlotName) => !!imageFor(slot);
