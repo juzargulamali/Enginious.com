@@ -28,7 +28,7 @@ export function BriefMenu() {
     <div ref={root} className="bm">
       <button ref={btn} type="button" className="bm-btn" aria-expanded={open} aria-controls="bm-panel" onClick={() => setOpen((o) => !o)}>
         <span className="bm-ico" aria-hidden="true" />
-        <span className="bm-lbl">Your project brief</span>
+        <span className="bm-lbl">Project brief</span>
         <span className="bm-n" data-zero={items.length === 0 || undefined} aria-label={`${items.length} selected`}>{items.length}</span>
       </button>
       {open && (

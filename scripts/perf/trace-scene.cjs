@@ -32,6 +32,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     console.log(`main ${m("RunTask")} | layerize ${m("PaintArtifactCompositor::Update")} | paint ${m("LocalFrameView::RunPaintLifecyclePhase")} | style+layout ${m("LocalFrameView::UpdateStyleAndLayout")} | sw-draw ${get((x) => /Compositor/.test(x), "SoftwareRenderer::DoDrawQuad").toFixed(0)}`);
     await b.close(); return;
   }
+  if (process.argv.includes("--style")) {
+    const u = ev.filter((e) => e.ph === "X" && e.name === "UpdateLayoutTree" && names[e.pid + ":" + e.tid] === "CrRendererMain");
+    const tot = u.reduce((a, e) => a + e.dur, 0) / 1000;
+    console.log(`UpdateLayoutTree: ${u.length} calls, ${tot.toFixed(1)} ms; elementCount histogram (calls / ms):`);
+    const bk = {}; u.forEach((e) => { const c = e.args?.elementCount ?? 0; const k = c < 10 ? "<10" : c < 100 ? "<100" : c < 1000 ? "<1000" : ">=1000"; (bk[k] ||= [0, 0]); bk[k][0]++; bk[k][1] += e.dur / 1000; });
+    Object.entries(bk).forEach(([k, v]) => console.log("  " + k.padEnd(7), v[0], v[1].toFixed(1)));
+    u.sort((a, b) => b.dur - a.dur).slice(0, 6).forEach((e) => console.log("  top", (e.dur / 1000).toFixed(1), "ms elements", e.args?.elementCount));
+  }
   rep("main thread (CrRendererMain)", (n) => n === "CrRendererMain");
   rep("compositor + raster threads", (n) => /Compositor|Raster|CompositorTile/.test(n));
   await b.close();

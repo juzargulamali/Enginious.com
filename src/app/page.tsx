@@ -22,6 +22,10 @@ import { filmPoster, resolveShowreel, YOUTUBE } from "@/content/media";
 import { PROJECTS, projectBySlug } from "@/content/projects";
 import { GENERAL_CONTACT } from "@/content/site";
 import { techBySlug } from "@/content/technologies";
+import { publishedTestimonials, sampleTestimonials } from "@/content/testimonials";
+
+// Fictional sample testimonials exist only on non-production builds (never on production or once indexing is enabled).
+const SAMPLES_ALLOWED = process.env.ALLOW_INDEXING !== "true" && process.env.VERCEL_ENV !== "production";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -145,7 +149,7 @@ export default function Home() {
         </section>
 
         {/* ---- 4c. testimonials (published only; fictional samples on previews with ?samples=1) ---- */}
-        <Testimonials sampleAllowed={process.env.ALLOW_INDEXING !== "true"} />
+        <Testimonials published={publishedTestimonials()} samples={SAMPLES_ALLOWED ? sampleTestimonials() : []} />
 
         {/* ---- 5. people ---- */}
         <section id="people" className="scene home-sec" aria-labelledby="ppl-h">

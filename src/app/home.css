@@ -98,7 +98,7 @@
 .pc2-in { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: clamp(430px, 38vw, 560px); padding: 26px; border-radius: 22px; overflow: hidden; background: linear-gradient(172deg, rgba(39, 205, 216, 0.14), rgba(2, 7, 11, 0.84) 58%), #03101a; border: 1px solid rgba(39, 205, 216, 0.1); transition: transform 0.25s ease-out, border-color 0.3s; will-change: transform; }
 .pc2:hover .pc2-in { border-color: rgba(70, 233, 243, 0.45); }
 .pc2[data-active] .pc2-in { border-color: rgba(70, 233, 243, 0.7); box-shadow: 0 0 0 1px rgba(70, 233, 243, 0.18), 0 0 52px rgba(70, 233, 243, 0.16); }
-.pc2-spot { position: absolute; left: 0; top: 0; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(closest-side, rgba(70, 233, 243, 0.24), transparent 70%); opacity: 0; transition: opacity 0.3s; will-change: transform; pointer-events: none; }
+.pc2-spot { position: absolute; left: 0; top: 0; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(closest-side, rgba(70, 233, 243, 0.24), transparent 70%); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
 .pc2:hover .pc2-spot { opacity: 1; }
 .pc2-n { position: absolute; top: 22px; left: 26px; font-family: var(--font-code), monospace; font-size: 0.72rem; letter-spacing: 0.18em; color: var(--neon); }
 .pc2-art { position: absolute; top: 8%; left: 50%; width: 60%; margin-left: -30%; color: var(--neon); }
@@ -388,3 +388,14 @@ html[data-js] .pc2:not([data-reached]) .pc2-b, html[data-js] .pc2:not([data-reac
 .pm-mk[data-on][data-kind="office"] .shape::after { border-radius: 4px; }
 @keyframes pmSel { from { transform: scale(0.6); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .pm-mk[data-on] .shape::after { animation: none; opacity: 0.7; transform: none; } }
+
+/* Round 6 layer budget (measured: ~100 composited layers on the home page at the capabilities/tower scroll position; cost tracks layer count under software compositing). */
+.pc2:hover .pc2-spot { will-change: transform; }
+.tw:not([data-live]) .tower { animation-play-state: paused; }
+.pm:not([data-stage="2"]) .pm-mk .shape::after { animation: none; }
+@media (max-width: 900px) {
+  /* Lighter tower on phones: no idle sway, no face shading overlays, no orbit/turntable motion layers. */
+  .tower { animation: none; transform: rotateY(-22deg); }
+  .face::after { display: none; }
+  .orbit, .pool { display: none; }
+}

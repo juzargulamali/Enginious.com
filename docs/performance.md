@@ -128,3 +128,21 @@ Honest read: the regression is **not fully fixed**. Script time (-3%, -11% exclu
 Changes made: tower driven by CSS transitions with imperative writes (no JS spring loop); showroom toggles attributes directly with no inherited colour transition; map reveal is CSS-driven by container data attributes; clip-path beams replaced by SVG-data-URI backgrounds; shared scroll bus; section `contain-intrinsic-size` set to measured heights (fixes anchor jumps landing on the wrong section); map reveal observer moved to the map frame (it never fired on the tall container).
 
 Next candidates: fewer paint layers in the tower (flatten preserve-3d further), fewer large gradients in the hero, test on a real mid-range phone.
+
+## Revision 6 (round 6): hero and tower investigation
+
+Same environment as revision 5 (Playwright + CDP, CPU x4, software rendering, local production build, 1440 x 900, same wheel sequence: 140 px steps every 28 ms). Synthetic only; no real device and no GPU were tested, and none is assumed to help.
+
+**Fair before/after.** The previous commit (6589359) and the current build were run alternately, 2 x 3 runs each, same scenes. Shared scenes (everything except Clients), total slow frames: before 18 and 20, after 22 and 20. Script ms about 280 and style ms about 440 in both. **No measurable change.** Clients (new in round 5): 0 slow frames in every run, reported separately. Mobile (390 x 844, dpr 2): hero 1 to 2 slow frames, tower 2 to 3, before and after; already acceptable.
+
+**Per-effect experiments** (CSS injected one at a time, desktop). Pages without the home page's scenes scroll the same distance at 0 slow frames (/company, /privacy, /insights, /company/team), so the floor in this environment is clean. On the home page the first 2400 px (hero, capabilities, start of tower) gave 9 to 13 slow frames. No single effect explains it:
+- Hiding any one of: tower sway, face shading, face shadow, orbit/turntable, tower glow, hero pillars/ring/floor, hero beams, hero spot, neon lights, will-change hints, content-visibility, shorter face transitions: all within run-to-run noise (about +/-3 frames).
+- Hiding the hero media alone: 3 to 11. Capabilities cards alone: 3 to 8. Tower alone: 6 to 9.
+- Hiding the capabilities cards and the tower together: 1 to 2 slow frames at 57 fps. Hiding all three: 0.
+- Composited layers on the home page at that position: about 100 (18 tower faces, 25 neon comet/edge layers, 15 card layers, glow, tags). With the cards flattened and the comets removed: 60 layers and about 6 slow frames. So cost tracks layer count under software compositing (Layerize about 290 ms and software draw about 900 ms per scene run), not any one effect.
+
+**Changes kept** (small, safe): card spotlight layer promoted only on hover; tower idle sway paused when the tower is not on screen; map selection pulse runs only after the map has revealed; on phones the tower drops idle sway, face shading and the orbit. Layers fell from 102 to 90; slow frames did not change measurably. The neon flowing lines were left as they are because removing them alone did not measurably help and they are part of the creative direction.
+
+**Not fixed, and why.** Getting the home page to 60 fps in this environment needs the layer count roughly halved (faces, comets and card layers together), which means changing the look (fewer comets, static cards, flatter tower), not a rendering tweak. Not done without your direction. Whether it matters on real hardware is unknown: check on a mid-range phone and a laptop without a discrete GPU before deciding.
+
+Also fixed: `contain-intrinsic-size` per section (anchor jumps), map reveal observer, header wrapping.

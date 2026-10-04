@@ -50,3 +50,7 @@
 - Company Mission / Vision: drafts, to confirm.
 - Contact: Poland has no supplied email/phone; enquiries fall back to the general contact. Brief file uploads are not built (needs storage and validation).
 - Imagery: **no image generation capability is available in this environment, so no images were generated.** The slots (Contact scene, Events, Experience centres, Permanent installation, preview portraits) are ready in `src/content/images.ts` with focal point, alt and status; the designed CSS stages are fallbacks, not photographs. Supply or approve real/licensed images to fill them.
+
+## Round 6
+- Testimonials: samples are not shipped at all by production builds (`VERCEL_ENV=production` or `ALLOW_INDEXING=true`); with none published the section is omitted. Verified in both modes.
+- Image slots and exact specs: `docs/asset-handoff.md`. Still no images generated.

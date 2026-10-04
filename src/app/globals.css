@@ -303,3 +303,13 @@ a { color: inherit; text-decoration: none; }
 /* Light beams: a pre-rendered SVG trapezoid instead of clip-path + gradient (clip-path needs a mask render surface, which is costly to composite). */
 :root { --beam-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2346e9f3' stop-opacity='.26'/%3E%3Cstop offset='.85' stop-color='%2346e9f3' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='40,0 60,0 100,100 0,100' fill='url(%23g)'/%3E%3C/svg%3E"); }
 .beam, .cone { clip-path: none !important; background: var(--beam-svg) 0 0 / 100% 100% no-repeat !important; }
+
+/* Header: never wrap, never collide (checked at 1181 to 1920 wide). */
+.site-header .bar { gap: 1rem; }
+.site-header .bar > a:first-child { flex: none; margin-right: 0.8rem; }
+.nav-links, .nav-regions, .nav-cta, .nav-links a, .nav-regions a, .nav-start, .bm-btn { white-space: nowrap; }
+.nav-links { gap: 1.05rem; font-size: 0.88rem; }
+.nav-regions { padding-left: 0.8rem; margin-left: 0; font-size: 0.8rem; }
+.nav-regions a { padding: 0.4rem 0.4rem; }
+.nav-start { padding-inline: 1rem; }
+@media (min-width: 1181px) and (max-width: 1500px) { .bm-lbl { display: none; } }

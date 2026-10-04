@@ -5,7 +5,7 @@ import { useRef, useState, useSyncExternalStore } from "react";
 import { Edge } from "@/components/neon/Edge";
 import { TechForm } from "@/components/TechForm";
 import { projectBySlug } from "@/content/projects";
-import { publishedTestimonials, sampleTestimonials } from "@/content/testimonials";
+import type { Testimonial } from "@/content/testimonials";
 import { techBySlug } from "@/content/technologies";
 
 const subscribe = () => () => {};
@@ -17,9 +17,10 @@ const wantsSamples = () => new URLSearchParams(window.location.search).get("samp
  * Only PUBLISHED testimonials are shown. Fictional samples appear only on previews with ?samples=1, clearly marked "Sample".
  * With nothing to show, the whole section is omitted (no empty placeholder on the public page).
  */
-export function Testimonials({ sampleAllowed }: { sampleAllowed: boolean }) {
-  const samples = useSyncExternalStore(subscribe, wantsSamples, () => false) && sampleAllowed;
-  const list = samples ? sampleTestimonials() : publishedTestimonials();
+export function Testimonials({ published, samples: sampleList }: { published: Testimonial[]; samples: Testimonial[] }) {
+  // `samples` is empty on production builds (decided on the server), so fictional text is not even shipped there.
+  const samples = useSyncExternalStore(subscribe, wantsSamples, () => false);
+  const list = samples && sampleList.length ? sampleList : published;
   const [i, setI] = useState(0);
   const drag = useRef<number | null>(null);
   if (list.length === 0) return null;
