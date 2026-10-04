@@ -41,7 +41,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   for (let y = s0 - 500; y < s0 + 800; y += 80) { await p.evaluate((y) => window.scrollTo(0, y), y); await sleep(220); act.add(await p.locator('.sr-ex[data-on="true"] .sr-lbl').textContent()); }
   ok("showroom: scrolling brings different exhibits forward", act.size >= 3, [...act].join(" | "));
   await p.locator(".sr-ex").nth(0).click(); await sleep(300);
-  const first = await p.locator(".sr-info h3").textContent();
+  const first = await p.evaluate(() => document.querySelector(".sr-i:not([hidden]) h3").textContent);
   ok("showroom: explanation follows the selected exhibit", /Touch/.test(first), first);
 
   // evidence scale-up
@@ -54,9 +54,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // map
   await p.evaluate(() => document.getElementById("global").scrollIntoView({ block: "start" })); await sleep(750);
-  const early = await p.evaluate(() => ({ o: [...document.querySelectorAll('.pm-mk[data-kind="office"]')].filter((e) => e.hasAttribute("data-show")).length, pr: [...document.querySelectorAll('.pm-mk[data-kind="project"]')].filter((e) => e.hasAttribute("data-show")).length }));
+  const early = await p.evaluate(() => ({ o: [...document.querySelectorAll('.pm-mk[data-kind="office"]')].filter((e) => getComputedStyle(e).visibility === "visible").length, pr: [...document.querySelectorAll('.pm-mk[data-kind="project"]')].filter((e) => getComputedStyle(e).visibility === "visible").length }));
   await sleep(2600);
-  const late = await p.evaluate(() => ({ o: [...document.querySelectorAll('.pm-mk[data-kind="office"]')].filter((e) => e.hasAttribute("data-show")).length, pr: [...document.querySelectorAll('.pm-mk[data-kind="project"]')].filter((e) => e.hasAttribute("data-show")).length }));
+  const late = await p.evaluate(() => ({ o: [...document.querySelectorAll('.pm-mk[data-kind="office"]')].filter((e) => getComputedStyle(e).visibility === "visible").length, pr: [...document.querySelectorAll('.pm-mk[data-kind="project"]')].filter((e) => getComputedStyle(e).visibility === "visible").length }));
   ok("map: reveals offices first, then project locations", early.o === 3 && early.pr === 0 && late.pr === 17, JSON.stringify({ early, late }));
   ok("map: 3 offices + 17 project markers (19 project locations incl. Dubai and Riyadh offices)", late.o === 3 && late.pr === 17);
   const names = await p.locator(".pm-list .pm-cols .pm-li b").allTextContents();
@@ -73,8 +73,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok("map: Brazil shows COP30 only", /COP30/.test(await p.locator(".pm-panel").textContent()));
   await p.getByRole("button", { name: "Gulf", exact: true }).click(); await sleep(1200);
   ok("map: Gulf zoom changes the view", /scale\((?!1\))/.test((await p.locator(".pm-stage").getAttribute("style")) || ""));
-  await p.getByRole("button", { name: /Project locations/ }).first().click(); await sleep(300);
-  ok("map: project layer can be switched off", (await p.locator('.pm-mk[data-kind="project"][data-show]').count()) === 0 || (await p.locator('.pm-mk[data-kind="project"][data-show]').count()) === 0);
+  await p.getByRole("button", { name: /Project locations/ }).first().click(); await sleep(900);
+  ok("map: project layer can be switched off", (await p.locator('.pm-mk[data-kind="project"]').first().evaluate((e) => getComputedStyle(e).visibility)) === "hidden");
   await p.locator('.pm-mk[data-kind="office"]').first().focus(); await p.keyboard.press("Enter"); await sleep(200);
   ok("map: markers are keyboard-operable buttons", (await p.locator(".pm-panel h3").textContent()).length > 0);
 
@@ -89,7 +89,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await p.getByRole("button", { name: "Leadership", exact: true }).click(); await sleep(300);
   ok("people: filter leaves the two leaders", (await p.locator(".tg-card").count()) === 2);
   const prof = await p.locator(".tg-profile").textContent();
-  ok("people: profile shows responsibilities and a leadership message area", /Responsibilities|direction|leadership/i.test(prof) && /Leadership message/.test(prof));
+  ok("people: profile shows responsibilities; unapproved message is not shown", /Responsibilities|direction|leadership/i.test(prof) && !/will appear here/.test(prof));
   await p.getByRole("button", { name: "List", exact: true }).click(); await sleep(200);
   ok("people: list view is the single alternative (gallery hidden)", (await p.locator(".tl li").count()) === 2 && (await p.locator(".tg-stage").count()) === 0);
 
@@ -132,7 +132,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await p.evaluate(() => document.getElementById("capabilities").scrollIntoView()); await sleep(600);
   ok("reduced motion: capabilities fully revealed", (await p.locator(".pc2[data-reached]").count()) === 3, (await p.locator(".pc2[data-reached]").count()) + " revealed");
   await p.evaluate(() => document.getElementById("global").scrollIntoView()); await sleep(500);
-  ok("reduced motion: map shows offices and projects immediately", (await p.locator(".pm-mk[data-show]").count()) === 20);
+  ok("reduced motion: map shows offices and projects immediately", (await p.evaluate(() => [...document.querySelectorAll(".pm-mk")].filter((e) => getComputedStyle(e).visibility === "visible").length)) === 20);
   await ctx.close();
 
   // phone

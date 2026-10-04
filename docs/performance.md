@@ -109,3 +109,22 @@ Same harness and conditions as above (software rendering, CPU x4 ~ modest laptop
 **Regression, stated plainly:** idle and pointer interaction stay light, but **scrolling the whole page is clearly worse** (slow frames 6 to 21; about 21 React commits per scroll). The cause is the new scroll choreography itself: scenes that react to scroll (capability reveals, tower stage changes with its spring, showroom exhibit changes, evidence scale, people depth, map) do real work while the page moves, and the map and gallery add more elements. The test scroll (about 5,000 px/s on a throttled CPU, software renderer) is harsher than a real wheel or touch scroll, and a GPU will rasterise far faster, but that is not demonstrated here. Candidate fixes, not yet done: stop re-rendering React on stage changes during scroll (write class names directly), cheaper `content-visibility` hints for the map and gallery, and drop the showroom auto-step on touch.
 
 Checks: `scripts/perf/round4-test.cjs` (46), `home-test.cjs` (25), `site-test.cjs` (23): all pass.
+
+## Revision 5 (round 5)
+
+Method: Playwright + CDP, CPU x4 throttle, software rendering (no GPU), local production build. Synthetic only. Deployed preview is not reachable from the build sandbox and no real device was tested.
+
+Whole-page scroll (`measure.cjs`, desktop, x4): before (round 4) 21 slow frames, ~39 fps. After: 20 slow frames, 43 fps. Mobile (390, dpr 2, x4): 7 slow frames, 52 fps. Idle and pointer sweep stay at 60 fps.
+
+Per-scene (`scene-profile.cjs`, x4, median of 3; files `docs/perf/scenes-before.json`, `scenes-after1.json`, `scenes-after3.json`):
+
+| | slow frames | script ms | style ms | React commits |
+|---|---|---|---|---|
+| before | 18 | 318 | 392 | 25 |
+| after (adds the new Clients scene) | 19 | 307 | 455 | 13 |
+
+Honest read: the regression is **not fully fixed**. Script time (-3%, -11% excluding Clients) and React commits (25 to 13) fell, and the showroom, projects and people scenes are clean. The tower (engineering, 8 slow frames) and hero (5) still miss 60 fps under x4 software rendering; their cost is style recalculation and software compositing (Layerize, DoDrawQuad), not JS. Style ms did not fall overall. We do not assume a GPU or real device will fix this; it has to be confirmed on hardware.
+
+Changes made: tower driven by CSS transitions with imperative writes (no JS spring loop); showroom toggles attributes directly with no inherited colour transition; map reveal is CSS-driven by container data attributes; clip-path beams replaced by SVG-data-URI backgrounds; shared scroll bus; section `contain-intrinsic-size` set to measured heights (fixes anchor jumps landing on the wrong section); map reveal observer moved to the map frame (it never fired on the tall container).
+
+Next candidates: fewer paint layers in the tower (flatten preserve-3d further), fewer large gradients in the hero, test on a real mid-range phone.

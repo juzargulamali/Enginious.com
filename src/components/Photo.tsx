@@ -10,7 +10,7 @@ export function Photo({ slot, id, sizes = "100vw", priority = false, className =
   if (!a) return null;
   const set = a.widths.map((w) => `${a.src}-${w}.webp ${w}w`).join(", ");
   const largest = a.widths[a.widths.length - 1];
-  const tag = a.status === "stock" ? "Illustrative image" : a.status === "preview-portrait" ? "Preview" : null;
+  const tag = a.status === "stock" || a.status === "concept" ? "Illustrative image" : a.status === "preview-portrait" || a.status === "fictional-portrait" ? "Preview" : null;
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}

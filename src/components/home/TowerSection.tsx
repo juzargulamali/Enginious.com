@@ -37,73 +37,57 @@ const STAGES = [
 const LAST = STAGES.length - 1;
 const TIERS = 6;
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
+// Tiers keep a small helical offset at rest; mid-drag they lag behind each other further, then lock aligned on release.
 const REST_TWIST = 7;
 const twistFor = (s: number) => REST_TWIST + Math.sin(Math.PI * (s - Math.floor(s))) * 36;
-const tierT = (i: number, s: number, tw: number) => `rotateY(${(-s * 120 + i * tw).toFixed(2)}deg)`;
+// One 3D context, 18 faces placed directly (no per-tier preserve-3d groups: those each created a render surface that
+// software compositing had to redraw every frame). Face = rotateY(tier angle + face offset) translateZ(apothem).
+const faceT = (i: number, k: number, s: number, tw: number) => `rotateY(${(-s * 120 + i * tw + k * 120).toFixed(2)}deg) translateZ(var(--ap))`;
 const orbitT = (s: number) => `rotate(${(-s * 60).toFixed(2)}deg)`;
 const tableT = (s: number) => `translate(-50%, 50%) rotateX(76deg) rotateZ(${(s * 120).toFixed(2)}deg)`;
 
+/**
+ * PERFORMANCE: there is no JavaScript animation loop. A stage change writes the eight target transforms ONCE and CSS
+ * transitions (compositor-driven; per-tier delays give the travelling twist) do the motion. Only an active drag writes
+ * transforms per pointer frame, with transitions switched off for the duration.
+ */
 export function TowerSection() {
   const root = useRef<HTMLDivElement>(null);
   const scene = useRef<HTMLDivElement>(null);
-  const tiers = useRef<HTMLDivElement[]>([]);
+  const faces = useRef<HTMLDivElement[]>([]);
   const orbit = useRef<HTMLSpanElement>(null);
   const table = useRef<HTMLSpanElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const [stage, setStage] = useState(LAST);
   const stageRef = useRef(LAST);
-  const reduce = useRef(false);
+  const target = useRef(LAST);
   const manual = useRef(false); // once the visitor takes the controls, scrolling stops steering the tower
-  const stepRef = useRef<(now: number) => void>(() => {});
-  const sim = useRef({ s: LAST, v: 0, target: LAST, raf: 0, last: 0, drag: null as null | { x: number; s: number; w: number; moved: boolean; t: number; lx: number; v: number } });
+  const drag = useRef<null | { x: number; s: number; w: number; moved: boolean; t: number; lx: number; v: number; cur: number }>(null);
 
   const paint = useCallback((s: number) => {
     const tw = twistFor(s);
-    for (let i = 0; i < TIERS; i++) {
-      const t = tiers.current[i];
-      if (t) t.style.transform = tierT(i, s, tw);
-    }
+    for (let i = 0; i < TIERS; i++) for (let k = 0; k < 3; k++) { const f = faces.current[i * 3 + k]; if (f) f.style.transform = faceT(i, k, s, tw); }
     if (orbit.current) orbit.current.style.transform = orbitT(s);
     if (table.current) table.current.style.transform = tableT(s);
     const idx = clamp(Math.round(s), 0, LAST);
     if (idx !== stageRef.current) { stageRef.current = idx; setStage(idx); }
   }, []);
 
-  const step = useCallback((now: number) => {
-    const q = sim.current;
-    const dt = Math.min(0.032, (now - q.last) / 1000 || 0.016);
-    q.last = now;
-    const k = 140, c = 2 * Math.sqrt(k) * 0.92;
-    q.v += ((q.target - q.s) * k - q.v * c) * dt;
-    q.s += q.v * dt;
-    paint(q.s);
-    if (Math.abs(q.v) < 0.0008 && Math.abs(q.target - q.s) < 0.0008) { q.s = q.target; q.v = 0; paint(q.s); q.raf = 0; return; }
-    q.raf = requestAnimationFrame(stepRef.current);
-  }, [paint]);
-  useEffect(() => { stepRef.current = step; }, [step]);
-
   const goTo = useCallback((t: number) => {
-    const q = sim.current;
-    q.target = clamp(t, 0, LAST);
-    if (reduce.current) { q.s = q.target; q.v = 0; paint(q.s); return; }
-    if (!q.raf) { q.last = performance.now(); q.raf = requestAnimationFrame(stepRef.current); }
+    target.current = clamp(t, 0, LAST);
+    paint(target.current);
   }, [paint]);
-
   const userGo = useCallback((t: number) => { manual.current = true; goTo(t); }, [goTo]);
 
   // As the section moves through view the tower progresses Idea -> Engineering -> Experience. Manual controls always win.
   useScrollProgress(root, (t) => {
-    if (t < 0.06 || t > 0.97) manual.current = false; // fully out of view: hand control back to the scroll
-    if (manual.current || reducedMotion()) return;
-    const target = t < 0.42 ? 0 : t < 0.6 ? 1 : 2;
-    if (target !== Math.round(sim.current.target)) goTo(target);
+    if (t < 0.06 || t > 0.97) manual.current = false;
+    if (manual.current || reducedMotion() || drag.current) return;
+    const next = t < 0.42 ? 0 : t < 0.6 ? 1 : 2;
+    if (next !== target.current) goTo(next);
   });
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reduce.current = mq.matches;
-    const on = () => (reduce.current = mq.matches);
-    mq.addEventListener("change", on);
     const el = root.current!;
     const io = new IntersectionObserver(([e]) => { el.toggleAttribute("data-paused", !e.isIntersecting); el.toggleAttribute("data-live", e.isIntersecting); }, { rootMargin: "120px 0px" });
     io.observe(el);
@@ -115,41 +99,38 @@ export function TowerSection() {
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (wrap.current) wrap.current.style.transform = `rotateX(${(-6 - py * 2).toFixed(2)}deg) rotateY(${(px * 6).toFixed(2)}deg)`; });
     };
     el.addEventListener("pointermove", move, { passive: true });
-    const q = sim.current;
-    return () => { mq.removeEventListener("change", on); io.disconnect(); el.removeEventListener("pointermove", move); cancelAnimationFrame(raf); cancelAnimationFrame(q.raf); };
+    return () => { io.disconnect(); el.removeEventListener("pointermove", move); cancelAnimationFrame(raf); };
   }, []);
 
   const down = (e: React.PointerEvent) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    const q = sim.current;
     const w = scene.current?.getBoundingClientRect().width ?? 600;
-    q.drag = { x: e.clientX, s: q.s, w, moved: false, t: performance.now(), lx: e.clientX, v: 0 };
     manual.current = true;
-    cancelAnimationFrame(q.raf); q.raf = 0; q.v = 0;
+    drag.current = { x: e.clientX, s: target.current, w, moved: false, t: performance.now(), lx: e.clientX, v: 0, cur: target.current };
     scene.current?.setPointerCapture(e.pointerId);
   };
   const move = (e: React.PointerEvent) => {
-    const q = sim.current, d = q.drag;
+    const d = drag.current;
     if (!d) return;
     const dx = e.clientX - d.x;
-    if (!d.moved && Math.abs(dx) < 4) return;
-    d.moved = true;
+    if (!d.moved) { if (Math.abs(dx) < 4) return; d.moved = true; root.current?.setAttribute("data-drag", ""); }
     const now = performance.now();
     d.v = (e.clientX - d.lx) / Math.max(1, now - d.t); d.lx = e.clientX; d.t = now;
     let s = d.s - dx / (d.w * 0.52);
     if (s < 0) s *= 0.25;
     if (s > LAST) s = LAST + (s - LAST) * 0.25;
-    q.s = s; paint(s);
+    d.cur = s; paint(s);
   };
   const up = (e: React.PointerEvent) => {
-    const q = sim.current, d = q.drag;
-    q.drag = null;
+    const d = drag.current;
+    drag.current = null;
     if (scene.current?.hasPointerCapture(e.pointerId)) scene.current.releasePointerCapture(e.pointerId);
+    root.current?.removeAttribute("data-drag");
     if (!d || !d.moved) return;
-    goTo(Math.round(clamp(q.s - d.v * 0.9, 0, LAST)));
+    goTo(Math.round(clamp(d.cur - d.v * 0.9, 0, LAST)));
   };
   const key = (e: React.KeyboardEvent) => {
-    const cur = Math.round(sim.current.target);
+    const cur = Math.round(target.current);
     if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); userGo(cur + 1); }
     else if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); userGo(cur - 1); }
     else if (e.key === "Home") { e.preventDefault(); userGo(0); }
@@ -209,11 +190,10 @@ export function TowerSection() {
         </span>
         <div ref={wrap} className="tower-wrap" aria-hidden="true">
           <div className="tower">
-            {Array.from({ length: TIERS }).map((_, i) => (
-              <div key={i} ref={(el) => { if (el) tiers.current[i] = el; }} className="tier" style={{ ["--i" as string]: i, transform: tierT(i, LAST, REST_TWIST) }}>
-                <div className="face f0" /><div className="face f1" /><div className="face f2" />
-              </div>
-            ))}
+            {Array.from({ length: TIERS * 3 }).map((_, n) => {
+              const i = Math.floor(n / 3), k = n % 3;
+              return <div key={n} ref={(el) => { if (el) faces.current[n] = el; }} className={`face f${k}`} style={{ ["--i" as string]: i, transform: faceT(i, k, LAST, REST_TWIST) }} />;
+            })}
           </div>
         </div>
         <ul className="annots" aria-hidden="true">

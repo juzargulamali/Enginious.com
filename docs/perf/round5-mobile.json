@@ -1,0 +1,73 @@
+{
+  "label": "round5-mobile",
+  "base": "http://localhost:3300",
+  "view": "mobile",
+  "viewport": [
+    390,
+    844
+  ],
+  "css": null,
+  "init": null,
+  "dpr": 2,
+  "runs": 2,
+  "rates": {
+    "4": {
+      "homeIdle5s": {
+        "fps": 60.2,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.7,
+        "frameWorstMs": 16.8,
+        "framesOver33ms": 0,
+        "framesOver50ms": 0,
+        "frames": 301,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 0,
+        "events": 0,
+        "reactCommits": 0,
+        "mainThreadBusyPct": 10,
+        "scriptMs": 32.1,
+        "layoutMs": 0,
+        "styleMs": 99.8
+      },
+      "homePointerSweep4s": {
+        "fps": 60.2,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.7,
+        "frameWorstMs": 16.8,
+        "framesOver33ms": 0,
+        "framesOver50ms": 0,
+        "frames": 249,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 32,
+        "eventP95Ms": 32,
+        "events": 253,
+        "reactCommits": 0,
+        "mainThreadBusyPct": 26,
+        "scriptMs": 136.2,
+        "layoutMs": 0,
+        "styleMs": 144.2
+      },
+      "homeScrollWholePage": {
+        "fps": 52.4,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 33.4,
+        "frameWorstMs": 66.7,
+        "framesOver33ms": 7,
+        "framesOver50ms": 1,
+        "frames": 246,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 40,
+        "eventP95Ms": 32,
+        "events": 607,
+        "reactCommits": 15,
+        "mainThreadBusyPct": 53,
+        "scriptMs": 283.4,
+        "layoutMs": 58.8,
+        "styleMs": 374.9
+      }
+    }
+  }
+}

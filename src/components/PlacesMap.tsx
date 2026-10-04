@@ -37,7 +37,7 @@ export function PlacesMap() {
   const stage = reduced ? 2 : introStage;
 
   useEffect(() => {
-    const el = root.current;
+    const el = root.current?.querySelector(".pm-frame");
     if (!el) return;
     if (window.matchMedia(RM).matches) return;
     let t2 = 0;
@@ -71,7 +71,7 @@ export function PlacesMap() {
   };
 
   return (
-    <div ref={root} className="pm" data-stage={stage} data-trace-scope>
+    <div ref={root} className="pm" data-stage={stage} data-offices={layers.offices} data-projects={layers.projects} data-trace-scope>
       <div className="pm-bar">
         <div role="group" aria-label="Map view" className="pm-chips">
           {VIEWS.map((x) => <button key={x.key} type="button" className="chip" aria-pressed={view === x.key} onClick={() => setView(x.key)}>{x.label}</button>)}
@@ -87,11 +87,10 @@ export function PlacesMap() {
           <div className="pm-stage" style={{ aspectRatio: `${W} / ${H}`, transform: `translate(${tx}%, ${ty}%) scale(${k})`, ["--k" as string]: k }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="pm-land" src="/art/map-land.svg" alt="" width={W} height={H} decoding="async" loading="lazy" />
-            {layers.offices && <Trace points={route} w={W} h={H} duration={7000} nodes={[]} className="pm-trace" />}
+            <Trace points={route} w={W} h={H} duration={7000} nodes={[]} className="pm-trace" />
             {PLACES_DATA.map((p) => {
               const pos = (MAP.points as Record<string, readonly [number, number]>)[p.id];
               const office = !!p.office;
-              const visible = office ? layers.offices && stage >= 1 : layers.projects && stage >= 2;
               return (
                 <button
                   key={p.id}
@@ -100,10 +99,7 @@ export function PlacesMap() {
                   data-kind={office ? "office" : "project"}
                   data-precision={p.precision}
                   data-on={sel === p.id || undefined}
-                  data-show={visible || undefined}
                   data-label={showLabel(p) || undefined}
-                  tabIndex={visible ? 0 : -1}
-                  aria-hidden={visible ? undefined : true}
                   aria-pressed={sel === p.id}
                   aria-label={`${p.name}${office ? `, ${p.office!.label}` : ""}${p.project ? ", project location" : ""}${p.precision === "country" ? ", country level" : ""}`}
                   style={{ left: `${pos[0]}%`, top: `${pos[1]}%` }}

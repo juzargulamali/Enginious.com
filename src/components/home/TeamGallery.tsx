@@ -99,7 +99,7 @@ export function TeamGallery({ showLink = false, depth = false }: { showLink?: bo
               if (off > n / 2) off -= n;
               else if (off < -n / 2) off += n; // ring: neighbours on both sides, so the selected card is always centred
               const abs = Math.abs(off);
-              if (abs > 3) return null;
+              if (abs > 2) return null; // cards further out are not rendered at all, so they cannot widen the page
               return (
                 <button
                   key={p.id}
@@ -133,10 +133,11 @@ export function TeamGallery({ showLink = false, depth = false }: { showLink?: bo
           {!isPreview(person.id) && <p className="role">{person.role}</p>}
           <ul>{(leader?.responsibilities ?? [DEPT_BLURB[person.dept]]).map((r) => <li key={r}>{r}</li>)}</ul>
         </div>
-        {leader && (
+        {/* A leadership message is shown only once approved. Drafts live in docs/leadership-drafts.md and are never rendered. */}
+        {leader?.approved && leader.message && (
           <div className="tg-msg">
             <p className="eyebrow">Leadership message</p>
-            {leader.approved && leader.message ? <p style={{ marginTop: 10 }}>{leader.message}</p> : <p className="soft" style={{ marginTop: 10 }}>A message from {person.name.split(" ")[0]} will appear here.</p>}
+            <p style={{ marginTop: 10 }}>{leader.message}</p>
           </div>
         )}
         {showLink && <div style={{ gridColumn: "1 / -1" }}><Link href="/company/team" className="btn btn-primary">Team &amp; leadership →</Link></div>}

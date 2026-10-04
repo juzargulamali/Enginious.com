@@ -5,7 +5,14 @@ export const NAV = [
   { href: "/technologies", label: "Technologies" },
   { href: "/solutions", label: "Solutions" },
   { href: "/company", label: "Company" },
+  { href: "/company/team", label: "Team" },
   { href: "/insights", label: "Insights" },
+] as const;
+
+export const REGION_NAV = [
+  { href: "/uae", label: "UAE" },
+  { href: "/saudi-arabia", label: "Saudi Arabia" },
+  { href: "/europe", label: "Europe" },
 ] as const;
 
 export type RegionKey = "uae" | "ksa" | "europe";

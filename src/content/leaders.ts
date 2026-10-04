@@ -3,6 +3,7 @@
 export interface LeaderInfo {
   photo?: string; // image id in src/content/images.ts
   responsibilities: string[];
+  /** Shown publicly ONLY when approved is true. Drafts for approval are in docs/leadership-drafts.md. */
   message?: string;
   approved: boolean;
 }

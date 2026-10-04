@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { AddToBrief } from "@/components/AddToBrief";
 import { TechForm } from "@/components/TechForm";
 import { TECH_CATEGORIES, TECHNOLOGIES } from "@/content/technologies";
 import { isNarrow, reducedMotion, useScrollProgress } from "@/lib/scrollBus";
 
 /**
- * Digital showroom: six distinct exhibits (each drawn from the profile's description of that technology) standing on a
- * lit floor with reflections. Hover or tap an exhibit to read what it is. Pointer depth is mouse only, one write per frame.
+ * Digital showroom: six distinct exhibits on a lit floor. Hover, tap or keys select an exhibit; scrolling through the section
+ * also brings each forward in turn (desktop). Pointer depth is mouse only, one write per frame.
+ *
+ * PERFORMANCE: all six explanations are rendered once and the active exhibit/explanation is switched by toggling attributes
+ * directly on the DOM (no React render per change), and no inherited `color` is transitioned (that restyled every SVG
+ * shape in every exhibit on each frame). Only opacity/transform change, which the compositor handles.
  */
 const EXHIBITS = ["touch-and-throw", "holofan", "tri-helix", "robotic-arm", "ai-photobooth", "circular-dial"];
 const POS = [
@@ -17,22 +21,30 @@ const POS = [
 ];
 
 export function ShowroomTeaser() {
-  const [sel, setSel] = useState(2);
-  const manual = useRef(false);
-  const wrap = useRef<HTMLDivElement>(null);
-  const choose = (i: number) => { manual.current = true; setSel(i); };
-  // Scrolling through the showroom brings each exhibit forward in turn (desktop). Hover, tap or keys take over.
-  useScrollProgress(wrap, (t) => {
-    if (t < 0.05 || t > 0.97) manual.current = false;
-    if (manual.current || reducedMotion() || isNarrow()) return;
-    const i = Math.min(EXHIBITS.length - 1, Math.max(0, Math.floor(((t - 0.22) / 0.5) * EXHIBITS.length)));
-    setSel((cur) => (cur === i ? cur : i));
-  });
+  const root = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const far = useRef<HTMLDivElement>(null);
   const near = useRef<HTMLDivElement>(null);
-  const t = TECHNOLOGIES.find((x) => x.slug === EXHIBITS[sel])!;
-  const cat = TECH_CATEGORIES.find((c) => c.key === t.category)!;
+  const manual = useRef(false);
+  const current = useRef(2);
+
+  const activate = (i: number) => {
+    if (i === current.current && root.current?.dataset.ready) return;
+    current.current = i;
+    const r = root.current;
+    if (!r) return;
+    r.dataset.ready = "1";
+    r.querySelectorAll<HTMLElement>(".sr-ex").forEach((el, k) => { el.dataset.on = String(k === i); el.setAttribute("aria-selected", String(k === i)); });
+    r.querySelectorAll<HTMLElement>(".sr-i").forEach((el, k) => { el.hidden = k !== i; });
+  };
+  const choose = (i: number) => { manual.current = true; activate(i); };
+
+  // Scrolling through the showroom brings each exhibit forward in turn (desktop). Hover, tap or keys take over.
+  useScrollProgress(root, (t) => {
+    if (t < 0.05 || t > 0.97) manual.current = false;
+    if (manual.current || reducedMotion() || isNarrow()) return;
+    activate(Math.min(EXHIBITS.length - 1, Math.max(0, Math.floor(((t - 0.22) / 0.5) * EXHIBITS.length))));
+  });
 
   useEffect(() => {
     const el = stage.current;
@@ -54,7 +66,7 @@ export function ShowroomTeaser() {
   }, []);
 
   return (
-    <div ref={wrap} className="sr" data-front>
+    <div ref={root} className="sr" data-front>
       <div ref={stage} className="sr-stage" data-trace-scope>
         <div ref={far} className="sr-far" aria-hidden="true"><span className="cone c1" /><span className="cone c2" /><span className="cone c3" /><span className="cone c4" /><span className="cone c5" /><span className="cone c6" /></div>
         <span className="sr-floor" aria-hidden="true" />
@@ -67,11 +79,11 @@ export function ShowroomTeaser() {
                 key={slug}
                 type="button"
                 role="option"
-                aria-selected={sel === i}
+                aria-selected={i === 2}
                 className="sr-ex"
-                data-on={sel === i}
+                data-on={i === 2}
                 style={{ left: `${p.x}%`, ["--z" as string]: p.z }}
-                onMouseEnter={() => setSel(i)}
+                onMouseEnter={() => activate(i)}
                 onFocus={() => choose(i)}
                 onClick={() => choose(i)}
               >
@@ -84,14 +96,22 @@ export function ShowroomTeaser() {
         </div>
       </div>
       <div className="sr-info" aria-live="polite">
-        <p className="eyebrow">{cat.label}</p>
-        <h3>{t.name}</h3>
-        <p>{t.summary}</p>
-        <div className="sr-actions">
-          {t.detailed && <Link href={`/technologies/${t.slug}`} className="btn">Open details →</Link>}
-          <AddToBrief slug={t.slug} name={t.name} />
-          <Link href="/technologies" className="btn btn-primary">Enter the showroom →</Link>
-        </div>
+        {EXHIBITS.map((slug, i) => {
+          const t = TECHNOLOGIES.find((x) => x.slug === slug)!;
+          const cat = TECH_CATEGORIES.find((c) => c.key === t.category)!;
+          return (
+            <div key={slug} className="sr-i" hidden={i !== 2}>
+              <p className="eyebrow">{cat.label}</p>
+              <h3>{t.name}</h3>
+              <p>{t.summary}</p>
+              <div className="sr-actions">
+                {t.detailed && <Link href={`/technologies/${t.slug}`} className="btn">Open details →</Link>}
+                <AddToBrief slug={t.slug} name={t.name} />
+                <Link href="/technologies" className="btn btn-primary">Enter the showroom →</Link>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

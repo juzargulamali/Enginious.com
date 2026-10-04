@@ -42,3 +42,11 @@
 - **Project locations** are the 19 supplied by the owner. Related work is attached only where the profile records the place (Qatar for Doha, Oman for Muscat, Bahrain, Belém for Brazil are noted as such). Kuwait, Baku, Hannover, Vienna, Amsterdam, Miami, Barcelona, Paris, London, Las Vegas, Shanghai have no recorded work, so the panel says "Project details are being added." Bahrain, Kuwait, Brazil and Poland are country-level markers; Poland's office city is not shown.
 - **Company page lifecycle** (seven steps) is an explanation of how the supplied services connect, not a claim about internal process or tooling.
 - **Brief uploads** are not offered: storage, validation and failure handling are not built.
+
+## Round 5 approvals needed
+- Clients: confirm which names may be shown and whether each is a direct or agency relationship (all currently unconfirmed; no logos used).
+- Testimonials: samples are fictional and unpublished (visible only with `?samples=1` off production). Supply real, approved quotes.
+- CEO / CTO messages: drafts in `docs/leadership-drafts.md`, hidden until approved.
+- Company Mission / Vision: drafts, to confirm.
+- Contact: Poland has no supplied email/phone; enquiries fall back to the general contact. Brief file uploads are not built (needs storage and validation).
+- Imagery: **no image generation capability is available in this environment, so no images were generated.** The slots (Contact scene, Events, Experience centres, Permanent installation, preview portraits) are ready in `src/content/images.ts` with focal point, alt and status; the designed CSS stages are fallbacks, not photographs. Supply or approve real/licensed images to fill them.

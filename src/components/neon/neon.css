@@ -11,8 +11,8 @@
 .nx-b { left: 0; right: 0; bottom: 0; height: 1.5px; --line: linear-gradient(90deg, transparent, var(--neon-soft) 22%, var(--neon-soft) 86%, transparent); }
 .nx-l { top: 0; bottom: 0; left: 0; width: 1.5px; --line: linear-gradient(180deg, transparent, var(--neon-soft) 16%, var(--neon-soft) 80%, transparent); }
 .nx-r { top: 0; bottom: 0; right: 0; width: 1.5px; --line: linear-gradient(180deg, transparent, var(--neon-soft) 20%, var(--neon-soft) 84%, transparent); }
-.nx-c { position: absolute; box-shadow: 0 0 10px 2px rgba(70, 233, 243, 0.7); opacity: 0; }
-.nx-t .nx-c, .nx-b .nx-c { top: 0; left: 0; width: 28%; height: 100%; background: linear-gradient(90deg, transparent, #b8fbff 70%, #fff); animation: nxX var(--dur, 9s) linear infinite var(--delay, 0s); }
+.nx-c { position: absolute; opacity: 0; }
+.nx-t .nx-c, .nx-b .nx-c { top: 0; left: 0; width: 28%; height: 100%; background: linear-gradient(90deg, transparent, rgba(184, 251, 255, 0.7) 60%, #fff); animation: nxX var(--dur, 9s) linear infinite var(--delay, 0s); }
 .nx-b .nx-c { background: linear-gradient(270deg, transparent, #b8fbff 70%, #fff); animation-name: nxXr; }
 .nx-l .nx-c, .nx-r .nx-c { left: 0; top: 0; height: 28%; width: 100%; background: linear-gradient(180deg, transparent, #b8fbff 70%, #fff); animation: nxY var(--dur, 9s) linear infinite var(--delay, 0s); }
 .nx-l .nx-c { background: linear-gradient(0deg, transparent, #b8fbff 70%, #fff); animation-name: nxYr; }

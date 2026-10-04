@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./home.css";
 import "@/components/neon/neon.css";
+import { ClientsField } from "@/components/home/ClientsField";
 import { EvidenceFilm } from "@/components/home/EvidenceFilm";
 import { FilmFacade } from "@/components/home/FilmFacade";
 import { FinalCTA } from "@/components/home/FinalCTA";
@@ -9,6 +10,7 @@ import { TeamGallery } from "@/components/home/TeamGallery";
 import { PortalCard } from "@/components/home/PortalCard";
 import { ShowreelHero } from "@/components/home/ShowreelHero";
 import { ShowroomTeaser } from "@/components/home/ShowroomTeaser";
+import { Testimonials } from "@/components/home/Testimonials";
 import { TowerSection } from "@/components/home/TowerSection";
 import { Edge } from "@/components/neon/Edge";
 import { NeonController } from "@/components/neon/NeonController";
@@ -131,6 +133,19 @@ export default function Home() {
           </div>
           <div className="container"><Link href="/work" className="btn">All {PROJECTS.length} projects →</Link></div>
         </section>
+
+        {/* ---- 4b. clients ---- */}
+        <section id="clients" className="scene home-sec" aria-labelledby="cl-h">
+          <div className="container">
+            <SceneHead eyebrow="Clients" title="Connected through experience." id="cl-h">
+              <p className="lede" style={{ marginTop: "1.1rem" }}>Select a name to see the work we delivered together.</p>
+            </SceneHead>
+            <ClientsField />
+          </div>
+        </section>
+
+        {/* ---- 4c. testimonials (published only; fictional samples on previews with ?samples=1) ---- */}
+        <Testimonials sampleAllowed={process.env.ALLOW_INDEXING !== "true"} />
 
         {/* ---- 5. people ---- */}
         <section id="people" className="scene home-sec" aria-labelledby="ppl-h">

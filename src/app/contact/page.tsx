@@ -4,6 +4,7 @@ import "./contact.css";
 import "@/components/neon/neon.css";
 import { EnquiryForm } from "@/components/EnquiryForm";
 import { NeonController } from "@/components/neon/NeonController";
+import { Photo, hasPhoto } from "@/components/Photo";
 
 export const metadata: Metadata = {
   title: "Contact / Start a project",
@@ -15,7 +16,8 @@ export default function ContactPage() {
   return (
     <div className="ct-hero">
       <NeonController />
-      <div className="ct-stage" aria-hidden="true"><span className="beam b1" /><span className="beam b2" /><span className="beam b3" /><span className="shard s1" /><span className="shard s2" /><span className="shard s3" /></div>
+      {hasPhoto("contactScene") && <div className="ct-scene" aria-hidden="true"><Photo slot="contactScene" sizes="100vw" priority /></div>}
+      <div className="ct-stage" aria-hidden="true"><span className="haze" /><span className="floor" /><span className="beam b1" /><span className="beam b2" /><span className="beam b3" /><span className="shard s1" /><span className="shard s2" /><span className="shard s3" /></div>
       <div className="container">
         <p className="eyebrow">Contact / Start a project</p>
         <h1 style={{ marginTop: 12 }}>Let&apos;s build something worth <span className="accent">experiencing.</span></h1>

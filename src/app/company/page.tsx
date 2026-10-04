@@ -23,14 +23,15 @@ export const metadata: Metadata = {
 const MISSION = "To help organisations captivate their audiences with experiential technology that is engineered, built and supported by one team.";
 const VISION = "To lead the way in innovative, immersive experiences: pioneering customisable technology for events, automation and robotics around the world.";
 
-const LIFE = [
-  ["Brief & strategy", "We start with the audience and the story: what visitors should feel, do and discover."],
-  ["Creative & content", "2D and 3D content, motion and storytelling made for the screens in the room."],
-  ["Software", "Interactive applications and the logic behind each experience, built in Unity and Unreal."],
-  ["Hardware & engineering", "Mechatronics, product design and bespoke technology developed alongside the content."],
-  ["Integration & testing", "Hardware, software and content are joined and tested as one system before it ships."],
-  ["Installation", "Installed on show floors and in permanent spaces, on schedule."],
-  ["Operation & support", "Operated through the event, then supported with maintenance and after-sales care."],
+// Seven connected stages. Short on purpose: the visual carries the sequence.
+const LIFE: [string, string, string][] = [
+  ["Strategy", "The idea and the audience.", "touch-and-throw"],
+  ["Creative & content", "2D and 3D storytelling.", "holofan"],
+  ["Software", "Interactive applications.", "ar-vr"],
+  ["Hardware & engineering", "Mechatronics and product design.", "robotic-arm"],
+  ["Integration & testing", "Joined and tested as one system.", "tri-helix"],
+  ["Installation", "On the show floor, on schedule.", "kinetic-wall-ceiling"],
+  ["Support", "Operation and maintenance.", "circular-dial"],
 ];
 
 const CAPS = [
@@ -87,11 +88,17 @@ export default function CompanyPage() {
         <section className="scene" aria-labelledby="how-h">
           <div className="container">
             <SceneHead eyebrow="How Enginious works" title="Creative, content, software, hardware and delivery: connected." id="how-h">
-              <p className="lede" style={{ marginTop: "1.1rem" }}>Because the disciplines sit in one team, an idea does not get handed from agency to developer to fabricator. It is developed, built and tested together, then installed and supported by the people who made it.</p>
+              <p className="lede" style={{ marginTop: "1.1rem" }}>One team, one sequence: developed together, tested together, then installed and supported by the people who made it.</p>
             </SceneHead>
-            <ol className="co-life" style={{ listStyle: "none", padding: 0 }}>
-              {LIFE.map(([t, b], i) => (
-                <li key={t} className="co-step"><span className="n">{String(i + 1).padStart(2, "0")}</span><h3>{t}</h3><p>{b}</p></li>
+            <ol className="co-life" style={{ listStyle: "none", padding: 0 }} data-neon>
+              <span className="co-run" aria-hidden="true"><em /></span>
+              {LIFE.map(([t, b, f], i) => (
+                <li key={t} className="co-step">
+                  <span className="ico"><TechForm slug={f} size={64} /></span>
+                  <span className="n">{String(i + 1).padStart(2, "0")}</span>
+                  <h3>{t}</h3>
+                  <p>{b}</p>
+                </li>
               ))}
             </ol>
           </div>

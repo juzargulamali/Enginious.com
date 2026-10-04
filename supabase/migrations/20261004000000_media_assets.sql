@@ -6,7 +6,7 @@ create table if not exists public.media_assets (
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
   kind         text not null check (kind in ('portrait', 'scene')),
-  status       text not null check (status in ('real', 'stock', 'preview-portrait')),
+  status       text not null check (status in ('real', 'stock', 'preview-portrait', 'concept', 'fictional-portrait')),
   published    boolean not null default false,
   storage_path text not null,                       -- e.g. photos/juzar-gulamali
   width        integer not null check (width > 0),

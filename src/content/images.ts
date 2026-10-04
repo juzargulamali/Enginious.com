@@ -2,13 +2,16 @@
 // every field below (file, alt text, focal point, crop, licence, status) is editable in the CMS without code changes.
 //
 //  status  real            = supplied by Enginious / the person shown; may be used for what it depicts
+//          concept         = AI-generated environment: an illustrative concept, NOT a photograph of an Enginious project
+//          fictional-portrait = AI-generated person: a preview placeholder, NOT a real employee
+//          (every non-"real" image must be replaced before launch; see docs/licences/README.md)
 //          stock           = licensed stock photograph: ILLUSTRATIVE only, never presented as an Enginious installation
 //          preview-portrait= stock portrait standing in for a team member: a preview placeholder, not an employee
 //
 // Add a photo with: node scripts/images/ingest.mjs <id> <file> --alt ... --focal x,y --licence ... --source ... --credit ...
 // then paste the printed entry here. Slots (below) say where each photo is used; swap a slot's `id` to replace it.
 
-export type ImageStatus = "real" | "stock" | "preview-portrait";
+export type ImageStatus = "real" | "stock" | "preview-portrait" | "concept" | "fictional-portrait";
 
 export interface ImageAsset {
   id: string;
@@ -62,6 +65,8 @@ export const SLOTS = {
   capPermanent: "interactive-technology",
   previewMale: "preview-portrait-male",
   previewFemale: "preview-portrait-female",
+  contactScene: "contact-scene",
+  heroPoster: "hero-poster",
 } as const;
 export type SlotName = keyof typeof SLOTS | (string & {});
 
