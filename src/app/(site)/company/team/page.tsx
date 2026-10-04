@@ -4,12 +4,11 @@ import "@/components/neon/neon.css";
 import { TeamGallery } from "@/components/home/TeamGallery";
 import { Edge } from "@/components/neon/Edge";
 import { NeonController } from "@/components/neon/NeonController";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Team & leadership",
-  description: "Meet the engineers, creators and problem-solvers behind Enginious, and the leadership guiding the company.",
-  alternates: { canonical: "/company/team" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildMetadata({ path: "/company/team", pageKey: "team", title: "Team & leadership", description: "Meet the engineers, creators and problem-solvers behind Enginious, and the leadership guiding the company." });
+}
 
 export default function TeamPage() {
   return (

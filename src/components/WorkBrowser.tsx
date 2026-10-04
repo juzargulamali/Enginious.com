@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { PROJECTS, type Region3 } from "@/content/projects";
-import { TECHNOLOGIES } from "@/content/technologies";
+import type { Region3 } from "@/content/projects";
+import { useContent } from "./ContentProvider";
 import { Placeholder } from "./Placeholder";
 
 const REGION_LABEL: Record<Region3 | "all", string> = { all: "All regions", uae: "UAE", ksa: "Saudi Arabia", international: "International" };
 
 /** Only filters supported by the content: region, sector and technology (technology only where recorded). */
 export function WorkBrowser() {
+  const { projects: PROJECTS, techBySlug } = useContent();
   const [region, setRegion] = useState<Region3 | "all">("all");
   const [sector, setSector] = useState<string>("all");
-  const sectors = useMemo(() => [...new Set(PROJECTS.map((p) => p.sector))].sort(), []);
+  const sectors = useMemo(() => [...new Set(PROJECTS.map((p) => p.sector).filter(Boolean))].sort(), [PROJECTS]);
   const list = PROJECTS.filter((p) => (region === "all" || p.region === region) && (sector === "all" || p.sector === sector));
 
   return (
@@ -42,7 +43,8 @@ export function WorkBrowser() {
             {p.technologies.length > 0 && (
               <p style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {p.technologies.map((s) => {
-                  const t = TECHNOLOGIES.find((x) => x.slug === s)!;
+                  const t = techBySlug(s);
+                  if (!t) return null;
                   return t.detailed ? (
                     <Link key={s} href={`/technologies/${s}`} className="chip" style={{ minHeight: 28, padding: "0 .6rem", fontSize: ".76rem" }}>{t.name}</Link>
                   ) : (

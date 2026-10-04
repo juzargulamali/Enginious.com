@@ -1,10 +1,9 @@
 import type { MetadataRoute } from "next";
+import { EXCLUDED_PREFIXES, indexingAllowed, publicOrigin } from "@/lib/seo/indexing";
 
-// Indexing is opt-in: set ALLOW_INDEXING=true on the real production site only.
+// Disallow everything unless indexing is explicitly enabled for a real production deployment (see lib/seo/indexing.ts).
+// Admin, API and internal routes stay disallowed even after launch.
 export default function robots(): MetadataRoute.Robots {
-  if (process.env.ALLOW_INDEXING !== "true") {
-    return { rules: { userAgent: "*", disallow: "/" } };
-  }
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://enginious-com.vercel.app";
-  return { rules: { userAgent: "*", allow: "/", disallow: ["/setup-check", "/api/"] }, sitemap: `${base}/sitemap.xml` };
+  if (!indexingAllowed()) return { rules: { userAgent: "*", disallow: "/" } };
+  return { rules: { userAgent: "*", allow: "/", disallow: [...EXCLUDED_PREFIXES, "/privacy"] }, sitemap: `${publicOrigin()}/sitemap.xml` };
 }

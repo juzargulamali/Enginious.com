@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/ComingSoon";
-import { REGIONS } from "@/content/site";
-export const metadata: Metadata = { title: "Saudi Arabia", description: "Enginious in Saudi Arabia: our branch in the Kingdom.", alternates: { canonical: "/saudi-arabia" } };
-export default function Ksa() {
-  return (
-    <ComingSoon eyebrow="Regions · Saudi Arabia" title="Our branch in the Kingdom.">
-      <p>Contact: {REGIONS.ksa.email} · {REGIONS.ksa.phone}</p>
-    </ComingSoon>
-  );
+import { RegionPage } from "@/components/RegionPage";
+import { getContent } from "@/lib/content/load";
+import { buildMetadata } from "@/lib/seo/metadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return buildMetadata({ path: "/saudi-arabia", pageKey: "saudi-arabia", title: "Saudi Arabia", description: "Enginious in Saudi Arabia: our branch in the Kingdom." });
+}
+
+export default async function Page() {
+  return <RegionPage regionKey="ksa" content={await getContent()} />;
 }

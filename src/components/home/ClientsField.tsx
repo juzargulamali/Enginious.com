@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { Photo } from "@/components/Photo";
-import { CLIENTS, hasConfirmedRelationships, type Client } from "@/content/clients";
-import { IMAGES } from "@/content/images";
-import { projectBySlug } from "@/content/projects";
+import { useContent } from "@/components/ContentProvider";
+import type { Client } from "@/content/clients";
 
 /**
  * "Connected through experience": a field of client nodes joined by restrained neon paths. Selecting a node brings it into
@@ -15,9 +14,11 @@ import { projectBySlug } from "@/content/projects";
  * Phones: a swipeable strip with the story underneath.
  */
 export function ClientsField() {
-  const [sel, setSel] = useState(CLIENTS.findIndex((c) => c.id === "etihad"));
+  const { clients: CLIENTS, projectBySlug, imageById, hasConfirmedRelationships } = useContent();
+  const [sel, setSel] = useState(() => Math.max(0, CLIENTS.findIndex((c) => c.id === "etihad")));
   const strip = useRef<HTMLUListElement>(null);
-  const c: Client = CLIENTS[sel];
+  if (CLIENTS.length === 0) return null;
+  const c: Client = CLIENTS[Math.min(sel, CLIENTS.length - 1)];
   const related = c.projects.map(projectBySlug).filter((p) => !!p);
   const pick = (i: number) => setSel(i);
   const onKey = (e: React.KeyboardEvent) => {
@@ -38,7 +39,7 @@ export function ClientsField() {
         </svg>
         <ul ref={strip} className="cl-nodes" role="listbox" aria-label="Clients" onKeyDown={onKey}>
           {CLIENTS.map((x, i) => {
-            const logo = x.logo ? IMAGES[x.logo] : undefined;
+            const logo = x.logo ? imageById(x.logo) : undefined;
             return (
               <li key={x.id} role="presentation">
                 <button type="button" role="option" aria-selected={i === sel} tabIndex={i === sel ? 0 : -1} className="cl-node" data-on={i === sel || undefined} data-rel={x.relationship} onClick={() => pick(i)} onFocus={() => pick(i)}>
@@ -53,6 +54,7 @@ export function ClientsField() {
       <div className="cl-story" aria-live="polite" key={c.id}>
         <p className="eyebrow">Selected client</p>
         <h3>{c.name}</h3>
+        {c.relationship !== "unconfirmed" && c.attribution && <p className="muted">{c.attribution}</p>}
         {related.length === 0 ? (
           <p className="muted">Related projects are being added.</p>
         ) : (

@@ -14,7 +14,20 @@ import { CONTENT_TYPES, PAGE_SEO_PATHS, type ContentType, type Data } from "@/li
 
 export interface SeedItem { slug: string; title: string; data: Data; sort_order: number; featured: boolean }
 
-const FEATURED_PROJECTS = new Set(["whx", "dubai-air-show", "cityscape", "global-health-exhibition", "f1-etihad"]);
+// Longer text that was written directly into the case-study and technology pages in Milestone 1. It moves into the CMS with the import.
+const PROJECT_EXTRA: Record<string, Data> = {
+  whx: {
+    challenge: "American Hospital needed to stand out within a busy exhibition environment, and to present healthcare content in a more fluid, intuitive way than static displays allow.",
+    experience: "Enginious delivered a dynamic installation integrating motion-based display technologies. Movement and form drew attention while content was presented in a more fluid and intuitive way.",
+  },
+};
+const TECH_EXTRA: Record<string, Data> = {
+  "tri-helix": {
+    description:
+      "Tri-Helix is a unique kinetic technology of rotating triangular screens that stack and rotate 360 degrees. When aligned, they create immersive displays with adjustable shapes such as hexagons and cylinders. Joined together, they form an LED wall that can transform back into rotating triangles for dynamic presentations: a convertible display.\n\n## How visitors interact\n\nTri-Helix can carry interaction as well as motion: at IKTVA 2025 it was combined with a transparent touchscreen interface so attendees could choose themed content (Environmental, Social, Governance) and explore Aramco's ESG initiatives.\n\n## Suitable applications\n\nExhibition stands and show floors where a moving centrepiece should carry a brand story: aviation, healthcare, real estate, technology and energy events. See the delivered projects below.",
+  },
+};
+
 
 const COMPANY: SeedItem[] = [
   {
@@ -61,15 +74,15 @@ export function seedItems(type: ContentType): SeedItem[] {
   switch (type) {
     case "project":
       return PROJECTS.map((p, i) => ({
-        slug: p.slug, title: p.title, sort_order: (i + 1) * 10, featured: FEATURED_PROJECTS.has(p.slug),
-        data: { client: p.client, event: p.event, location: p.location, region: p.region, year: p.year, sector: p.sector, summary: p.summary, technologies: p.technologies, case_study: p.caseStudy === true },
+        slug: p.slug, title: p.title, sort_order: (i + 1) * 10, featured: false,
+        data: { client: p.client, event: p.event, location: p.location, region: p.region, year: p.year, sector: p.sector, summary: p.summary, technologies: p.technologies, case_study: p.caseStudy === true, ...(PROJECT_EXTRA[p.slug] ?? {}) },
       }));
     case "technology":
-      return TECHNOLOGIES.map((t, i) => ({ slug: t.slug, title: t.name, sort_order: (i + 1) * 10, featured: false, data: { category: t.category, summary: t.summary, detailed: t.detailed === true, projects: t.projects } }));
+      return TECHNOLOGIES.map((t, i) => ({ slug: t.slug, title: t.name, sort_order: (i + 1) * 10, featured: false, data: { category: t.category, summary: t.summary, detailed: t.detailed === true, projects: t.projects, ...(TECH_EXTRA[t.slug] ?? {}) } }));
     case "person":
       return PEOPLE.map((p, i) => {
         const l = LEADERS[p.id];
-        return { slug: p.id, title: p.name, sort_order: (i + 1) * 10, featured: p.dept === "leadership", data: { role: p.role, department: p.dept, leadership: p.dept === "leadership", ...(l?.photo ? { portrait: l.photo } : {}), ...(l?.responsibilities?.length ? { responsibilities: l.responsibilities } : {}) } };
+        return { slug: p.id, title: p.name, sort_order: (i + 1) * 10, featured: false, data: { role: p.role, department: p.dept, leadership: p.dept === "leadership", ...(l?.photo ? { portrait: l.photo } : {}), ...(l?.responsibilities?.length ? { responsibilities: l.responsibilities } : {}) } };
       });
     case "client":
       return CLIENTS.map((c, i) => ({ slug: c.id, title: c.name, sort_order: (i + 1) * 10, featured: false, data: { relationship: c.relationship, projects: c.projects } }));

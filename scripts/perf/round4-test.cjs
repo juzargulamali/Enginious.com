@@ -118,7 +118,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok("contact: region card updates emphasis, details and destination", (await p.locator('.ct-reg[data-on="true"]').textContent()).includes("Saudi") && /Saudi Arabia Branch/.test(side) && /lubna@enginious\.ae/.test(side));
   await p.locator(".ct-reg", { hasText: "Poland" }).click(); await sleep(300);
   ok("contact: Poland falls back to the general contact (no invented Poland details)", /info@enginious\.ae/.test(await p.locator(".ct-side-d").textContent()));
-  ok("contact: no file upload shown (storage not built)", (await p.locator('input[type="file"]').count()) === 0);
+  ok("contact: optional private attachment input with stated limits (storage built in Milestone 2)", (await p.locator('input[type="file"]').count()) === 1 && /4 MB/.test(await p.locator("#files-help").textContent()));
   await p.getByRole("button", { name: /Send enquiry/ }).click(); await sleep(700);
   ok("contact: validation errors show", (await p.locator(".err").count()) >= 3);
   await p.fill("#name", "Test"); await p.fill("#email", "t@example.com"); await p.fill("#message", "Planning a stand in Warsaw next spring.");

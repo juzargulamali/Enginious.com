@@ -8,16 +8,14 @@ import { NeonController } from "@/components/neon/NeonController";
 import { SceneHead } from "@/components/neon/SceneHead";
 import { Spine } from "@/components/neon/Spine";
 import { TechForm } from "@/components/TechForm";
-import { IMAGES } from "@/content/images";
-import { LEADERS } from "@/content/leaders";
-import { REGIONS } from "@/content/site";
-import { PEOPLE } from "@/content/team";
+import { getContent } from "@/lib/content/load";
+import { buildMetadata } from "@/lib/seo/metadata";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbLd } from "@/lib/seo/jsonld";
 
-export const metadata: Metadata = {
-  title: "Company",
-  description: "How Enginious works: creative strategy, content, software, hardware, engineering, installation and support in one team, headquartered in Dubai with branches in Saudi Arabia and Poland.",
-  alternates: { canonical: "/company" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildMetadata({ path: "/company", pageKey: "company", title: "Company", description: "How Enginious works: creative strategy, content, software, hardware, engineering, installation and support in one team, headquartered in Dubai with branches in Saudi Arabia and Poland." });
+}
 
 // DRAFT wording for approval (see docs/content-todo.md). Based on the company profile's mission and vision.
 const MISSION = "To help organisations captivate their audiences with experiential technology that is engineered, built and supported by one team.";
@@ -45,11 +43,22 @@ const CAPS = [
   ["circular-dial", "Installation, operation & support", "On-site delivery, maintenance contracts and after-sales support."],
 ];
 
-const LEADS = PEOPLE.filter((p) => p.dept === "leadership");
+const LIFE_FORMS = ["touch-and-throw", "holofan", "ar-vr", "robotic-arm", "tri-helix", "kinetic-wall-ceiling", "circular-dial"];
+const DEFAULT_STORY = "Enginious is a tribe of engineers, creative artists and designers who push the boundaries of technology to captivate audiences, elevate brands and deliver transformative experiences.\n\nWe work with brands, agencies, corporate marketing teams, government organisations and teams developing permanent experience spaces, from kinetic displays and interactive installations to immersive environments, AI activations, AR and VR, and bespoke applications.\n\nOur global headquarters is in Dubai, with a branch in Saudi Arabia and a branch in Poland serving Europe.";
 
-export default function CompanyPage() {
+export default async function CompanyPage() {
+  const c = await getContent();
+  const LEADS = c.people.filter((p) => p.dept === "leadership");
+  const LEADERS = c.leaders;
+  const REGIONS = c.regions;
+  const story = (c.company.story?.body || DEFAULT_STORY).split(/\n\s*\n/).filter(Boolean);
+  const mission = c.company.mission?.body || MISSION;
+  const vision = c.company.vision?.body || VISION;
+  const steps = c.company.process?.steps ?? [];
+  const life: [string, string, string][] = steps.length ? steps.map((s, i) => [s.title, s.body ?? "", LIFE_FORMS[i % LIFE_FORMS.length]]) : LIFE;
   return (
     <>
+      <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Company", path: "/company" }])} />
       <NeonController />
       <section className="co-hero">
         <div className="container">
@@ -70,16 +79,14 @@ export default function CompanyPage() {
 
         <section className="scene" aria-labelledby="story-h">
           <div className="container">
-            <SceneHead eyebrow="Our story" title="Where innovators meet artisans." id="story-h" />
+            <SceneHead eyebrow="Our story" title={c.company.story?.title ?? "Where innovators meet artisans."} id="story-h" />
             <div className="co-two" style={{ marginTop: 36 }}>
               <div className="co-story">
-                <p>Enginious is a tribe of engineers, creative artists and designers who push the boundaries of technology to captivate audiences, elevate brands and deliver transformative experiences.</p>
-                <p>We work with brands, agencies, corporate marketing teams, government organisations and teams developing permanent experience spaces, from kinetic displays and interactive installations to immersive environments, AI activations, AR and VR, and bespoke applications.</p>
-                <p>Our global headquarters is in Dubai, with a branch in Saudi Arabia and a branch in Poland serving Europe.</p>
+                {story.map((t) => <p key={t}>{t}</p>)}
               </div>
               <div className="co-mv" style={{ marginTop: 0 }}>
-                <article className="co-card"><Edge variant="top" duration={11} /><p className="eyebrow">Mission</p><p>{MISSION}</p></article>
-                <article className="co-card"><Edge variant="bottom-right" duration={11} /><p className="eyebrow">Vision</p><p>{VISION}</p></article>
+                <article className="co-card"><Edge variant="top" duration={11} /><p className="eyebrow">Mission</p><p>{mission}</p></article>
+                <article className="co-card"><Edge variant="bottom-right" duration={11} /><p className="eyebrow">Vision</p><p>{vision}</p></article>
               </div>
             </div>
           </div>
@@ -92,7 +99,7 @@ export default function CompanyPage() {
             </SceneHead>
             <ol className="co-life" style={{ listStyle: "none", padding: 0 }} data-neon>
               <span className="co-run" aria-hidden="true"><em /></span>
-              {LIFE.map(([t, b, f], i) => (
+              {life.map(([t, b, f], i) => (
                 <li key={t} className="co-step">
                   <span className="ico"><TechForm slug={f} size={64} /></span>
                   <span className="n">{String(i + 1).padStart(2, "0")}</span>
@@ -123,7 +130,7 @@ export default function CompanyPage() {
                 return (
                   <Link key={p.id} href="/company/team">
                     <Edge variant="left" duration={12} />
-                    <span className="av">{photo && IMAGES[photo] ? <Photo id={photo} sizes="110px" label={false} /> : p.name.split(" ").map((w) => w[0]).join("")}</span>
+                    <span className="av">{photo && c.images[photo] ? <Photo id={photo} sizes="110px" label={false} /> : p.name.split(" ").map((w) => w[0]).join("")}</span>
                     <span><b>{p.name}</b><span>{p.role}</span></span>
                   </Link>
                 );

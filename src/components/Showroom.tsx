@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TECHNOLOGIES, TECH_CATEGORIES, type TechCategory, type Technology } from "@/content/technologies";
+import { TECH_CATEGORIES, type TechCategory, type Technology } from "@/content/technologies";
+import { useContent } from "./ContentProvider";
 import { useBrief } from "./BriefProvider";
 import { AddToBrief } from "./AddToBrief";
 
@@ -61,12 +62,13 @@ function Glyph({ category, seed }: { category: TechCategory; seed: number }) {
 
 export function Showroom() {
   const brief = useBrief();
+  const { technologies: TECHNOLOGIES } = useContent();
   const [cat, setCat] = useState<TechCategory>("kinetic");
   const [selected, setSelected] = useState<string | null>(null);
   const stage = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState<TechCategory | "all">("all");
 
-  const inCat = useMemo(() => TECHNOLOGIES.filter((t) => t.category === cat), [cat]);
+  const inCat = useMemo(() => TECHNOLOGIES.filter((t) => t.category === cat), [TECHNOLOGIES, cat]);
   const sel: Technology | undefined = TECHNOLOGIES.find((t) => t.slug === selected);
   const chosen = sel && sel.category === cat ? sel : undefined;
 
