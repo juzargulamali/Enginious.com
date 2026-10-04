@@ -1,6 +1,25 @@
 # Milestone 2 test report
 
-**Everything in this file is LOCAL stand-in output.** No result here comes from the hosted Supabase project or a deployed preview; those are tracked separately in `docs/hosted-verification.md` (hosted run: NOT RUN yet).
+**Two kinds of result, kept apart.** Section "Hosted results" (below) comes from the real Supabase project `enginious-website` and the Vercel preview, run by hand by the owner. Every other table in this file is LOCAL stand-in output (Postgres with a mock auth/storage layer), not hosted.
+
+## Hosted results (real Supabase + Vercel preview)
+Run by the owner on 2026-10-04 against `https://enginious-com-git-claude-milestone-2-cms-enginious.vercel.app` (commit `81c8e19`, docs-only commits after it). These are the owner's reported results; Claude could not reach the hosted systems and has not reproduced them. Notifications and indexing were off.
+
+| Hosted check | Result |
+|---|---|
+| Administrator sign in (real Supabase Auth, role from `cms_roles`) | passed |
+| Logout; protected pages redirect to login | passed |
+| Password recovery (email, link on the preview host, new password, reused link rejected) | passed |
+| Draft -> publish -> unpublish (draft not public, draft edit not public, unpublish removes, delete) | passed |
+| Image upload (private) with thumbnail, then delete | passed |
+| Editor permissions with a real second account (no Users or Audit, no permanent delete, `/admin/users` refused) | passed |
+| One stored test enquiry: reference returned, appears in inbox, deleted, no email sent | passed |
+| Notification status label on that enquiry | observed `pending`, expected `skipped`; **not re-checked**; the enquiry itself was stored correctly. Open item, see `docs/hosted-verification.md` |
+
+Not verified at all: real email notifications (provider not configured), real devices, screen readers, production URL behaviour before merge.
+
+## Local stand-in results
+
 
 All results below are from LOCAL stand-ins: a real Postgres 16 with a mock auth/storage schema, a small
 PostgREST/GoTrue/Storage shim (`scripts/test/mock-supabase.cjs`) that runs queries under the real database roles

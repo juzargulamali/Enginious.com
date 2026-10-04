@@ -71,7 +71,7 @@ Preview: `https://enginious-com-git-claude-milestone-2-cms-enginious.vercel.app`
 
 | Date | Who ran it | Preview host | Commit | Pass | Fail | Manual done | Notes |
 |---|---|---|---|---|---|---|---|
-| (not run yet) | | | | | | | |
+| 2026-10-04 | Owner (manual) | enginious-com-git-claude-milestone-2-cms-enginious.vercel.app | 81c8e19 | 7 of 7 checks | 0 | recovery email done | Notification label showed `pending` (open item above); scripted run not used |
 
 Hosted results must go in this table only. Never copy a local-stand-in number here.
 
