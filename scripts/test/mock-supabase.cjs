@@ -331,6 +331,7 @@ const mime = (n) => ({ webp: "image/webp", jpg: "image/jpeg", jpeg: "image/jpeg"
 // ------------------------------------------------------------------ server
 http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://x");
+  if (process.env.MOCK_LOG) console.log(req.method, url.pathname + url.search.slice(0, 80));
   if (req.method === "OPTIONS") return send(res, 204, undefined, { "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*" });
   try {
     if (url.pathname === "/__mock/keys") return send(res, 200, { anon: ANON, service: SERVICE, secret: SECRET });

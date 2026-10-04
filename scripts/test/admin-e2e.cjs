@@ -64,7 +64,7 @@ async function login(ctx, email, password = "correct-horse-battery") {
   await p.goto(BASE + "/admin/content/project/new", { waitUntil: "load" }); await sleep(400);
   await p.fill("#title", "Test Expo 2027");
   ok("slug is suggested from the title", (await p.inputValue("#slug")) === "test-expo-2027");
-  await p.click('button[type="submit"]');
+  await p.getByRole("button", { name: "Create draft" }).click();
   await p.waitForURL(/\/admin\/content\/project\/[0-9a-f-]{36}$/, { timeout: 15000 });
   ok("new draft opens in the editor", (await p.locator("h1").first().innerText()) === "Test Expo 2027");
   const editorUrl = p.url();
@@ -84,8 +84,8 @@ async function login(ctx, email, password = "correct-horse-battery") {
   // slug collision
   await p.goto(BASE + "/admin/content/project/new", { waitUntil: "load" }); await sleep(400);
   await p.fill("#title", "Another"); await p.fill("#slug", "whx");
-  await p.click('button[type="submit"]'); await sleep(1500);
-  ok("duplicate slug is refused with a clear message", /already used/i.test(await p.locator("body").innerText()), (await p.locator("body").innerText()).slice(0, 200));
+  await p.getByRole("button", { name: "Create draft" }).click(); await sleep(1500);
+  ok("duplicate slug is refused with a clear message", /already (used|in use)/i.test(await p.locator("body").innerText()), (await p.locator("body").innerText()).slice(0, 200));
 
   // publish
   await p.goto(editorUrl, { waitUntil: "load" }); await sleep(400);
