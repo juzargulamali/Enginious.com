@@ -10,28 +10,69 @@
 .btn .play { font-size: 0.7rem; color: var(--neon); }
 
 /* ================================ 0. SHOWREEL HERO ================================ */
-.rh { --rh-h: 100svh; position: relative; min-height: 100svh; display: flex; align-items: flex-end; overflow: clip; isolation: isolate; background: #01050a; }
-.rh-media { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
-.rh-stage { position: absolute; inset: 0; background: radial-gradient(900px 600px at 72% 28%, rgba(39, 205, 216, 0.24), transparent 62%), radial-gradient(700px 520px at 18% 72%, rgba(38, 121, 141, 0.3), transparent 62%), linear-gradient(180deg, #02101a, #01050a); }
-.rh-stage .beam, .film-stage .beam { position: absolute; top: -10%; width: 22%; height: 92%; clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); background: linear-gradient(180deg, rgba(70, 233, 243, 0.24), transparent 82%); }
-.b1 { left: 10%; } .b2 { left: 42%; opacity: 0.7; } .b3 { left: 72%; opacity: 0.85; }
-.rh-stage .ringd { position: absolute; right: 13%; top: 11%; width: clamp(150px, 17vw, 290px); aspect-ratio: 1; border-radius: 50%; border: clamp(8px, 1vw, 15px) solid rgba(70, 233, 243, 0.5); box-shadow: 0 0 60px rgba(70, 233, 243, 0.28), inset 0 0 40px rgba(70, 233, 243, 0.2); }
-.rh-stage .pillar { position: absolute; bottom: 15%; width: clamp(50px, 5.6vw, 104px); background: repeating-linear-gradient(180deg, rgba(70, 233, 243, 0.5) 0 2px, rgba(7, 36, 48, 0.96) 2px 34px), linear-gradient(90deg, transparent, rgba(70, 233, 243, 0.3), transparent); border-left: 1px solid rgba(70, 233, 243, 0.5); border-right: 1px solid rgba(70, 233, 243, 0.25); box-shadow: 0 0 60px rgba(70, 233, 243, 0.22); }
-.rh-stage .p1 { left: 56%; height: 50%; } .rh-stage .p2 { left: 68%; height: 63%; } .rh-stage .p3 { left: 80%; height: 44%; }
-.rh-stage .floor, .film-stage .floor { position: absolute; left: -10%; right: -10%; bottom: 0; height: 40%; background: repeating-linear-gradient(90deg, rgba(70, 233, 243, 0.13) 0 1px, transparent 1px 90px), repeating-linear-gradient(0deg, rgba(70, 233, 243, 0.11) 0 1px, transparent 1px 46px); transform: perspective(520px) rotateX(58deg); transform-origin: 50% 100%; -webkit-mask-image: linear-gradient(transparent, #000 45%); mask-image: linear-gradient(transparent, #000 45%); }
-.rh-layer { position: absolute; inset: -16px; will-change: transform; }
+/* The Enginious Digital Atrium. Three depths (distant environment, the lit showreel screen set in receding planes, the foreground copy),
+   one light direction: the far end of the hall, upper right of centre. Faces that look toward it carry a thin teal rim; shadows fall
+   down and to the left. Motion budget: one transform per depth, no filters, no will-change, nothing animates until the pointer moves. */
+.rh { --rh-h: 100svh; --sw: min(44vw, 760px); position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 108px 0 clamp(150px, 21vh, 196px); overflow: clip; isolation: isolate; background: #01050a; }
+/* 1. distant environment */
+.rh-env { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse 40% 50% at 71% 44%, rgba(39, 205, 216, 0.26), transparent 68%), radial-gradient(ellipse 58% 36% at 72% 80%, rgba(14, 90, 110, 0.2), transparent 70%), linear-gradient(180deg, #02101a 0%, #01050a 64%); }
+.at-env { position: absolute; inset: 0; }
+.at-env svg { display: block; width: 100%; height: 100%; }
+.at-rails line { stroke: rgba(70, 233, 243, 0.22); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.at-rails .at-ceil { stroke: rgba(70, 233, 243, 0.14); }
+.at-rails .at-trans { stroke: rgba(70, 233, 243, 0.07); }
+.at-rim { stroke: rgba(70, 233, 243, 0.34); stroke-width: 1; vector-effect: non-scaling-stroke; }
+/* the near-black opening: vignette, a calm pool behind the copy, a lintel under the header, two edge-lit pillars. Static. */
+.at-frame { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 46% 56% at 20% 54%, rgba(0, 3, 6, 0.6), transparent 72%), radial-gradient(ellipse 80% 76% at 62% 46%, transparent 50%, rgba(0, 3, 6, 0.6) 80%, rgba(0, 2, 4, 0.95) 100%); }
+.at-cast, .at-glow { position: absolute; left: 73.5%; top: 45%; width: var(--sw); height: calc(var(--sw) * 0.5625); margin-left: calc(var(--sw) / -2); margin-top: calc(var(--sw) * -0.2812); border-radius: 8px; }
+.at-cast { transform: translate(-22px, 30px); box-shadow: 0 0 110px 6px rgba(0, 0, 0, 0.5); }
+.at-glow { box-shadow: 0 0 52px rgba(39, 205, 216, 0.24); }
+.at-lintel { position: absolute; left: 0; right: 0; top: 0; height: 13%; background: linear-gradient(180deg, #000 0%, rgba(0, 2, 4, 0.78) 42%, transparent); }
+.at-pillar { position: absolute; top: 0; bottom: 0; width: clamp(14px, 3.2vw, 56px); }
+.at-pl { left: 0; background: linear-gradient(90deg, #000, #010608); box-shadow: inset -1px 0 0 rgba(70, 233, 243, 0.14); }
+.at-pr { right: 0; background: linear-gradient(270deg, #000, #010608); box-shadow: inset 1px 0 0 rgba(70, 233, 243, 0.3); }
+.rh::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 15%; z-index: 1; pointer-events: none; background: linear-gradient(180deg, transparent, var(--bg)); }
+
+/* 2. middle: the showreel screen in receding planes (real 3D: perspective on the parent, one transform on .rh-mid) */
+.rh-midpos { position: absolute; z-index: 2; left: 73.5%; top: 45%; width: var(--sw); margin-left: calc(var(--sw) / -2); margin-top: calc(var(--sw) * -0.2812); }
+.rh-mid { position: relative; perspective: 1500px; perspective-origin: 18% 50%; }
+.rh-planes { position: absolute; left: -12%; width: 148%; top: -71.11%; height: 241.78%; pointer-events: none; }
+.rh-planes svg { display: block; width: 100%; height: 100%; }
+.rh-planes .pl-a { fill: rgba(39, 205, 216, 0.06); stroke: rgba(70, 233, 243, 0.32); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.rh-planes .pl-b { fill: rgba(5, 30, 40, 0.2); stroke: rgba(70, 233, 243, 0.16); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.rh-planes .pl-c { fill: rgba(3, 18, 26, 0.16); stroke: rgba(70, 233, 243, 0.09); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.rh-planes .pl-rail { stroke-width: 2; vector-effect: non-scaling-stroke; }
+.rh-planes .pl-m { display: none; }
+.rh-screen { position: relative; aspect-ratio: 16 / 9; border-radius: 6px; border: 1px solid rgba(70, 233, 243, 0.5); background: #02090e; cursor: pointer; transform: rotateY(6deg); }
+.rh-media { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
+.rh-screen-base { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(120% 90% at 72% 18%, #0c3441, #03111a 60%, #01070b); }
+.rh-screen-base span { transform: translateY(54px); font: 600 0.7rem/1 var(--font-mono); letter-spacing: 0.3em; text-transform: uppercase; color: rgba(70, 233, 243, 0.55); }
 .rh-poster, .rh-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .rh-video { opacity: 0; transition: opacity 0.9s; }
 .rh-video[data-on] { opacity: 1; }
-.rh-yt { position: absolute; left: 50%; top: 50%; aspect-ratio: 16 / 9; width: max(114%, calc(var(--rh-h) * 1.14 * 1.7778)); border: 0; transform: translate(-50%, -50%); opacity: 0; transition: opacity 0.9s; pointer-events: none; }
+.rh-yt { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; opacity: 0; transition: opacity 0.9s; pointer-events: none; }
 .rh-yt[data-on] { opacity: 1; }
-.rh-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(1, 5, 10, 0.88) 0%, rgba(1, 5, 10, 0.52) 36%, rgba(1, 5, 10, 0.06) 68%), linear-gradient(0deg, rgba(1, 5, 10, 0.94) 0%, transparent 40%), linear-gradient(180deg, rgba(1, 5, 10, 0.6), transparent 24%); }
-.rh-spot { position: absolute; left: 0; top: 0; width: 640px; height: 640px; border-radius: 50%; background: radial-gradient(closest-side, rgba(70, 233, 243, 0.2), transparent 70%); will-change: transform; transform: translate3d(60vw, 20vh, 0); pointer-events: none; }
-.rh-hud { position: absolute; inset: 88px 22px 22px var(--spine-x); pointer-events: none; will-change: transform; z-index: 1; }
-.rh-copy { position: relative; z-index: 2; width: 100%; padding-block: 0 clamp(150px, 20vh, 190px); will-change: transform; }
-.rh-copy h1 { font-size: clamp(2.3rem, 5.4vw, 5.2rem); max-width: 13ch; margin-top: 14px; }
-.rh-sub { max-width: 54ch; color: #c8dbdf; margin-top: 1.2rem; font-size: clamp(1rem, 1.3vw, 1.2rem); }
+.rh-glass { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(225deg, rgba(140, 245, 252, 0.16), transparent 30%), linear-gradient(0deg, rgba(1, 6, 10, 0.5), transparent 34%); }
+.rh-playcue { position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -38px 0 0 -38px; display: grid; place-items: center; padding-left: 5px; border-radius: 50%; border: 1px solid rgba(70, 233, 243, 0.7); background: rgba(2, 9, 14, 0.58); color: #fff; font-size: 1.05rem; box-shadow: 0 0 30px rgba(70, 233, 243, 0.35); transition: opacity 0.6s; pointer-events: none; }
+.rh-playcue[data-hide] { opacity: 0; }
+.rh-screen:hover { border-color: rgba(70, 233, 243, 0.75); }
+.rh-ctrl { position: absolute; right: 12px; bottom: 12px; z-index: 4; }
+.rh-pause { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line-strong); background: rgba(2, 7, 11, 0.66); color: #fff; cursor: pointer; font-size: 0.78rem; }
+.rh-pause:hover { border-color: var(--neon); }
+
+/* 3. foreground: sharp, separated from the environment by restrained shadow (down and left, away from the light) and rim light */
+.rh-copy { position: relative; z-index: 3; pointer-events: none; }
+.rh-copy > * { pointer-events: auto; }
+.rh-copy-a > *, .rh-copy-b > * { max-width: min(41vw, 36rem); }
+.rh-copy h1 { font-size: clamp(2.3rem, 4.1vw, 4.4rem); margin-top: 14px; text-shadow: -3px 5px 24px rgba(0, 4, 8, 0.8); }
+.rh-sub { color: #c8dbdf; margin-top: 1.2rem; font-size: clamp(1rem, 1.25vw, 1.15rem); text-shadow: -2px 3px 14px rgba(0, 4, 8, 0.85); }
 .rh-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 1.9rem; }
+.rh-cta .btn { box-shadow: -8px 12px 28px rgba(0, 0, 0, 0.5), inset -1px 1px 0 rgba(160, 250, 255, 0.34); }
+.rh-cue { position: absolute; left: 50%; bottom: 8px; width: 28px; height: 52px; margin-left: -14px; z-index: 4; }
+.rh-cue span { display: block; width: 2px; height: 100%; margin: auto; background: linear-gradient(var(--neon), transparent); }
+.rh-stage .beam, .film-stage .beam { position: absolute; top: -10%; width: 22%; height: 92%; clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); background: linear-gradient(180deg, rgba(70, 233, 243, 0.24), transparent 82%); }
+.b1 { left: 10%; } .b2 { left: 42%; opacity: 0.7; } .b3 { left: 72%; opacity: 0.85; }
+.rh-stage .floor, .film-stage .floor { position: absolute; left: -10%; right: -10%; bottom: 0; height: 40%; background: repeating-linear-gradient(90deg, rgba(70, 233, 243, 0.13) 0 1px, transparent 1px 90px), repeating-linear-gradient(0deg, rgba(70, 233, 243, 0.11) 0 1px, transparent 1px 46px); transform: perspective(520px) rotateX(58deg); transform-origin: 50% 100%; -webkit-mask-image: linear-gradient(transparent, #000 45%); mask-image: linear-gradient(transparent, #000 45%); }
 /* International identity: always visible in the first viewport */
 .rs { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); bottom: clamp(26px, 4.5vh, 54px); width: min(var(--maxw), 100% - 2 * var(--gutter)); display: grid; grid-template-columns: auto 1fr auto 1fr auto; align-items: center; gap: 0; padding: 14px 20px; border-radius: 18px; background: linear-gradient(90deg, rgba(2, 7, 11, 0.82), rgba(2, 16, 26, 0.7)); border: 1px solid rgba(70, 233, 243, 0.28); }
 .rs-n { position: relative; display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; padding: 4px 6px; border-radius: 12px; color: #fff; }
@@ -46,11 +87,6 @@
 @keyframes rsRun { from { transform: translateX(-120%); } to { transform: translateX(520%); } }
 .rs[data-neon]:not([data-live]) em { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .rs-l em { display: none; } }
-.rh-ctrl { position: absolute; right: clamp(20px, 3vw, 46px); bottom: clamp(26px, 4vh, 50px); z-index: 4; }
-.rh-pause { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line-strong); background: rgba(2, 7, 11, 0.62); color: #fff; cursor: pointer; font-size: 0.78rem; }
-.rh-pause:hover { border-color: var(--neon); }
-.rh-cue { position: absolute; left: 50%; bottom: 8px; width: 28px; height: 52px; margin-left: -14px; z-index: 4; }
-.rh-cue span { display: block; width: 2px; height: 100%; margin: auto; background: linear-gradient(var(--neon), transparent); }
 
 .reel-dialog { border: 0; padding: 0; margin: auto; background: transparent; /* centred, with comfortable margins on every screen: never wider than the viewport minus 48px, never taller than the viewport minus 96px */ width: min(1120px, calc(100vw - 48px), calc((100svh - 96px) * 1.7778)); max-width: none; max-height: none; overflow: visible; }
 .reel-dialog::backdrop { background: rgba(1, 5, 10, 0.88); }
@@ -58,24 +94,28 @@
 .reel-frame iframe, .reel-frame video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .reel-close { position: absolute; top: 10px; right: 10px; z-index: 2; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line-strong); background: rgba(2, 7, 11, 0.75); color: #fff; cursor: pointer; }
 
+
+/* regional strip: a floating plate in the foreground, rim-lit on its top and right (toward the light), shadow falling down-left */
+.rs { z-index: 4; box-shadow: -16px 24px 50px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(120, 240, 250, 0.3), inset -1px 0 0 rgba(120, 240, 250, 0.2); }
 @media (max-width: 900px) {
-  .rh { --rh-h: 62svh; display: block; min-height: 0; }
-  .rh-media { position: relative; height: 62svh; z-index: 0; }
-  .rh-shade { background: linear-gradient(0deg, #01050a 0%, rgba(1, 5, 10, 0.3) 38%, transparent 62%), linear-gradient(180deg, rgba(1, 5, 10, 0.65), transparent 26%); }
-  .rh-hud { inset: 74px 12px auto 12px; height: calc(62svh - 124px); }
-  .rh-copy { margin-top: 22px; padding-block: 0 56px; }
-  .rh-cta .btn { flex: 1 1 auto; }
-  .rs { position: absolute; top: calc(62svh - 98px); bottom: auto; left: 12px; right: 12px; width: auto; transform: none; padding: 10px 10px; gap: 0; grid-template-columns: 1fr auto 1fr auto 1fr; border-radius: 14px; }
+  .rh { --sw: min(calc(100vw - 2 * var(--gutter) - 8px), 560px); min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 84px 0 0; }
+  .rh-copy-a > *, .rh-copy-b > * { max-width: none; }
+  .rh-copy h1 { font-size: clamp(2rem, 9vw, 2.9rem); margin-top: 10px; }
+  .rh-midpos { position: relative; left: auto; top: auto; margin: 22px auto 0; width: var(--sw); }
+  .rh-mid { perspective: 1100px; perspective-origin: 50% 40%; }
+  .rh-screen { transform: rotateX(5deg) rotateY(-3deg); box-shadow: -14px 20px 40px rgba(0, 0, 0, 0.6), 0 0 32px rgba(39, 205, 216, 0.24); }
+  .rh-planes .pl-d { display: none; } .rh-planes .pl-m { display: block; }
+  .at-cast, .at-glow { display: none; }
+  .rh-playcue { width: 60px; height: 60px; margin: -30px 0 0 -30px; }
+  .rh-sub { margin-top: 1.7rem; font-size: 1rem; }
+  .rh-cta { margin-top: 1.4rem; } .rh-cta .btn { flex: 1 1 auto; }
+  .rs { position: relative; left: auto; bottom: auto; transform: none; width: auto; margin: 26px 12px 56px; padding: 10px 10px; gap: 0; grid-template-columns: 1fr auto 1fr auto 1fr; border-radius: 14px; }
   .rs-n { grid-template-columns: 1fr; row-gap: 1px; justify-items: start; padding: 2px 2px; }
   .rs-n i { grid-row: auto; width: 10px; height: 10px; margin: 0 0 6px 3px; }
   .rs-n b { font-size: 0.95rem; } .rs-n span { font-size: 0.64rem; letter-spacing: 0; line-height: 1.2; }
   .rs-l { margin: 0 4px; width: 14px; } .rs-l em { display: none; }
-  .rh-stage .p1 { left: 8%; } .rh-stage .p2 { left: 22%; } .rh-stage .p3 { left: 70%; } .rh-stage .ringd { right: 8%; top: 22%; }
-  .rh-copy h1 { font-size: clamp(2rem, 9.2vw, 2.9rem); }
-  .rh-ctrl { top: 84px; bottom: auto; right: 22px; }
-  .rh-copy { padding-block: 0 56px; }
   .rh-cue { display: none; }
-  .rh-spot { display: none; }
+  .rh::after { height: 6%; }
 }
 
 /* ================================ shared scene bits ================================ */

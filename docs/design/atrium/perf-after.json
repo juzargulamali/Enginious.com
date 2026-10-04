@@ -1,0 +1,118 @@
+{
+  "label": "after",
+  "base": "http://localhost:3300",
+  "at": "2026-10-04T15:11:06.891Z",
+  "note": "software renderer; relative comparison only",
+  "results": {
+    "1440 x1 idle": {
+      "fps": 59.8,
+      "over33": 2,
+      "worst": 33.2,
+      "long": 0,
+      "cpuBusyPct": 2.8,
+      "style": 28.1,
+      "layout": 0,
+      "script": 9.2,
+      "domNodes": 1426
+    },
+    "1440 x1 pointer": {
+      "fps": 39,
+      "over33": 96,
+      "worst": 66.7,
+      "long": 8,
+      "cpuBusyPct": 28.5,
+      "style": 41.1,
+      "layout": 0,
+      "script": 30.9,
+      "domNodes": 1426
+    },
+    "1440 x1 scroll": {
+      "fps": 43.3,
+      "over33": 20,
+      "worst": 50,
+      "long": 0,
+      "cpuBusyPct": 10.8,
+      "style": 9.4,
+      "layout": 0.1,
+      "script": 7.8,
+      "domNodes": 1426
+    },
+    "1440 x4 idle": {
+      "fps": 60,
+      "over33": 0,
+      "worst": 16.8,
+      "long": 0,
+      "cpuBusyPct": 9.7,
+      "style": 108.6,
+      "layout": 0,
+      "script": 23.3,
+      "domNodes": 1426
+    },
+    "1440 x4 pointer": {
+      "fps": 39.2,
+      "over33": 96,
+      "worst": 66.7,
+      "long": 2,
+      "cpuBusyPct": 43.6,
+      "style": 138.2,
+      "layout": 0,
+      "script": 103.6,
+      "domNodes": 1426
+    },
+    "1440 x4 scroll": {
+      "fps": 43.2,
+      "over33": 22,
+      "worst": 50,
+      "long": 0,
+      "cpuBusyPct": 29.7,
+      "style": 38.4,
+      "layout": 0.6,
+      "script": 41.1,
+      "domNodes": 1430
+    },
+    "mobile x1 idle": {
+      "fps": 60,
+      "over33": 0,
+      "worst": 16.8,
+      "long": 0,
+      "cpuBusyPct": 2.4,
+      "style": 21.4,
+      "layout": 0,
+      "script": 8.4,
+      "domNodes": 1424
+    },
+    "mobile x1 scroll": {
+      "fps": 59.8,
+      "over33": 0,
+      "worst": 16.8,
+      "long": 0,
+      "cpuBusyPct": 5.9,
+      "style": 9.5,
+      "layout": 0.2,
+      "script": 10.9,
+      "domNodes": 1437
+    },
+    "mobile x4 idle": {
+      "fps": 60,
+      "over33": 0,
+      "worst": 16.8,
+      "long": 0,
+      "cpuBusyPct": 8.9,
+      "style": 81.6,
+      "layout": 0,
+      "script": 23.2,
+      "domNodes": 1424
+    },
+    "mobile x4 scroll": {
+      "fps": 60.1,
+      "over33": 0,
+      "worst": 16.8,
+      "long": 0,
+      "cpuBusyPct": 23.3,
+      "style": 35.3,
+      "layout": 0.2,
+      "script": 56,
+      "domNodes": 1437
+    }
+  }
+}

@@ -75,7 +75,7 @@ async function newCtx(b, opts = {}) {
     await ctx.route(/youtube-nocookie\.com\/embed/, (r) => r.abort());
     p = await ctx.newPage(); p.on("pageerror", (e) => errs.push(e.message));
     await p.goto(BASE + "/", { waitUntil: "domcontentloaded" }); await sleep(2500);
-    ok("blocked YouTube: hero still shows headline, CTA and designed stage", (await p.locator("h1").textContent()).includes("experiences") && (await p.locator(".rh-stage .pillar").count()) === 3 && (await p.getByRole("link", { name: /Start a project/ }).first().isVisible()));
+    ok("blocked YouTube: hero still shows headline, CTA and the neutral screen", (await p.locator("h1").textContent()).includes("experiences") && (await p.locator(".rh-screen-base").count()) === 1 && (await p.getByRole("link", { name: /Start a project/ }).first().isVisible()));
     ok("blocked YouTube: no pause button for a video that never played", (await p.getByRole("button", { name: /background video/ }).count()) === 0);
     await ctx.close();
 
@@ -97,8 +97,8 @@ async function newCtx(b, opts = {}) {
     ({ ctx } = await newCtx(b, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }));
     p = await ctx.newPage(); p.on("pageerror", (e) => errs.push(e.message));
     await p.goto(BASE + "/", { waitUntil: "domcontentloaded" }); await sleep(2200);
-    const m = await p.evaluate(() => { const v = document.querySelector('.rh-media').getBoundingClientRect(); const c = document.querySelector('.rh-copy h1').getBoundingClientRect(); const cta = document.querySelector('.rh-cta .btn-primary').getBoundingClientRect(); return { videoBottom: v.bottom, h1Top: c.top, ctaBottom: cta.bottom, vh: innerHeight, overflow: document.documentElement.scrollWidth > innerWidth + 1 }; });
-    ok("phone: video above, headline starts inside the first screen", m.h1Top < m.vh * 0.85, JSON.stringify(m));
+    const m = await p.evaluate(() => { const v = document.querySelector('.rh-screen').getBoundingClientRect(); const c = document.querySelector('.rh-copy h1').getBoundingClientRect(); const cta = document.querySelector('.rh-cta .btn-primary').getBoundingClientRect(); return { videoBottom: v.bottom, h1Top: c.top, ctaBottom: cta.bottom, vh: innerHeight, overflow: document.documentElement.scrollWidth > innerWidth + 1 }; });
+    ok("phone: headline and the framed showreel are inside the first screen", m.h1Top < m.vh * 0.85, JSON.stringify(m));
     ok("phone: no horizontal overflow", !m.overflow);
     ok("phone: pause control reachable", (await p.getByRole("button", { name: /Pause background video/ }).count()) === 1);
     await ctx.close();
