@@ -13,6 +13,7 @@ alter table public.media_assets
   add column if not exists mime          text,
   add column if not exists bytes         integer check (bytes >= 0),
   add column if not exists original_name text check (char_length(original_name) <= 200),
+  add column if not exists original_path text,                       -- private bucket path of the untouched upload (images only)
   add column if not exists visibility    text not null default 'public' check (visibility in ('public', 'private')),
   add column if not exists variants      integer[] not null default '{}',
   add column if not exists title         text check (char_length(title) <= 200),
@@ -67,7 +68,7 @@ begin
   end if;
   delete from public.media_assets where id = p_id;
   perform public.cms_audit_log('media.delete', p_id, jsonb_build_object('path', m.storage_path));
-  return jsonb_build_object('storage_path', m.storage_path, 'visibility', m.visibility, 'kind', m.kind, 'variants', m.variants);
+  return jsonb_build_object('storage_path', m.storage_path, 'visibility', m.visibility, 'kind', m.kind, 'variants', m.variants, 'original_path', m.original_path);
 end $$;
 revoke all on function public.cms_media_references(text), public.cms_delete_media(text) from public, anon;
 grant execute on function public.cms_media_references(text), public.cms_delete_media(text) to authenticated;

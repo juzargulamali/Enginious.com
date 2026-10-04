@@ -51,10 +51,11 @@ export async function deleteMedia(id: string): Promise<ActionResult> {
   if (!sb) return fail("The CMS is not connected to its database.", "unavailable");
   const { data, error } = await sb.rpc("cms_delete_media", { p_id: id });
   if (error) { const f = friendlyDbError(error); return fail(f.error, f.code); }
-  const m = data as { storage_path: string; visibility: string; kind: string; variants: number[] };
+  const m = data as { storage_path: string; visibility: string; kind: string; variants: number[]; original_path: string | null };
   const bucket = m.visibility === "private" ? "private" : m.kind === "document" ? "documents" : "media";
   const paths = m.kind === "document" ? [m.storage_path] : (m.variants ?? []).map((w) => `${m.storage_path}-${w}.webp`);
   if (paths.length) await sb.storage.from(bucket).remove(paths);
+  if (m.original_path) await sb.storage.from("private").remove([m.original_path]);
   updateTag("content");
   return { ok: true };
 }

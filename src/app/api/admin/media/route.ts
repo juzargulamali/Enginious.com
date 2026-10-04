@@ -5,7 +5,7 @@ import { supabaseUser } from "@/lib/supabase/server";
 import { checkPdf, MAX_UPLOAD_BYTES, processImage, UploadError } from "@/lib/cms/media-process";
 import { formatBytes, hasBlockedExtension, safeDisplayName } from "@/lib/upload";
 import { slugify } from "@/lib/cms/schema";
-import { updateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -74,16 +74,18 @@ export async function POST(request: Request) {
       const bucket = visibility === "private" ? "private" : "media";
       const base = `images/${img.uuid}/img`;
       for (const v of img.variants) await put(bucket, `${base}-${v.width}.webp`, v.data, "image/webp");
-      await put("private", `originals/${img.uuid}.${img.original.ext}`, img.original.data, img.original.type);
-      row = { id, kind, status, published: field("published", 5) !== "false", storage_path: base, width: img.width, height: img.height, focal_x: fx, focal_y: fy, alt, title, caption: field("caption", 400) || null, credit: field("credit", 200) || null, source_url: sourceUrl || null, licence: field("licence", 200) || null, mime: "image/webp", bytes: img.variants[img.variants.length - 1].data.length, original_name: safeDisplayName(file.name), visibility, variants: img.variants.map((v) => v.width) };
+      const originalPath = `originals/${img.uuid}.${img.original.ext}`;
+      await put("private", originalPath, img.original.data, img.original.type);
+      row = { id, kind, status, published: field("published", 5) !== "false", storage_path: base, width: img.width, height: img.height, focal_x: fx, focal_y: fy, alt, title, caption: field("caption", 400) || null, credit: field("credit", 200) || null, source_url: sourceUrl || null, licence: field("licence", 200) || null, mime: "image/webp", bytes: img.variants[img.variants.length - 1].data.length, original_name: safeDisplayName(file.name), visibility, variants: img.variants.map((v) => v.width), original_path: originalPath };
     }
     const { error } = await sb.from("media_assets").insert(row);
     if (error) { await cleanup(); return json({ error: error.code === "42501" ? "You do not have permission to add media." : "The media could not be saved. Please try again." }, error.code === "42501" ? 403 : 500); }
-    updateTag("content");
+    revalidateTag("content", { expire: 0 }); // route handlers cannot use updateTag; expire immediately
     return json({ ok: true, id, width: row.width ?? null, height: row.height ?? null }, 201);
   } catch (e) {
     await cleanup();
     if (e instanceof UploadError) return json({ error: e.message }, 400);
+    console.error("media upload failed:", e instanceof Error ? `${e.name}: ${e.message}` : "unknown"); // no file names or user data
     return json({ error: "The upload failed. Please try again." }, 500);
   }
 }

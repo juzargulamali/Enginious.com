@@ -33,7 +33,7 @@ function MediaPicker({ field, value, onChange, media, id, error }: { field: Fiel
           <span>{value ? (current ? current.alt || current.title || current.id : `${value} (not found in the media library)`) : "Nothing selected"}</span>
           {current && <span className="adm-badge" data-s="draft">{current.status}</span>}
         </div>
-        <button type="button" id={id} className="adm-btn adm-btn-sm" onClick={() => setOpen(true)}>{value ? "Change" : "Choose"}</button>
+        <button type="button" id={id} className="adm-btn adm-btn-sm" aria-label={`${value ? "Change" : "Choose"} ${field.label}`} onClick={() => setOpen(true)}>{value ? "Change" : "Choose"}</button>
         {value && <button type="button" className="adm-btn adm-btn-sm adm-btn-ghost" onClick={() => onChange(undefined)}>Clear</button>}
       </div>
       {open && (
