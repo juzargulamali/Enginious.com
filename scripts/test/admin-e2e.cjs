@@ -2,6 +2,7 @@
 //   NODE_PATH=$(npm root -g) node scripts/test/admin-e2e.cjs [baseUrl] [screenshotDir]
 const { chromium } = require("playwright");
 const fs = require("fs");
+const { reviewAndPublish } = require("./lib-adopt.cjs");
 const BASE = process.argv[2] || "http://localhost:3300";
 const SHOTS = process.argv[3] || "/tmp/claude-0/adm";
 fs.mkdirSync(SHOTS, { recursive: true });
@@ -55,10 +56,20 @@ async function login(ctx, email, password = "correct-horse-battery") {
   await p.goto(BASE + "/admin/content/project", { waitUntil: "load" }); await sleep(400);
   ok("empty project list shows an empty state", /No projects and case studies here yet/i.test(await p.locator("body").innerText()));
   p.once("dialog", (d) => d.accept());
-  await p.getByRole("button", { name: "Import starter content" }).click();
+  await p.getByRole("button", { name: "Import starter content as drafts" }).click();
   await p.waitForSelector("table.adm-table", { timeout: 20000 });
   const imported = await p.locator("table.adm-table tbody tr").count();
-  ok("import starter content creates the existing projects", imported >= 20, String(imported));
+  ok("import starter content creates the existing projects as drafts", imported >= 20, String(imported));
+  ok("every imported project is a draft (nothing published by the import)", (await p.locator("table.adm-table tbody .adm-badge[data-s=published]").count()) === 0);
+  ok("an editor does not get the reviewed-publish button", (await p.getByRole("button", { name: "Review and publish imported content" }).count()) === 0);
+  {
+    const actx = await b.newContext({ viewport: { width: 1440, height: 900 } });
+    const ap = await login(actx, "admin@test.local");
+    await reviewAndPublish(ap, BASE, "project");
+    ok("an administrator completes the reviewed publishing step", true);
+    await actx.close();
+  }
+  await p.goto(BASE + "/admin/content/project", { waitUntil: "load" });
 
   // create a new project
   await p.goto(BASE + "/admin/content/project/new", { waitUntil: "load" }); await sleep(400);

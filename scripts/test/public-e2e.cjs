@@ -2,6 +2,7 @@
 // publishing/unpublishing/slug changes/SEO edits take effect, and sample testimonials never appear as real ones.
 //   NODE_PATH=$(npm root -g) node scripts/test/public-e2e.cjs [baseUrl]
 const { chromium } = require("playwright");
+const { importDrafts, reviewAndPublish } = require("./lib-adopt.cjs");
 const BASE = process.argv[2] || "http://localhost:3300";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let pass = 0, fail = 0;
@@ -16,12 +17,6 @@ async function login(ctx, email) {
   await p.fill("#email", email); await p.fill("#password", "correct-horse-battery"); await p.click('button[type="submit"]');
   await p.waitForURL(/\/admin\/?$/, { timeout: 15000 });
   return p;
-}
-async function importType(p, type) {
-  await p.goto(`${BASE}/admin/content/${type}`, { waitUntil: "load" });
-  p.once("dialog", (d) => d.accept());
-  await p.getByRole("button", { name: "Import starter content" }).click();
-  await p.waitForSelector("table.adm-table", { timeout: 30000 });
 }
 async function openItem(p, type, text) {
   await p.goto(`${BASE}/admin/content/${type}?q=${encodeURIComponent(text)}`, { waitUntil: "load" });
@@ -49,13 +44,39 @@ const publish = async (p) => { await p.getByRole("button", { name: /Save and (pu
   const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
   const p = await login(ctx, "editor@test.local");
 
-  // ---- 2. import: the public site must look identical afterwards
-  const beforeWork = (await get("/work")).text;
-  for (const t of ["project", "technology", "person", "client", "region", "company_section", "solution", "setting", "page_seo"]) await importType(p, t);
+  // ---- 2. import is DRAFT-ONLY: the live site must not change at all until an administrator runs the reviewed step
+  const TYPES = ["project", "technology", "person", "client", "region", "company_section", "solution", "setting", "page_seo"];
+  const beforeWork = (await get("/work")).text, beforeHome = (await get("/")).text, beforeCompany = (await get("/company")).text;
+  for (const t of TYPES) await importDrafts(p, BASE, t);
+  await sleep(500);
+  ok("editor sees the 'still starter content' notice", /still shows the built-in starter content/.test(await (async () => { await p.goto(`${BASE}/admin/content/project`, { waitUntil: "load" }); return p.locator("body").innerText(); })()));
+  ok("editor does not get the reviewed-publish control", (await p.getByRole("button", { name: "Review and publish imported content" }).count()) === 0);
+  ok("after a draft-only import the live /work is byte-for-byte the same count of projects", count((await get("/work")).text) === count(beforeWork) && count(beforeWork) > 20);
+  ok("after a draft-only import the home page and company page are unchanged", (await get("/")).text.length === beforeHome.length && (await get("/company")).text.length === beforeCompany.length);
+  await openItem(p, "project", "World Health Expo");
+  await p.fill("#ed-title", "IMPORTED DRAFT EDIT");
+  await saveDraft(p);
+  await p.getByRole("button", { name: /Save and publish/ }).click();
+  await p.waitForFunction(() => /still shows the built-in starter content|reviews|Review and publish/i.test(document.body.innerText), null, { timeout: 15000 });
+  ok("an editor cannot publish one imported item ahead of the review step", !/Published\. The public page/.test(await p.locator("body").innerText()));
+  await sleep(400);
+  ok("the live site never showed the edited draft", !/IMPORTED DRAFT EDIT/.test((await get("/work")).text));
+  await p.fill("#ed-title", "World Health Expo"); await saveDraft(p);
+  // an administrator performs the explicit reviewed publishing step; the site then uses the CMS
+  const actx = await b.newContext({ viewport: { width: 1440, height: 900 } });
+  const ap = await login(actx, "admin@test.local");
+  await ap.goto(`${BASE}/admin/content/project`, { waitUntil: "load" });
+  await ap.getByRole("button", { name: "Review and publish imported content" }).click();
+  ok("publishing needs the review confirmation ticked", await ap.getByRole("button", { name: "Publish reviewed content" }).isDisabled());
+  await actx.close();
+  const actx2 = await b.newContext({ viewport: { width: 1440, height: 900 } });
+  const ap2 = await login(actx2, "admin@test.local");
+  for (const t of TYPES) await reviewAndPublish(ap2, BASE, t);
+  await actx2.close();
   await sleep(500);
   const afterWork = (await get("/work")).text;
   const nBefore = count(beforeWork), nAfter = count(afterWork);
-  ok("after import /work still lists the same number of projects", /World Health Expo/.test(afterWork) && nBefore > 20 && nAfter === nBefore, `${nAfter} vs ${nBefore}`);
+  ok("after the reviewed publish /work lists the same number of projects", /World Health Expo|IMPORTED DRAFT EDIT/.test(afterWork) && nAfter === nBefore, `${nAfter} vs ${nBefore}`);
   r = await get("/company"); ok("company page shows the imported mission wording", /engineered, built and supported by one team/.test(r.text));
   r = await get("/uae"); ok("UAE page shows the confirmed Dubai contact", /info@enginious\.ae/.test(r.text) && /Dubai/.test(r.text));
   r = await get("/europe"); ok("Europe page says no Europe projects are listed and has no invented email", /do not list projects delivered in Europe/.test(r.text));

@@ -7,7 +7,35 @@
 --
 -- Conventions inside `data`: keys starting with "_" are internal (approval flags, notes) and are stripped from the public snapshot.
 
--- Milestone 1 placeholders replaced by the generic model (they were never written to by the app).
+-- Prerequisite check: stop with a clear message instead of failing half way through.
+do $prereq$
+declare missing text[] := '{}';
+begin
+  if to_regprocedure('public.cms_is_staff()') is null then missing := array_append(missing, 'public.cms_is_staff() (20261005000000_cms_roles.sql)'); end if;
+  if to_regclass('public.cms_audit') is null then missing := array_append(missing, 'public.cms_audit (20261005000000_cms_roles.sql)'); end if;
+  if cardinality(missing) > 0 then
+    raise exception 'ABORTED: earlier migrations are missing (20261005000000_cms_roles.sql): %. Apply the earlier migrations in order first (docs/cms-setup.md). Nothing was changed.', array_to_string(missing, ', ') using errcode = 'P0001';
+  end if;
+end
+$prereq$;
+
+-- Milestone 1 placeholders replaced by the generic model. They were never written to by the app, but this migration DROPS them,
+-- so it refuses to run if they hold anything. Back up and review any rows first (docs/cms-setup.md, "Before you apply").
+do $guard$
+declare t text; n bigint;
+begin
+  foreach t in array array['clients', 'testimonials', 'client_projects'] loop
+    if to_regclass('public.' || t) is not null then
+      execute format('select count(*) from public.%I', t) into n;
+      if n > 0 then
+        raise exception 'ABORTED: public.% contains % row(s) and this migration would drop the table. Export the data, decide what to keep, and empty the table deliberately before re-running. Nothing was changed.', t, n
+          using errcode = 'P0001';
+      end if;
+    end if;
+  end loop;
+end
+$guard$;
+
 drop table if exists public.client_projects cascade;
 drop table if exists public.testimonials cascade;
 drop table if exists public.clients cascade;

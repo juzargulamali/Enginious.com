@@ -1,6 +1,7 @@
 // Populates the LOCAL CMS with realistic demo data, then checks desktop and mobile admin layouts (overflow, labels, focus) and takes screenshots.
 //   NODE_PATH=$(npm root -g) node scripts/test/admin-visual.cjs [baseUrl] [outDir]
 const { chromium } = require("playwright");
+const { reviewAndPublish } = require("./lib-adopt.cjs");
 const sharp = require("sharp");
 const crypto = require("crypto");
 const BASE = process.argv[2] || "http://localhost:3300";
@@ -26,7 +27,8 @@ const ENQ = [
   // demo data: import every type, enquiries, media
   for (const t of ["project", "technology", "person", "client", "region", "company_section", "solution", "setting", "page_seo"]) {
     await p.goto(`${BASE}/admin/content/${t}`, { waitUntil: "load" });
-    p.once("dialog", (d) => d.accept()); await p.getByRole("button", { name: "Import starter content" }).click(); await p.waitForSelector("table.adm-table", { timeout: 30000 });
+    p.once("dialog", (d) => d.accept()); await p.getByRole("button", { name: "Import starter content as drafts" }).click(); await p.waitForSelector("table.adm-table", { timeout: 30000 });
+    await reviewAndPublish(p, BASE, t);
   }
   for (const [name, email, company, region, projectType, message, technologies] of ENQ) {
     await fetch(BASE + "/api/enquiries", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submissionId: crypto.randomUUID(), region, name, email, company, country: "", projectType, eventDate: "", budget: "", message, technologies, website: "", sourcePath: "/contact" }) });

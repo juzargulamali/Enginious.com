@@ -16,6 +16,8 @@ as_editor "insert into content_items (type, slug, title, draft) values
  ('article','delta-story','Delta Story','{\"excerpt\":\"e\",\"body\":\"Body text.\"}'),
  ('article','hidden-story','Hidden Story','{\"excerpt\":\"e\",\"body\":\"Body text.\",\"seo_noindex\":true}'),
  ('testimonial','real-quote','Real Quote','{\"quote\":\"A real approved quote about the work.\",\"speaker_name\":\"Real Person\",\"speaker_role\":\"Director\",\"organisation\":\"Real Org\",\"_permission_confirmed\":true}')"
+# the starter-backed types used below must be adopted before the database lets individual items be published (see docs/cms-setup.md section 8)
+$PSQL -c "insert into public.cms_type_adoption (type) values ('project'), ('technology') on conflict do nothing" >/dev/null
 as_editor "select cms_publish(id) from content_items where slug in ('alpha-case','gamma-tech','delta-story','hidden-story','real-quote')"
 rc=0
 ck() { if eval "$2"; then echo "  PASS $1"; else echo "  FAIL $1"; rc=1; fi; }

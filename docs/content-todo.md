@@ -57,7 +57,7 @@
 - Spacing: Clients, Testimonials and People use a tighter section rhythm (about 140px between Clients and People at 1440 wide, 64px on phones), same with or without Testimonials.
 
 ## Milestone 2 (CMS) additions
-- **Import the starter content** into the CMS (each type's list page -> "Import starter content"). Until you do, the public site serves the built-in copy for that type. The fictional sample testimonials and unapproved leadership messages are never imported.
+- **Import the starter content as drafts** (each type's list page -> "Import starter content as drafts"), review it, then an administrator runs "Review and publish imported content" for that type. Until then the public site serves the built-in copy and nothing changes. The fictional sample testimonials and unapproved leadership messages are never imported.
 - **Client relationships:** all 35 clients are "not confirmed" (names only). To say "direct client" or "delivered through an agency" you must confirm each and enter the approved wording; the CMS blocks publishing otherwise.
 - **Testimonials:** none published. A testimonial can be published only with written permission ticked and cannot be a fictional sample. The Testimonials section stays hidden until one is published.
 - **Leadership messages / bios / responsibilities:** private until written and approved; the approval tick is internal and never public.

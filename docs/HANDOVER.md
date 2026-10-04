@@ -12,7 +12,7 @@ Branch `claude/milestone-2-cms` (from `main` at `ef781a9`, Milestone 1). Not mer
 ## Where things are
 | Area | Files |
 |---|---|
-| Database | `supabase/migrations/20261005*.sql`, `supabase/bootstrap-admin.sql`, tests `supabase/tests/rls.test.sql` |
+| Database | `supabase/migrations/20261005*.sql`, `20261006000000_import_review.sql`, `supabase/bootstrap-admin.sql`, tests `supabase/tests/rls.test.sql` |
 | Content model | `src/lib/cms/schema.ts` (fields, validation), `src/lib/content/{seed,assemble,load,lean}.ts` |
 | Admin UI | `src/app/(admin)/admin/**`, `src/components/admin/**`, actions in `src/app/(admin)/admin/actions/` |
 | Auth | `src/proxy.ts`, `src/lib/cms/auth.ts`, `src/lib/supabase/server.ts` |
@@ -25,13 +25,14 @@ Branch `claude/milestone-2-cms` (from `main` at `ef781a9`, Milestone 1). Not mer
 ## Key decisions (all reversible)
 1. **One generic content engine** (`content_items` draft + `content_published` snapshot + revisions) instead of 13 tables: new fields are a schema edit, not a migration. Internal fields start with `_` and are stripped by the database.
 2. **The CMS acts as the signed-in user** (RLS enforces permissions). The service key is used only after a role check, or to store enquiries.
-3. **Starter content fallback per type**: the public site never depends on the CMS being populated. After import the CMS is authoritative (unpublishing never brings starter content back).
+3. **Starter content fallback per type, draft-only imports**: the public site never depends on the CMS being populated. "Import starter content as drafts" changes nothing publicly. A type switches to the CMS only when an administrator runs the explicit reviewed publishing step (`cms_publish_reviewed_import`, all-or-nothing); until then the database refuses to publish items of that type. After adoption the CMS is authoritative (unpublishing never brings starter content back).
+3a. **Migration guards**: the content migration aborts, changing nothing, if `clients`, `testimonials` or `client_projects` hold rows; each Milestone 2 migration also checks its prerequisites. Tests: `scripts/test/migration-guards.sh`.
 4. **Edits go live on publish** (including order/featured); `Apply order to live site` publishes order only.
 5. **Uploads are limited to 4 MB** (hosting request cap). Larger files/video need a signed direct-to-storage flow (backlog).
 6. **Regions page template replaced the hand-built Europe page** with a shared `RegionPage` (UAE and Saudi Arabia were placeholders). Check the design.
 
 ## Local test stand-ins (read before trusting any result)
-Docker and the Supabase CLI are not available in the build sandbox, so verification uses: a real local Postgres 16 with mocked `auth`/`storage` schemas (`supabase/tests/mock-supabase.sql`), a small Node server that speaks the subset of PostgREST/GoTrue/Storage the app uses and runs every query with the caller's real role and claims so **row level security is real** (`scripts/test/mock-supabase.cjs`), and a fake email provider. **Not verified**: the hosted Supabase project (real GoTrue emails, SMTP, real Storage behaviour, real PostgREST), a real email provider, the deployed Vercel preview from a browser (the sandbox cannot open `*.vercel.app`), real devices.
+Docker and the Supabase CLI are not available in the build sandbox, so verification uses: a real local Postgres 16 with mocked `auth`/`storage` schemas (`supabase/tests/mock-supabase.sql`), a small Node server that speaks the subset of PostgREST/GoTrue/Storage the app uses and runs every query with the caller's real role and claims so **row level security is real** (`scripts/test/mock-supabase.cjs`), and a fake email provider. **Hosted verification has NOT been run yet.** `docs/hosted-verification.md` and `scripts/hosted-verify/run.cjs` are ready; the local rehearsal of that script passes against the stand-ins and says nothing about the real project. **Not verified**: the hosted Supabase project (real GoTrue emails, SMTP, real Storage behaviour, real PostgREST), a real email provider, the deployed Vercel preview from a browser (the sandbox cannot open `*.vercel.app`), real devices.
 
 ## Known limitations / follow-ups
 - Browser back/forward is not guarded for unsaved edits (close, reload and in-app links are).
@@ -42,9 +43,9 @@ Docker and the Supabase CLI are not available in the build sandbox, so verificat
 - Performance of the home page hero/tower was not changed in this milestone (see `docs/performance.md`); public bundles were not enlarged (admin code is route-isolated).
 
 ## Owner actions (short list)
-See the final report and `LAUNCH.md`: apply 5 migrations; create first administrator; Supabase auth settings and SMTP; Vercel env vars; Import starter content; approve content; supply media and the old-site URL export; decide retention; test notifications with `NOTIFY_OVERRIDE_TO` on a preview.
+See the final report and `LAUNCH.md`: follow `docs/cms-setup.md` (back up, create your Auth user, apply 6 migrations, assign the administrator role); Supabase auth settings and SMTP; Vercel env vars; import starter content as drafts, review, then the reviewed publish per type; supply media and the old-site URL export; decide retention; test notifications with `NOTIFY_OVERRIDE_TO` on a preview.
 
 ## Next steps for a new session
 1. Review the Vercel preview with the owner; fix visual feedback.
-2. Once the real Supabase project is set up, run a smoke test of invite, publish, upload, enquiry on the preview and update `docs/test-report.md` with a "deployed" section.
+2. Once the real Supabase project is set up, run `scripts/hosted-verify/run.cjs` (see `docs/hosted-verification.md`), do its manual steps and record the result in that file's table. Keep hosted and local results apart.
 3. Items in `docs/BACKLOG.md` (Milestone 2 block).

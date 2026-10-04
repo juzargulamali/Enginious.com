@@ -8,6 +8,19 @@
 --
 -- Image/PDF validation (type, signature, size, dimensions) happens on the server before anything is stored; SVG is refused.
 
+-- Prerequisite check: stop with a clear message instead of failing half way through.
+do $prereq$
+declare missing text[] := '{}';
+begin
+  if to_regclass('public.media_assets') is null then missing := array_append(missing, 'public.media_assets'); end if;
+  if to_regclass('storage.buckets') is null then missing := array_append(missing, 'storage.buckets (Supabase Storage)'); end if;
+  if to_regprocedure('public.cms_is_staff()') is null then missing := array_append(missing, 'public.cms_is_staff() (20261005000000_cms_roles.sql)'); end if;
+  if cardinality(missing) > 0 then
+    raise exception 'ABORTED: earlier migrations are missing (20261004000000_media_assets.sql / 20261005000000_cms_roles.sql): %. Apply the earlier migrations in order first (docs/cms-setup.md). Nothing was changed.', array_to_string(missing, ', ') using errcode = 'P0001';
+  end if;
+end
+$prereq$;
+
 alter table public.media_assets
   add column if not exists caption       text check (char_length(caption) <= 400),
   add column if not exists mime          text,

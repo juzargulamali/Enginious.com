@@ -91,6 +91,27 @@ select t.eq('...but the status is forced to draft', 'authenticated', :'E', $q$se
 select t.expect('client cannot flip status by update', 'authenticated', :'E', $q$update public.content_items set status = 'published' where slug = 'sneaky'$q$, 'err:42501');
 select t.expect('public sees nothing before publishing', 'anon', null, 'select * from public.content_published', 'ok:0');
 
+-- ============ starter imports: draft-only, explicit reviewed publish
+select t.expect('editor imports a starter draft (imported_at set)', 'authenticated', :'E', $q$insert into public.content_items (type, slug, title, draft, imported_at) values ('technology', 'imp-tech', 'Imported tech', '{"summary":"A short reviewed summary of the imported technology.","category":"Display"}', now())$q$, 'ok:1');
+select t.eq('a starter-backed type is not CMS-authoritative before adoption', 'anon', null, $q$select public.cms_type_initialised()::text$q$, '{}');
+select t.expect('publishing into an unadopted starter type is refused', 'authenticated', :'E', $q$select public.cms_publish(id) from public.content_items where slug = 'imp-tech'$q$, 'err:P0001');
+select t.eq('...and the live table stays empty', 'anon', null, $q$select count(*) from public.content_published$q$, '0');
+select t.expect('editor cannot run the reviewed publish', 'authenticated', :'E', $q$select public.cms_publish_reviewed_import('technology', true)$q$, 'err:42501');
+select t.expect('anon cannot run the reviewed publish', 'anon', null, $q$select public.cms_publish_reviewed_import('technology', true)$q$, 'err:42501');
+select t.expect('administrator must confirm the review', 'authenticated', :'A', $q$select public.cms_publish_reviewed_import('technology', false)$q$, 'err:P0001');
+select t.expect('types without starter content cannot be adopted', 'authenticated', :'A', $q$select public.cms_publish_reviewed_import('article', true)$q$, 'err:P0001');
+select t.expect('editor cannot write adoption rows', 'authenticated', :'E', $q$insert into public.cms_type_adoption (type) values ('technology')$q$, 'err:42501');
+select t.expect('administrator cannot write adoption rows directly', 'authenticated', :'A', $q$insert into public.cms_type_adoption (type) values ('technology')$q$, 'err:42501');
+select t.expect('administrator publishes the reviewed import', 'authenticated', :'A', $q$select public.cms_publish_reviewed_import('technology', true)$q$, 'ok:1');
+select t.eq('...the imported item is now live', 'anon', null, $q$select title from public.content_published where slug = 'imp-tech'$q$, 'Imported tech');
+select t.eq('...and the type is CMS-authoritative', 'anon', null, $q$select public.cms_type_initialised()::text$q$, '{technology}');
+select t.expect('a second reviewed publish is refused', 'authenticated', :'A', $q$select public.cms_publish_reviewed_import('technology', true)$q$, 'err:P0001');
+select t.expect('an invalid imported draft aborts the whole step', 'authenticated', :'E', $q$insert into public.content_items (type, slug, title, draft, imported_at) values ('region', 'bad-region', 'Bad region', '{"email":"not-an-email"}', now())$q$, 'ok:1');
+select t.expect('...reviewed publish fails', 'authenticated', :'A', $q$select public.cms_publish_reviewed_import('region', true)$q$, 'err:P0001');
+select t.eq('...nothing was published and region stays on starter content', 'anon', null, $q$select count(*) from public.content_published where type = 'region'$q$, '0');
+-- the older publishing checks below assume these types are already adopted
+insert into public.cms_type_adoption (type) values ('project'), ('client'), ('person'), ('setting');
+
 -- publish
 select t.expect('editor publishes a valid project', 'authenticated', :'E', $q$select public.cms_publish(id) from public.content_items where slug = 'alpha' and type = 'project'$q$, 'ok:1');
 select t.eq('public sees the published title', 'anon', null, $q$select title from public.content_published where slug = 'alpha' and type = 'project'$q$, 'Alpha');

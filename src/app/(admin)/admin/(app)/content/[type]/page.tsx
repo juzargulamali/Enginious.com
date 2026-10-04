@@ -8,6 +8,7 @@ import { timeAgo } from "@/lib/cms/format";
 import { RowActions } from "@/components/admin/RowActions";
 import { ListTools } from "@/components/admin/ListTools";
 import { canImport } from "@/lib/content/seed";
+import { supabaseUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Content" };
 
@@ -32,6 +33,19 @@ export default async function ContentList({ params, searchParams }: { params: Pr
     const s = p.toString();
     return s ? `?${s}` : "";
   };
+  let adopted = !canImport(def.type);
+  let pendingImported = 0;
+  if (canImport(def.type)) {
+    const sb = await supabaseUser();
+    if (sb) {
+      const [a, n] = await Promise.all([
+        sb.from("cms_type_adoption").select("type").eq("type", def.type).limit(1),
+        sb.from("content_items").select("id", { count: "exact", head: true }).eq("type", def.type).eq("status", "draft").not("imported_at", "is", null),
+      ]);
+      adopted = (a.data ?? []).length > 0;
+      pendingImported = n.count ?? 0;
+    }
+  }
   const base = `/admin/content/${def.type}`;
   const fixedLeft = def.fixedSlugs ? def.fixedSlugs.length - rows.length : 1;
 
@@ -44,11 +58,14 @@ export default async function ContentList({ params, searchParams }: { params: Pr
           <p>{def.description}</p>
         </div>
         <div className="adm-actions">
-          <ListTools type={def.type} orderable={def.orderable} canImport={canImport(def.type)} isAdmin={staff.role === "administrator"} />
+          <ListTools type={def.type} orderable={def.orderable} canImport={canImport(def.type)} isAdmin={staff.role === "administrator"} adopted={adopted} pendingImported={pendingImported} />
           {fixedLeft > 0 && <Link className="adm-btn adm-btn-primary" href={`${base}/new`}>New {def.label.toLowerCase()}</Link>}
         </div>
       </div>
 
+      {canImport(def.type) && !adopted && (
+        <p className="adm-alert" role="status">The live site still shows the built-in starter content for {def.plural.toLowerCase()}. Items here are drafts until an administrator reviews and publishes the imported content.</p>
+      )}
       <div className="adm-tabs" role="navigation" aria-label="Filter by status">
         {STATUSES.map(([k, label]) => <Link key={k} href={`${base}${qs({ status: k === "all" ? undefined : k })}`} aria-current={status === k ? "page" : undefined}>{label}</Link>)}
       </div>

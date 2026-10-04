@@ -2,6 +2,7 @@
 // public delivery, and delete protection.
 const { chromium } = require("playwright");
 const sharp = require("sharp");
+const { reviewAndPublish } = require("./lib-adopt.cjs");
 const BASE = process.argv[2] || "http://localhost:3300";
 const MOCK = "http://127.0.0.1:54321";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -94,7 +95,11 @@ const sql = (q) => require("child_process").execFileSync("psql", ["-h", "/var/tm
 
   // ---- choose media in editors; public delivery with labels
   await p.goto(BASE + "/admin/content/setting", { waitUntil: "load" });
-  p.once("dialog", (d) => d.accept()); await p.getByRole("button", { name: "Import starter content" }).click(); await p.waitForSelector("table.adm-table");
+  p.once("dialog", (d) => d.accept()); await p.getByRole("button", { name: "Import starter content as drafts" }).click(); await p.waitForSelector("table.adm-table");
+  { const actx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const ap = await actx.newPage();
+    await ap.goto(BASE + "/admin/login", { waitUntil: "load" }); await ap.fill("#email", "admin@test.local"); await ap.fill("#password", "correct-horse-battery"); await ap.click('button[type="submit"]'); await ap.waitForURL(/\/admin\/?$/);
+    await reviewAndPublish(ap, BASE, "setting"); await actx.close(); }
+  await p.goto(BASE + "/admin/content/setting", { waitUntil: "load" });
   await p.locator("table.adm-table a.t", { hasText: "Site settings" }).first().click(); await p.waitForSelector("#ed-title");
   await p.locator('[data-field="company_profile"]').getByRole("button", { name: /^Choose / }).click();
   await p.getByRole("dialog").getByRole("button", { name: /Company profile 2026/ }).click();

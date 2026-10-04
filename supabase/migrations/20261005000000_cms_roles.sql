@@ -2,6 +2,19 @@
 -- Roles: administrator (manages access, settings, deletion) and editor (content + enquiries).
 -- Nobody can grant themselves a role: the only writers are administrators (RLS) and the service role (invites, server only).
 
+-- Prerequisite check: stop with a clear message instead of failing half way through.
+do $prereq$
+declare missing text[] := '{}';
+begin
+  if to_regclass('auth.users') is null then missing := array_append(missing, 'auth.users (Supabase Auth)'); end if;
+  if to_regclass('public.cms_admins') is null then missing := array_append(missing, 'public.cms_admins'); end if;
+  if to_regprocedure('public.is_cms_admin()') is null then missing := array_append(missing, 'public.is_cms_admin() (20261003000000_baseline.sql)'); end if;
+  if cardinality(missing) > 0 then
+    raise exception 'ABORTED: earlier migrations are missing (20261003000000_baseline.sql): %. Apply the earlier migrations in order first (docs/cms-setup.md). Nothing was changed.', array_to_string(missing, ', ') using errcode = 'P0001';
+  end if;
+end
+$prereq$;
+
 create table if not exists public.cms_roles (
   user_id      uuid primary key references auth.users (id) on delete cascade,
   role         text not null check (role in ('administrator', 'editor')),

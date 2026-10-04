@@ -8,7 +8,8 @@ run typecheck npx tsc --noEmit
 run lint npx eslint src
 run unit npm test
 run db bash scripts/test/rls.sh
-for s in admin-e2e public-e2e auth-e2e enquiry-e2e media-e2e admin-visual; do run $s bash scripts/test/e2e.sh $s; done
+run migration-guards bash scripts/test/migration-guards.sh
+for s in admin-e2e public-e2e auth-e2e enquiry-e2e media-e2e admin-visual hosted-rehearsal; do run $s bash scripts/test/e2e.sh $s; done
 run indexing bash scripts/test/indexing-check.sh
 run consent bash scripts/test/consent-check.sh
 echo ALLDONE >> "$O/summary.txt"

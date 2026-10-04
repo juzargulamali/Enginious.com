@@ -1,6 +1,18 @@
 -- Milestone 2 / 4: enquiries workflow (notes, attachments, notification status), persistent rate limiting, retention.
 -- The public can still never read or write this table: only the server (service role) inserts; staff read and triage.
 
+-- Prerequisite check: stop with a clear message instead of failing half way through.
+do $prereq$
+declare missing text[] := '{}';
+begin
+  if to_regclass('public.enquiries') is null then missing := array_append(missing, 'public.enquiries (20261003010000_enquiries.sql)'); end if;
+  if to_regprocedure('public.cms_is_staff()') is null then missing := array_append(missing, 'public.cms_is_staff() (20261005000000_cms_roles.sql)'); end if;
+  if cardinality(missing) > 0 then
+    raise exception 'ABORTED: earlier migrations are missing (20261003010000_enquiries.sql): %. Apply the earlier migrations in order first (docs/cms-setup.md). Nothing was changed.', array_to_string(missing, ', ') using errcode = 'P0001';
+  end if;
+end
+$prereq$;
+
 alter table public.enquiries
   add column if not exists notification_status   text not null default 'pending' check (notification_status in ('pending', 'sent', 'failed', 'skipped')),
   add column if not exists notification_error    text check (char_length(notification_error) <= 300),
