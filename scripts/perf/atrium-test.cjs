@@ -64,6 +64,11 @@ const mat = (t) => { const m = /matrix(3d)?\(([^)]+)\)/.exec(t); if (!m) return 
       // idle: the scheduler sleeps (no style writes while nothing moves)
       const muts = await p.evaluate(() => new Promise((res) => { let n = 0; const mo = new MutationObserver((r) => { n += r.length; }); document.querySelectorAll(".rh-planes, .rh-mid, .rh-copy-a, .rh-copy-b").forEach((e) => mo.observe(e, { attributes: true })); setTimeout(() => { mo.disconnect(); res(n); }, 1500); }));
       ok("idle: no style writes while nothing is moving", muts === 0, String(muts));
+      // buttons hold still: put the pointer on the primary button, then check it does not drift
+      await p.mouse.move(300, 300); await sleep(900);
+      const btnBox = async () => { const b2 = await p.getByRole("link", { name: /Start a project/ }).nth(1).boundingBox(); return b2 ? Math.round(b2.x * 10) / 10 + "," + Math.round(b2.y * 10) / 10 : "none"; };
+      const bb = await btnBox(); await p.mouse.move(210, 590); await sleep(60); const b1 = await btnBox(); await sleep(450); const b2 = await btnBox();
+      ok("a button holds still under the pointer (no drift after the pointer lands on it)", b1 === b2, `${bb} -> ${b1} -> ${b2}`);
       // scroll transition
       await p.evaluate(() => window.scrollTo(0, 450)); await sleep(600);
       const sc = { pl: mat(await tr(p, ".rh-planes")), mid: mat(await tr(p, ".rh-mid")), fg: mat(await tr(p, ".rh-copy-a")) };

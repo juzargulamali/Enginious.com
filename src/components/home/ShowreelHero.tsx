@@ -138,6 +138,8 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
     const kick = () => { if (!raf && onScreen && !document.hidden) { window.clearTimeout(idle); promote(true); raf = requestAnimationFrame(apply); } };
     const move = (e: PointerEvent) => {
       if (e.pointerType !== "mouse" || !wide.matches) return;
+      // links and buttons must hold still under the cursor: freeze the layers where they are the moment the pointer is over one
+      if ((e.target as Element | null)?.closest?.("a, button")) { tx = x; ty = y; return; }
       const r = root.getBoundingClientRect();
       tx = ((e.clientX - r.left) / r.width) * 2 - 1; ty = ((e.clientY - r.top) / r.height) * 2 - 1;
       kick();
