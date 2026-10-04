@@ -172,23 +172,6 @@
 @media (prefers-reduced-motion: reduce) { .tower { animation: none; transform: rotateY(-22deg); } .glow, .annots li, .face, .orbit, .turntable { transition: none; } }
 
 /* ================================ 3. TECHNOLOGY SHOWROOM ================================ */
-.sr-stage { position: relative; height: clamp(360px, 42vw, 520px); margin-top: 48px; border-radius: 26px; overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, rgba(39, 205, 216, 0.12), transparent 60%), linear-gradient(180deg, #02101a, #01050a); border: 1px solid var(--line); }
-.sr-far { position: absolute; inset: 0; will-change: transform; }
-.sr-far .cone { position: absolute; top: -8%; width: 15%; height: 80%; clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); background: linear-gradient(180deg, rgba(70, 233, 243, 0.2), transparent 86%); }
-.sr-far .c1 { left: 1%; } .sr-far .c2 { left: 16.5%; } .sr-far .c3 { left: 33.5%; } .sr-far .c4 { left: 51.5%; } .sr-far .c5 { left: 68%; } .sr-far .c6 { left: 84%; }
-.sr-floor { position: absolute; left: -10%; right: -10%; bottom: 0; height: 48%; background: radial-gradient(60% 70% at 50% 8%, rgba(70, 233, 243, 0.3), transparent 70%), repeating-linear-gradient(90deg, rgba(70, 233, 243, 0.13) 0 1px, transparent 1px 84px), repeating-linear-gradient(0deg, rgba(70, 233, 243, 0.1) 0 1px, transparent 1px 44px); transform: perspective(620px) rotateX(62deg); transform-origin: 50% 100%; -webkit-mask-image: linear-gradient(transparent, #000 40%); mask-image: linear-gradient(transparent, #000 40%); }
-.sr-near { position: absolute; inset: 0; will-change: transform; }
-.sr-ex { position: absolute; bottom: 24%; width: 19%; transform: translateX(-50%); display: block; background: none; border: 0; color: rgba(70, 233, 243, 0.8); cursor: pointer; font: inherit; opacity: 0.55; transition: transform 0.4s, opacity 0.4s; }
-.sr-ex[data-on="true"] { opacity: 1; color: #a4f7fc; transform: translateX(-50%) translateY(-18px) scale(1.18); z-index: 4; }
-.sr-art, .sr-refl { display: grid; justify-items: center; }
-.sr-art svg, .sr-refl svg { width: calc(var(--z, 1) * clamp(70px, 11vw, 160px)); height: auto; display: block; }
-.sr-refl { position: absolute; left: 0; right: 0; top: 100%; transform: scaleY(-1); opacity: 0.2; -webkit-mask-image: linear-gradient(transparent 35%, #000); mask-image: linear-gradient(transparent 35%, #000); pointer-events: none; }
-.sr-lbl { position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 1; font-size: 0.78rem; letter-spacing: 0.06em; color: #d3eaed; text-align: center; }
-.sr-info { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 40px; align-items: end; margin-top: 24px; }
-.sr-info h3 { font-size: clamp(1.4rem, 2.4vw, 2rem); margin-top: 4px; }
-.sr-info p:not(.eyebrow) { color: #aac1c6; margin-top: 8px; max-width: 60ch; }
-.sr-actions { display: flex; gap: 10px; flex-wrap: wrap; grid-column: 1 / -1; }
-@media (max-width: 760px) { .sr-ex { width: 24%; bottom: 24%; } .sr-lbl { font-size: 0.64rem; } .sr-info { grid-template-columns: 1fr; } }
 
 /* ================================ 4. PROJECTS ================================ */
 .proj-top { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: center; margin-top: 40px; }
