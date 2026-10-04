@@ -12,8 +12,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const STUB = `<!doctype html><meta name="color-scheme" content="dark"><body style="margin:0;background:transparent"></body>`;
 const SCENES = [
   ["00-hero", null, 0],
-  ["01-capabilities", "#capabilities .cs", 0.12],
-  ["02-engineering", "#engineering .tw", 0.1],
+  ["01-capabilities", "#capabilities", 0.04],
+  ["01b-capabilities-lower", "#capabilities .cap-more", 0.6],
+  ["02-engineering", "#engineering", 0.05],
   ["03-technology", "#technology .sr-stage", 0.08],
   ["04-projects-top", "#projects .proj-top", 0.2],
   ["05-projects-film", "#projects .film-full", 0.12],

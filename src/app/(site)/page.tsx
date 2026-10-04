@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./home.css";
-import "./world.css";
 import "@/components/neon/neon.css";
 import { ClientsField } from "@/components/home/ClientsField";
 import { EvidenceFilm } from "@/components/home/EvidenceFilm";
 import { FilmFacade } from "@/components/home/FilmFacade";
 import { FinalCTA } from "@/components/home/FinalCTA";
 import { TeamGallery } from "@/components/home/TeamGallery";
-import { CapabilityStage } from "@/components/home/CapabilityStage";
+import { CapabilityEnv } from "@/components/home/CapabilityEnv";
+import { PortalCard } from "@/components/home/PortalCard";
 import { ShowreelHero } from "@/components/home/ShowreelHero";
 import { ShowroomTeaser } from "@/components/home/ShowroomTeaser";
 import { Testimonials } from "@/components/home/Testimonials";
@@ -64,19 +64,18 @@ export default async function Home() {
 
         {/* ---- 1. what we deliver ---- */}
         <section id="capabilities" className="scene home-sec" aria-labelledby="cap-h">
+          <CapabilityEnv />
           <div className="container">
             <SceneHead eyebrow="What we deliver" title="Everything an experience needs." id="cap-h">
               <p className="lede" style={{ marginTop: "1.1rem" }}>
                 From the first idea to the last day on site: one team for strategy, content, software, hardware and delivery.
               </p>
             </SceneHead>
-            <CapabilityStage
-              items={[
-                { n: "01", title: "Events, exhibitions & activations", blurb: "Technology and content for stands, roadshows and brand moments, built to draw a crowd and keep it.", tags: ["Experience design", "Interactive applications", "Digital content"], form: "kinetic-wall-ceiling", href: "/solutions", slot: "capEvents" },
-                { n: "02", title: "Experience centres", blurb: "Immersive, interactive spaces that explain a brand, product or place.", tags: ["Immersive rooms", "Interactive tables", "Touch & Throw"], form: "immersive-room", href: "/solutions", slot: "capCentres" },
-                { n: "03", title: "Permanent installations", blurb: "Experiential spaces tailored to your needs, with maintenance and support that keeps them running.", tags: ["Kinetic displays", "Content", "Maintenance & support"], form: "tri-helix", href: "/solutions", slot: "capPermanent" },
-              ]}
-            />
+            <div className="cap-grid" data-trace-scope>
+              <PortalCard n="01" title="Events, exhibitions & activations" blurb="Technology and content for stands, roadshows and brand moments, built to draw a crowd and keep it." tags={["Experience design", "Interactive applications", "Digital content"]} form="kinetic-wall-ceiling" href="/solutions" edge="perimeter" slot="capEvents" />
+              <PortalCard n="02" title="Experience centres" blurb="Immersive, interactive spaces that explain a brand, product or place." tags={["Immersive rooms", "Interactive tables", "Touch & Throw"]} form="immersive-room" href="/solutions" edge="left" slot="capCentres" />
+              <PortalCard n="03" title="Permanent installations" blurb="Experiential spaces tailored to your needs, with maintenance and support that keeps them running." tags={["Kinetic displays", "Content", "Maintenance & support"]} form="tri-helix" href="/solutions" edge="bottom-right" slot="capPermanent" />
+            </div>
             <ul className="cap-more">
               <li><TechForm slug="touch-and-throw" size={52} /><span><b>Interactive software &amp; content</b>Unity and Unreal applications, 2D and 3D content.</span></li>
               <li><TechForm slug="robotic-arm" size={52} /><span><b>Engineering &amp; integration</b>Mechatronics, product design and hardware/software integration.</span></li>
@@ -123,7 +122,7 @@ export default async function Home() {
           <div className="container">
             <EvidenceFilm>
               <div className="film-wrap" data-trace-scope>
-                <Edge variant="lit" duration={12} />
+                <Edge variant="brackets" duration={12} />
                 <FilmFacade youtubeId={filmId} poster={`https://i.ytimg.com/vi/${filmId}/maxresdefault.jpg`} title="Watch more from Enginious" />
               </div>
             </EvidenceFilm>

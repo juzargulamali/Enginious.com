@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
  * Neon edge treatments. Each variant lights a different set of edges so panels do not all share one outline.
  * Light travels along edges via transform-only animation; see neon.css.
  */
-export type EdgeVariant = "perimeter" | "top" | "left" | "bottom-right" | "brackets" | "under" | "lit";
+export type EdgeVariant = "perimeter" | "top" | "left" | "bottom-right" | "brackets" | "under";
 
 const EDGES: Record<EdgeVariant, ("t" | "r" | "b" | "l")[]> = {
   perimeter: ["t", "r", "b", "l"],
@@ -13,7 +13,6 @@ const EDGES: Record<EdgeVariant, ("t" | "r" | "b" | "l")[]> = {
   "bottom-right": ["b", "r"],
   brackets: ["t", "b"],
   under: ["b"],
-  lit: ["t", "r"], // rim light on the two edges that face the scene light (top and right): no corner brackets
 };
 
 export function Edge({ variant = "perimeter", duration = 9, delay = 0, className = "", style }: { variant?: EdgeVariant; duration?: number; delay?: number; className?: string; style?: CSSProperties }) {

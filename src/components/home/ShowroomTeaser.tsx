@@ -9,58 +9,29 @@ import { useContent } from "@/components/ContentProvider";
 import { isNarrow, reducedMotion, useScrollProgress } from "@/lib/scrollBus";
 
 /**
- * Digital showroom as an exhibition hall. Six exhibits stand on podiums on a glossy floor under a spotlight.
- * The selected exhibit steps forward to the centre front podium and its information opens; the others stay visible in a back row,
- * further away (higher on the floor, smaller, dimmer) on either side. Selecting is by click, tap, keys or the arrows. Hovering
- * deliberately does NOT select: nothing moves under the pointer, so no exhibit has to be chased. Scrolling through the section
- * still brings each exhibit forward in turn on desktop until the visitor takes over.
+ * Digital showroom: six distinct exhibits on a lit floor. Hover, tap or keys select an exhibit; scrolling through the section
+ * also brings each forward in turn (desktop). Pointer depth is mouse only, one write per frame.
  *
- * PERFORMANCE: all six explanations render once; a change writes CSS variables on six elements (no React render) and the move is a
- * compositor transition (transform and opacity). No pointer-driven motion, no filters, no inherited colour transitions.
+ * PERFORMANCE: all six explanations are rendered once and the active exhibit/explanation is switched by toggling attributes
+ * directly on the DOM (no React render per change), and no inherited `color` is transitioned (that restyled every SVG
+ * shape in every exhibit on each frame). Only opacity/transform change, which the compositor handles.
  */
 const ALL_EXHIBITS = ["touch-and-throw", "holofan", "tri-helix", "robotic-arm", "ai-photobooth", "circular-dial"];
-
-type Pose = { x: number; y: number; s: number; o: number; z: number };
-/** Where each exhibit stands when `active` is in front. Stage width w in px; phones keep only the nearest neighbours visible. */
-function arrange(active: number, n: number, w: number): Pose[] {
-  const narrow = w < 700;
-  const right = Math.ceil((n - 1) / 2), left = n - 1 - right;
-  return Array.from({ length: n }, (_, k) => {
-    if (k === active) return { x: 0, y: 0, s: narrow ? 1.12 : 1.34, o: 1, z: 10 };
-    // the others form a cycle around the active one: the next ones stand on the right, the previous ones on the left
-    const d = (k - active + n) % n;
-    const side = d <= right ? 1 : -1;
-    const c = side > 0 ? right : left;
-    const j = side > 0 ? d - 1 : n - 1 - d; // 0 = nearest the centre
-    const base = narrow ? 0.3 : 0.23, span = narrow ? 0 : 0.25;
-    const u = c <= 1 ? base + span / 2 : base + span * (j / (c - 1));
-    const hide = narrow && j > 0;
-    return { x: side * u * w, y: -(60 + j * 12), s: (narrow ? 0.6 : 0.66) - j * 0.05, o: hide ? 0 : 0.84 - j * 0.1, z: 6 - j };
-  });
-}
-const vars = (p: Pose) => ({ ["--x" as string]: `${p.x.toFixed(1)}px`, ["--y" as string]: `${p.y}px`, ["--s" as string]: p.s, ["--o" as string]: p.o, zIndex: p.z });
+// Positions for the exhibits that are actually published (the CMS may hide some), spread evenly with the centre nearest.
+const posFor = (n: number) => Array.from({ length: n }, (_, i) => { const t = n === 1 ? 0.5 : i / (n - 1); return { x: 9 + t * 82, z: 0.82 + 0.3 * (1 - Math.abs(t - 0.5) * 2) }; });
 
 export function ShowroomTeaser() {
   const { technologies: TECHNOLOGIES } = useContent();
   const EXHIBITS = ALL_EXHIBITS.filter((s) => TECHNOLOGIES.some((t) => t.slug === s));
-  const N = EXHIBITS.length;
-  const MID = Math.min(2, Math.max(0, N - 1));
-  const POSES = arrange(MID, N, 1100); // server pose for a typical desktop; refined to the real stage width on mount
+  const POS = posFor(EXHIBITS.length);
+  const MID = Math.min(2, Math.max(0, EXHIBITS.length - 1));
   const root = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
+  const far = useRef<HTMLDivElement>(null);
+  const near = useRef<HTMLDivElement>(null);
   const manual = useRef(false);
   const current = useRef(MID);
 
-  const layout = (i: number) => {
-    const st = stage.current;
-    if (!st) return;
-    const poses = arrange(i, N, st.clientWidth);
-    st.querySelectorAll<HTMLElement>(".sr-ex").forEach((el, k) => {
-      const p = poses[k];
-      el.style.setProperty("--x", `${p.x.toFixed(1)}px`); el.style.setProperty("--y", `${p.y}px`); el.style.setProperty("--s", String(p.s)); el.style.setProperty("--o", String(p.o)); el.style.zIndex = String(p.z);
-      el.tabIndex = k === i ? 0 : -1;
-    });
-  };
   const activate = (i: number) => {
     if (i === current.current && root.current?.dataset.ready) return;
     current.current = i;
@@ -69,57 +40,64 @@ export function ShowroomTeaser() {
     r.dataset.ready = "1";
     r.querySelectorAll<HTMLElement>(".sr-ex").forEach((el, k) => { el.dataset.on = String(k === i); el.setAttribute("aria-selected", String(k === i)); });
     r.querySelectorAll<HTMLElement>(".sr-i").forEach((el, k) => { el.hidden = k !== i; });
-    const cnt = r.querySelector(".sr-count"); if (cnt) cnt.textContent = `${i + 1} / ${N}`;
-    layout(i);
   };
   const choose = (i: number) => { manual.current = true; activate(i); };
-  const step = (d: number) => choose((current.current + d + N) % N);
 
-  // Scrolling through the showroom brings each exhibit forward in turn (desktop). Click, tap, keys or arrows take over.
+  // Scrolling through the showroom brings each exhibit forward in turn (desktop). Hover, tap or keys take over.
   useScrollProgress(root, (t) => {
     if (t < 0.05 || t > 0.97) manual.current = false;
     if (manual.current || reducedMotion() || isNarrow()) return;
-    activate(Math.min(N - 1, Math.max(0, Math.floor(((t - 0.22) / 0.5) * N))));
+    activate(Math.min(EXHIBITS.length - 1, Math.max(0, Math.floor(((t - 0.22) / 0.5) * EXHIBITS.length))));
   });
 
-  // Keep the poses right for the real stage width.
   useEffect(() => {
     const el = stage.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => layout(current.current));
-    ro.observe(el);
-    return () => ro.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [N]);
+    let raf = 0, px = 0, py = 0;
+    const flush = () => {
+      raf = 0;
+      if (far.current) far.current.style.transform = `translate3d(${(-px * 8).toFixed(1)}px, ${(-py * 4).toFixed(1)}px, 0)`;
+      if (near.current) near.current.style.transform = `translate3d(${(px * 14).toFixed(1)}px, ${(py * 6).toFixed(1)}px, 0)`;
+    };
+    const move = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      const r = el.getBoundingClientRect();
+      px = ((e.clientX - r.left) / r.width) * 2 - 1; py = ((e.clientY - r.top) / r.height) * 2 - 1;
+      if (!raf) raf = requestAnimationFrame(flush);
+    };
+    el.addEventListener("pointermove", move, { passive: true });
+    return () => { el.removeEventListener("pointermove", move); cancelAnimationFrame(raf); };
+  }, []);
 
-  if (N === 0) return null;
-  const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); step(1); (stage.current?.querySelectorAll<HTMLElement>(".sr-ex")[current.current])?.focus(); }
-    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); step(-1); (stage.current?.querySelectorAll<HTMLElement>(".sr-ex")[current.current])?.focus(); }
-  };
+  if (EXHIBITS.length === 0) return null;
   return (
     <div ref={root} className="sr" data-front>
-      <div ref={stage} className="sr-stage bleed" data-trace-scope>
-        <span className="sr-wall" aria-hidden="true" />
+      <div ref={stage} className="sr-stage" data-trace-scope>
+        <div ref={far} className="sr-far" aria-hidden="true"><span className="cone c1" /><span className="cone c2" /><span className="cone c3" /><span className="cone c4" /><span className="cone c5" /><span className="cone c6" /></div>
         <span className="sr-floor" aria-hidden="true" />
-        <span className="sr-spot" aria-hidden="true" />
-        <div className="sr-near" role="listbox" aria-label="Technologies" onKeyDown={onKey}>
+        <div ref={near} className="sr-near" role="listbox" aria-label="Technologies">
           {EXHIBITS.map((slug, i) => {
             const tech = TECHNOLOGIES.find((x) => x.slug === slug)!;
+            const p = POS[i];
             return (
-              <button key={slug} type="button" role="option" aria-selected={i === MID} tabIndex={i === MID ? 0 : -1} className="sr-ex" data-on={i === MID} style={vars(POSES[i])} onClick={() => choose(i)} onFocus={() => { if (current.current !== i) choose(i); }}>
+              <button
+                key={slug}
+                type="button"
+                role="option"
+                aria-selected={i === MID}
+                className="sr-ex"
+                data-on={i === MID}
+                style={{ left: `${p.x}%`, ["--z" as string]: p.z }}
+                onMouseEnter={() => activate(i)}
+                onFocus={() => choose(i)}
+                onClick={() => choose(i)}
+              >
                 <span className="sr-art"><TechForm slug={slug} size={180} /></span>
-                <span className="sr-pod" aria-hidden="true" />
                 <span className="sr-lbl">{tech.name}</span>
                 <span className="sr-refl" aria-hidden="true"><TechForm slug={slug} size={180} /></span>
               </button>
             );
           })}
-        </div>
-        <div className="sr-nav">
-          <button type="button" className="chip" aria-label="Previous exhibit" onClick={() => step(-1)}>←</button>
-          <span className="sr-count" aria-hidden="true">{MID + 1} / {N}</span>
-          <button type="button" className="chip" aria-label="Next exhibit" onClick={() => step(1)}>→</button>
         </div>
       </div>
       <div className="sr-info" aria-live="polite">

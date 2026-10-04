@@ -85,7 +85,6 @@ export function PlacesMap() {
 
       <div className="pm-grid">
         <div className="pm-frame">
-          <div className="pm-tilt">
           <div className="pm-stage" style={{ aspectRatio: `${W} / ${H}`, transform: `translate(${tx}%, ${ty}%) scale(${k})`, ["--k" as string]: k }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="pm-land" src="/art/map-land.svg" alt="" width={W} height={H} decoding="async" loading="lazy" />
@@ -112,7 +111,6 @@ export function PlacesMap() {
                 </button>
               );
             })}
-          </div>
           </div>
         </div>
 
