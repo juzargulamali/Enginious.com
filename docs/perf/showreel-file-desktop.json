@@ -1,0 +1,211 @@
+{
+  "label": "showreel-file-mode",
+  "base": "http://localhost:3300",
+  "view": "desktop",
+  "viewport": [
+    1440,
+    900
+  ],
+  "css": null,
+  "init": null,
+  "dpr": 1,
+  "runs": 3,
+  "rates": {
+    "1": {
+      "homeIdle5s": {
+        "fps": 60.2,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.7,
+        "frameWorstMs": 16.8,
+        "framesOver33ms": 0,
+        "framesOver50ms": 0,
+        "frames": 301,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 0,
+        "events": 0,
+        "reactCommits": 1,
+        "mainThreadBusyPct": 3.3,
+        "scriptMs": 14.3,
+        "layoutMs": 0,
+        "styleMs": 30.2
+      },
+      "homePointerSweep4s": {
+        "fps": 60.2,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.7,
+        "frameWorstMs": 16.8,
+        "framesOver33ms": 0,
+        "framesOver50ms": 0,
+        "frames": 249,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 32,
+        "eventP95Ms": 32,
+        "events": 147,
+        "reactCommits": 0,
+        "mainThreadBusyPct": 5.9,
+        "scriptMs": 33.9,
+        "layoutMs": 0,
+        "styleMs": 31
+      },
+      "homeScrollWholePage": {
+        "fps": 58.2,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.8,
+        "frameWorstMs": 50.1,
+        "framesOver33ms": 2,
+        "framesOver50ms": 1,
+        "frames": 201,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 32,
+        "eventP95Ms": 32,
+        "events": 263,
+        "reactCommits": 4,
+        "mainThreadBusyPct": 12.9,
+        "scriptMs": 38.9,
+        "layoutMs": 26.6,
+        "styleMs": 52.7
+      },
+      "routeTransitions": {
+        "fps": 60.2,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.8,
+        "frameWorstMs": 16.8,
+        "framesOver33ms": 0,
+        "framesOver50ms": 0,
+        "frames": 139,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 24,
+        "eventP95Ms": 24,
+        "events": 47,
+        "reactCommits": 16,
+        "mainThreadBusyPct": 7.9,
+        "scriptMs": 44.7,
+        "layoutMs": 15.8,
+        "styleMs": 9.9,
+        "hopMedianMs": 74,
+        "hopMs": [
+          [
+            143,
+            74,
+            59,
+            48
+          ],
+          [
+            118,
+            76,
+            51,
+            66
+          ],
+          [
+            112,
+            72,
+            64,
+            61
+          ]
+        ]
+      }
+    },
+    "4": {
+      "homeIdle5s": {
+        "fps": 60,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.8,
+        "frameWorstMs": 16.8,
+        "framesOver33ms": 0,
+        "framesOver50ms": 0,
+        "frames": 300,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 0,
+        "events": 0,
+        "reactCommits": 1,
+        "mainThreadBusyPct": 11.2,
+        "scriptMs": 40.2,
+        "layoutMs": 0,
+        "styleMs": 139.6
+      },
+      "homePointerSweep4s": {
+        "fps": 60.1,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.7,
+        "frameWorstMs": 16.8,
+        "framesOver33ms": 0,
+        "framesOver50ms": 0,
+        "frames": 240,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 40,
+        "eventP95Ms": 40,
+        "events": 147,
+        "reactCommits": 0,
+        "mainThreadBusyPct": 22.3,
+        "scriptMs": 139.8,
+        "layoutMs": 0,
+        "styleMs": 117.6
+      },
+      "homeScrollWholePage": {
+        "fps": 51.3,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 33.4,
+        "frameWorstMs": 100,
+        "framesOver33ms": 6,
+        "framesOver50ms": 3,
+        "frames": 208,
+        "longTasks": 1,
+        "longTaskMs": 76,
+        "eventMaxMs": 56,
+        "eventP95Ms": 48,
+        "events": 368,
+        "reactCommits": 4,
+        "mainThreadBusyPct": 42,
+        "scriptMs": 162.9,
+        "layoutMs": 104.2,
+        "styleMs": 207
+      },
+      "routeTransitions": {
+        "fps": 56.6,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.8,
+        "frameWorstMs": 99.9,
+        "framesOver33ms": 2,
+        "framesOver50ms": 2,
+        "frames": 155,
+        "longTasks": 1,
+        "longTaskMs": 85,
+        "eventMaxMs": 48,
+        "eventP95Ms": 48,
+        "events": 47,
+        "reactCommits": 16,
+        "mainThreadBusyPct": 27.1,
+        "scriptMs": 199.3,
+        "layoutMs": 65,
+        "styleMs": 46.1,
+        "hopMedianMs": 152,
+        "hopMs": [
+          [
+            400,
+            157,
+            79,
+            86
+          ],
+          [
+            409,
+            145,
+            104,
+            111
+          ],
+          [
+            399,
+            152,
+            103,
+            88
+          ]
+        ]
+      }
+    }
+  }
+}

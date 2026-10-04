@@ -1,0 +1,115 @@
+{
+  "base": "http://localhost:3300",
+  "view": "desktop",
+  "rate": 4,
+  "runs": 3,
+  "css": false,
+  "scenes": {
+    "hero": {
+      "slow": 4,
+      "frames": 51,
+      "fps": 43.6,
+      "busy": 47.7,
+      "script": 60.5,
+      "layout": 8.2,
+      "style": 99.2,
+      "commits": 6,
+      "px": 1700
+    },
+    "capabilities": {
+      "slow": 0,
+      "frames": 63,
+      "fps": 59.5,
+      "busy": 32.6,
+      "script": 21.4,
+      "layout": 1,
+      "style": 41.1,
+      "commits": 0,
+      "px": 2171.4
+    },
+    "engineering": {
+      "slow": 10,
+      "frames": 55,
+      "fps": 36.6,
+      "busy": 52.2,
+      "script": 56.8,
+      "layout": 13.5,
+      "style": 133.9,
+      "commits": 3,
+      "px": 2103.7
+    },
+    "technology": {
+      "slow": 3,
+      "frames": 58,
+      "fps": 48.8,
+      "busy": 44.8,
+      "script": 32.9,
+      "layout": 13.1,
+      "style": 48.4,
+      "commits": 0,
+      "px": 1972.4
+    },
+    "projects": {
+      "slow": 0,
+      "frames": 70,
+      "fps": 56.7,
+      "busy": 29.6,
+      "script": 29.7,
+      "layout": 4.5,
+      "style": 20,
+      "commits": 0,
+      "px": 2696.3
+    },
+    "clients": {
+      "slow": 0,
+      "frames": 51,
+      "fps": 60.8,
+      "busy": 34.2,
+      "script": 21.9,
+      "layout": 3.1,
+      "style": 15.7,
+      "commits": 0,
+      "px": 1742.8
+    },
+    "people": {
+      "slow": 0,
+      "frames": 64,
+      "fps": 61.2,
+      "busy": 32.4,
+      "script": 35.8,
+      "layout": 5.1,
+      "style": 37.7,
+      "commits": 1,
+      "px": 2340.5
+    },
+    "global": {
+      "slow": 6,
+      "frames": 53,
+      "fps": 46.8,
+      "busy": 32.9,
+      "script": 37.9,
+      "layout": 1.1,
+      "style": 58.6,
+      "commits": 3,
+      "px": 2188.9
+    },
+    "final": {
+      "slow": 0,
+      "frames": 44,
+      "fps": 60.7,
+      "busy": 19.1,
+      "script": 12.3,
+      "layout": 1,
+      "style": 18,
+      "commits": 0,
+      "px": 1605.1
+    }
+  },
+  "total": {
+    "slow": 23,
+    "style": 472.6,
+    "script": 309.2,
+    "layout": 50.6,
+    "commits": 13
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "base": "http://localhost:3300",
+  "view": "desktop",
+  "rate": 4,
+  "runs": 3,
+  "css": false,
+  "scenes": {
+    "hero": {
+      "slow": 5,
+      "frames": 51,
+      "fps": 44.8,
+      "busy": 49.9,
+      "script": 70,
+      "layout": 5.9,
+      "style": 80.6,
+      "commits": 7,
+      "px": 1700
+    },
+    "capabilities": {
+      "slow": 0,
+      "frames": 63,
+      "fps": 60,
+      "busy": 32.3,
+      "script": 20,
+      "layout": 0.9,
+      "style": 37.9,
+      "commits": 0,
+      "px": 2171.4
+    },
+    "engineering": {
+      "slow": 6,
+      "frames": 51,
+      "fps": 38.4,
+      "busy": 58.2,
+      "script": 74.5,
+      "layout": 10.5,
+      "style": 107.7,
+      "commits": 8,
+      "px": 2103.7
+    },
+    "technology": {
+      "slow": 5,
+      "frames": 57,
+      "fps": 47.2,
+      "busy": 49.4,
+      "script": 43.6,
+      "layout": 10.6,
+      "style": 79.1,
+      "commits": 6,
+      "px": 1986
+    },
+    "projects": {
+      "slow": 0,
+      "frames": 71,
+      "fps": 57.7,
+      "busy": 30.7,
+      "script": 30.6,
+      "layout": 5.3,
+      "style": 13.6,
+      "commits": 0,
+      "px": 2696.3
+    },
+    "people": {
+      "slow": 0,
+      "frames": 60,
+      "fps": 60.9,
+      "busy": 27.9,
+      "script": 29.8,
+      "layout": 6.2,
+      "style": 24.9,
+      "commits": 1,
+      "px": 2340.5
+    },
+    "global": {
+      "slow": 2,
+      "frames": 51,
+      "fps": 45.9,
+      "busy": 31.6,
+      "script": 35.2,
+      "layout": 2.7,
+      "style": 39.1,
+      "commits": 3,
+      "px": 2188.9
+    },
+    "final": {
+      "slow": 0,
+      "frames": 44,
+      "fps": 61.6,
+      "busy": 14.9,
+      "script": 14.2,
+      "layout": 0.8,
+      "style": 9.3,
+      "commits": 0,
+      "px": 1605.1
+    }
+  },
+  "total": {
+    "slow": 18,
+    "style": 392.2,
+    "script": 317.9,
+    "layout": 42.9,
+    "commits": 25
+  }
+}

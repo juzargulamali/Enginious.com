@@ -1,0 +1,93 @@
+{
+  "label": "exp-gallery-c",
+  "base": "http://localhost:3300",
+  "view": "desktop",
+  "viewport": [
+    1440,
+    900
+  ],
+  "css": "injected",
+  "init": null,
+  "dpr": 1,
+  "runs": 2,
+  "rates": {
+    "4": {
+      "galleryNext8": {
+        "fps": 59.9,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.8,
+        "frameWorstMs": 33.4,
+        "framesOver33ms": 1,
+        "framesOver50ms": 0,
+        "frames": 262,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 72,
+        "eventP95Ms": 72,
+        "events": 50,
+        "reactCommits": 8,
+        "mainThreadBusyPct": 28.4,
+        "scriptMs": 132.8,
+        "layoutMs": 21.8,
+        "styleMs": 167.5
+      },
+      "galleryFilterSwitch": {
+        "fps": 60.1,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.8,
+        "frameWorstMs": 16.8,
+        "framesOver33ms": 0,
+        "framesOver50ms": 0,
+        "frames": 128,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 48,
+        "eventP95Ms": 48,
+        "events": 46,
+        "reactCommits": 4,
+        "mainThreadBusyPct": 16.9,
+        "scriptMs": 54.3,
+        "layoutMs": 15.3,
+        "styleMs": 45.5
+      },
+      "galleryDragSwipe": {
+        "fps": 60,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.8,
+        "frameWorstMs": 33.4,
+        "framesOver33ms": 1,
+        "framesOver50ms": 0,
+        "frames": 228,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 56,
+        "eventP95Ms": 48,
+        "events": 163,
+        "reactCommits": 4,
+        "mainThreadBusyPct": 24.1,
+        "scriptMs": 100.8,
+        "layoutMs": 12.3,
+        "styleMs": 145.9
+      },
+      "galleryScroll": {
+        "fps": 57.6,
+        "frameMedianMs": 16.7,
+        "frameP95Ms": 16.8,
+        "frameWorstMs": 33.4,
+        "framesOver33ms": 1,
+        "framesOver50ms": 0,
+        "frames": 70,
+        "longTasks": 0,
+        "longTaskMs": 0,
+        "eventMaxMs": 64,
+        "eventP95Ms": 56,
+        "events": 151,
+        "reactCommits": 0,
+        "mainThreadBusyPct": 19.4,
+        "scriptMs": 41.4,
+        "layoutMs": 0,
+        "styleMs": 0
+      }
+    }
+  }
+}
