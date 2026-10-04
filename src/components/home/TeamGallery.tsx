@@ -17,11 +17,11 @@ const initials = (n: string) => n.split(" ").map((w) => w[0]).slice(0, 2).join("
 const PREVIEW: Record<string, string> = { "syed-tibyan": "previewMale", "zainab-jebur": "previewFemale" };
 
 /**
- * ONE representation of the team. A full-width gallery by default (selected card forward, neighbours receding in perspective; drag, swipe,
+ * ONE representation of the team, shared by the homepage and /company/team. A full-width gallery by default (selected card forward, neighbours receding in perspective; drag, swipe,
  * arrow keys, buttons, department filters, deliberate hover and gentle edge steering via useStageSteer); the same people as a simple list on
  * request. Clicking a side card centres it; clicking the centred card opens its profile. Never rotates by itself.
  */
-export function TeamGallery({ showLink = false, depth = false, wide = false }: { showLink?: boolean; depth?: boolean; wide?: boolean }) {
+export function TeamGallery({ showLink = false, depth = false }: { showLink?: boolean; depth?: boolean }) {
   const { people: PEOPLE, leaders: LEADERS, imageById, imageForSlot } = useContent();
   const isPreview = (id: string) => !!PREVIEW[id] && !!imageForSlot(PREVIEW[id]);
   const ORDER = useMemo(() => [...PEOPLE].sort((a, b) => (a.dept === "leadership" ? 0 : 1) - (b.dept === "leadership" ? 0 : 1)), [PEOPLE]);
@@ -50,7 +50,7 @@ export function TeamGallery({ showLink = false, depth = false, wide = false }: {
   const kbd = useRef(false);
   const go = (d: number) => setActive((a) => (Math.min(a, people.length - 1) + d + people.length) % people.length);
   const onKey = (e: React.KeyboardEvent) => {
-    if (wide) kbd.current = true;
+    kbd.current = true;
     if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
     else if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
     else if (e.key === "Home") { e.preventDefault(); setActive(0); }
@@ -64,8 +64,7 @@ export function TeamGallery({ showLink = false, depth = false, wide = false }: {
     stage.current?.querySelector<HTMLElement>('.tg-card[data-active="true"]')?.focus({ preventScroll: true });
   }, [idx, dept]);
 
-  const off0 = useRef<HTMLDivElement>(null);
-  useStageSteer(wide ? stage : off0, {
+  useStageSteer(stage, {
     itemSelector: ".tg-card",
     indexOf: (el) => Number((el as HTMLElement).dataset.i ?? -1),
     current: () => idx,
@@ -76,7 +75,6 @@ export function TeamGallery({ showLink = false, depth = false, wide = false }: {
   });
 
   const openProfile = () => {
-    if (!wide) return;
     const el = profile.current;
     if (!el) return;
     el.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "nearest" });
@@ -95,7 +93,7 @@ export function TeamGallery({ showLink = false, depth = false, wide = false }: {
   };
 
   return (
-    <div className={`tg${wide ? " tg-wide" : ""}`} ref={wrap}>
+    <div className="tg tg-wide" ref={wrap}>
       <div className="tg-top">
         <div role="group" aria-label="Filter people by department" className="tg-chips">
           {DEPTS.map((d) => <button key={d.key} type="button" className="chip" aria-pressed={dept === d.key} onClick={() => { setDept(d.key); setActive(0); }}>{d.label}</button>)}
@@ -119,7 +117,7 @@ export function TeamGallery({ showLink = false, depth = false, wide = false }: {
         <div ref={lift} className={depth ? "tg-depth" : undefined}>
           <div
             ref={stage}
-            className={`tg-stage${wide ? " bleed" : ""}`}
+            className="tg-stage bleed"
             role="group"
             aria-roledescription="carousel"
             aria-label="Team portraits. Use the left and right arrow keys, or drag."
@@ -136,7 +134,7 @@ export function TeamGallery({ showLink = false, depth = false, wide = false }: {
               if (off > n / 2) off -= n;
               else if (off < -n / 2) off += n; // ring: neighbours on both sides, so the selected card is always centred
               const abs = Math.abs(off);
-              if (abs > (wide ? 3 : 2)) return null; // cards further out are not rendered at all, so they cannot widen the page
+              if (abs > 3) return null; // cards further out are not rendered at all, so they cannot widen the page
               return (
                 <button
                   key={p.id}
@@ -145,14 +143,16 @@ export function TeamGallery({ showLink = false, depth = false, wide = false }: {
                   data-active={off === 0}
                   tabIndex={off === 0 ? 0 : -1}
                   data-i={i}
+                  data-side={off === 0 ? "c" : off > 0 ? "r" : "l"}
                   aria-label={`${isPreview(p.id) ? `${p.role} (preview portrait)` : `${p.name}, ${p.role}`}${off === 0 ? " (selected)" : ""}`}
                   aria-current={off === 0}
                   onPointerDown={() => { pressed.current = idx; }}
                   onClick={() => { const was = pressed.current ?? idx; pressed.current = null; if (drag.current?.moved) return; if (was === i) openProfile(); else setActive(i); }}
-                  style={{ transform: `translateX(calc(${off} * var(--step))) translateZ(${-abs * 190}px) rotateY(${off * -20}deg) scale(${off === 0 ? 1.1 : 1})`, zIndex: 10 - abs, opacity: abs > 2 ? 0.4 : 1 - abs * 0.2 }}
+                  style={{ transform: `translateX(calc(${off} * var(--step))) translateZ(${-abs * 190}px) rotateY(${off * -20}deg) scale(${off === 0 ? 1.1 : 1})`, zIndex: 10 - abs, ["--dim" as string]: off === 0 ? 0 : 0.14 + abs * 0.14 }}
                 >
                   <span className="tg-face">
                     {face(p)}
+                    <span className="tg-dim" aria-hidden="true" />
                     <span className="tg-cap"><strong>{isPreview(p.id) ? p.role : p.name}</strong>{!isPreview(p.id) && <span>{p.role}</span>}</span>
                   </span>
                 </button>
@@ -161,7 +161,7 @@ export function TeamGallery({ showLink = false, depth = false, wide = false }: {
             <button type="button" className="btn tg-prev" onClick={() => go(-1)} aria-label="Previous person">←</button>
             <button type="button" className="btn tg-next" onClick={() => go(1)} aria-label="Next person">→</button>
           </div>
-          {wide && <p className="stage-hint" aria-hidden="true">Move to explore · Click to discover</p>}
+          <p className="stage-hint" aria-hidden="true">Move to explore · Click to discover</p>
           <div className="tg-dots" aria-hidden="true">{people.map((p, i) => <button key={p.id} type="button" tabIndex={-1} aria-current={i === idx} onClick={() => setActive(i)} />)}</div>
         </div>
       )}

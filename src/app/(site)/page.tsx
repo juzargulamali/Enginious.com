@@ -161,7 +161,7 @@ export default async function Home() {
         <section id="people" className="scene home-sec" aria-labelledby="ppl-h">
           <div className="container">
             <SceneHead eyebrow="People" title="Meet the minds behind the experience." id="ppl-h" />
-            <TeamGallery showLink depth wide />
+            <TeamGallery showLink depth />
           </div>
         </section>
 

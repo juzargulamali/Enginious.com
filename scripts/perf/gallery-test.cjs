@@ -12,17 +12,17 @@ const G = {
   process.on("unhandledRejection", (e) => { ok("unexpected error", false, String(e).split("\n")[0]); console.log(out.join("\n")); process.exit(1); });
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium" });
   const errs = [];
-  const open = async (opts) => {
+  const open = async (opts, path = "/") => {
     const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, ...opts });
     const p = await ctx.newPage(); p.on("pageerror", (e) => errs.push(String(e)));
     await p.route(/youtube|ytimg/, (r) => r.abort());
-    await p.goto(BASE + "/", { waitUntil: "load" });
+    await p.goto(BASE + path, { waitUntil: "load" });
     return p;
   };
   const prep = async (p, g) => {
     await p.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 800) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); } });
     for (let k = 0; k < 3; k++) { // sections below the fold change height as they render: settle on the stage
-      await p.evaluate(([s]) => document.querySelector(s + " " + (s === "#technology" ? ".sr-stage" : ".tg-stage")).scrollIntoView({ block: "center" }), [g.section]);
+      await p.evaluate(([s]) => document.querySelector(s).scrollIntoView({ block: "center" }), [g.stage]);
       await sleep(700);
     }
   };
@@ -35,9 +35,9 @@ const G = {
     return c[0];
   }, [g.item, g.on, side]);
 
-  for (const key of ["sr", "tg"]) {
-    const g = G[key]; const name = key === "sr" ? "showroom" : "team gallery";
-    const p = await open({}); await prep(p, g);
+  for (const [key, path, label] of [["sr", "/", "showroom"], ["tg", "/", "team gallery (home)"], ["tg", "/company/team", "team gallery (team page)"]]) {
+    const g = G[key]; const name = label;
+    const p = await open({}, path); await prep(p, g);
     const st = await box(p, g.stage);
     ok(`${name}: stage spans the viewport`, Math.abs(st.w - 1440) < 2 && Math.abs(st.x) < 2, `w=${st.w} x=${st.x}`);
     ok(`${name}: no horizontal overflow`, (await p.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0);
@@ -102,13 +102,16 @@ const G = {
     }
     await p.close(); }
   // team: click centred opens profile; filters; no steering over arrows
-  { const g = G.tg; const p = await open({}); await prep(p, g);
+  for (const path of ["/", "/company/team"]) { const g = G.tg; const p = await open({}, path); await prep(p, g); const T = path === "/" ? "team (home)" : "team (page)";
     { const r = await box(p, ".tg-card[data-active='true']"); await p.mouse.move(r.x + r.w / 2, r.y + r.h / 2, { steps: 4 }); await p.mouse.down(); await p.mouse.up(); await sleep(900); }
-    ok("team: clicking the centred card focuses the profile", await p.evaluate(() => document.activeElement?.classList.contains("tg-profile")));
+    ok(`${T}: clicking the centred card focuses the profile`, await p.evaluate(() => document.activeElement?.classList.contains("tg-profile")));
     const a = await active(p, g); const st = await box(p, g.stage); await p.mouse.move(720, st.y + st.h * 0.5, { steps: 4 }); await p.mouse.move(1400, st.y + st.h * 0.5, { steps: 6 }); await sleep(2500);
-    ok("team: steering paused while the profile has focus", (await active(p, g)) === a);
+    ok(`${T}: steering paused while the profile has focus`, (await active(p, g)) === a);
     await p.locator(".tg-chips .chip").nth(1).click(); await sleep(300);
-    ok("team: department filter still works", (await p.locator(".tg-card").count()) > 0);
+    ok(`${T}: department filter still works`, (await p.locator(".tg-card").count()) > 0);
+    await p.locator(".tg-chips .chip").nth(0).click();
+    ok(`${T}: no duplicate list under the gallery`, (await p.locator("ul.tl").count()) === 0);
+    ok(`${T}: neighbour names are bright and cards are not faded`, await p.evaluate(() => { const c = document.querySelector('.tg-card[data-side="r"]'); if (!c) return false; const strong = c.querySelector(".tg-cap strong"); const role = c.querySelector(".tg-cap span"); const rgb = (e) => getComputedStyle(e).color.match(/\d+/g).map(Number); const lum = (e) => { const [r, g, b] = rgb(e); return 0.2126 * r + 0.7152 * g + 0.0722 * b; }; return getComputedStyle(c).opacity === "1" && lum(strong) > 235 && lum(role) > 200; }));
     await p.close(); }
   // reduced motion: no steering, hover still selects
   { const g = G.sr; const p = await open({ reducedMotion: "reduce" }); await prep(p, g);
@@ -117,20 +120,25 @@ const G = {
     const s1 = await active(p, g); ok("reduced motion: no continuous steering", s1 === s0, s0 + " -> " + s1 + " reduced=" + (await p.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)));
     await p.close(); }
   // no pointer-fine: hint hidden and no steering (touch device)
-  for (const key of ["sr", "tg"]) {
-    const g = G[key]; const p = await open({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }); await prep(p, g);
-    ok(`mobile ${key}: no horizontal overflow`, (await p.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0);
-    ok(`mobile ${key}: hint hidden on touch`, !(await p.locator(g.section + " .stage-hint").first().isVisible()));
-    ok(`mobile ${key}: vertical panning left to the browser`, (await p.evaluate((s) => getComputedStyle(document.querySelector(s)).touchAction, g.stage)).includes("pan-y"));
-    const c = await box(p, g.on); ok(`mobile ${key}: centred item is prominent`, c.w > 120 && c.x > 20 && c.x + c.w < 380, JSON.stringify(c));
+  for (const [key, path, vw] of [["sr", "/", 390], ["tg", "/", 390], ["tg", "/", 430], ["tg", "/", 768], ["tg", "/company/team", 390], ["tg", "/company/team", 430], ["tg", "/company/team", 768]]) {
+    const g = G[key]; const p = await open({ viewport: { width: vw, height: 900 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }, path); await prep(p, g);
+    const L = `${key === "sr" ? "showroom" : "team"} ${path === "/" ? "home" : "page"} ${vw}`;
+    ok(`${L}: no horizontal overflow`, (await p.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0);
+    ok(`${L}: hint hidden on touch`, !(await p.locator(".stage-hint").first().isVisible()));
+    if (key === "tg") {
+      const hit = await p.evaluate(() => { const arrows = [...document.querySelectorAll(".tg-prev, .tg-next")].map((e) => e.getBoundingClientRect()); const faces = [...document.querySelectorAll(".tg-card")].filter((e) => getComputedStyle(e).opacity > 0.05).map((e) => e.querySelector(".tg-face").getBoundingClientRect()); const hits = []; arrows.forEach((a, i) => faces.forEach((f) => { if (a.left < f.right && a.right > f.left && a.top < f.bottom && a.bottom > f.top) hits.push(i); })); return { hits: hits.length, sizes: arrows.map((a) => [Math.round(a.width), Math.round(a.height)]) }; });
+      ok(`${L}: arrows clear of every card, 44px+ targets`, hit.hits === 0 && hit.sizes.every(([w, h]) => w >= 44 && h >= 44), JSON.stringify(hit));
+    }
+    ok(`${L}: vertical panning left to the browser`, (await p.evaluate((s) => getComputedStyle(document.querySelector(s)).touchAction, g.stage)).includes("pan-y"));
+    const c = await box(p, g.on); ok(`${L}: centred item is prominent`, c.w > 120 && c.x > 10 && c.x + c.w < vw - 10, JSON.stringify(c));
     const a0 = await active(p, g);
     const next = await neighbour(p, g, 1).catch(() => null);
     await p.locator(key === "sr" ? '[aria-label="Next exhibit"]' : '[aria-label="Next person"]').tap(); await sleep(500);
-    ok(`mobile ${key}: next control works`, (await active(p, g)) !== a0);
+    ok(`${L}: next control works`, (await active(p, g)) !== a0);
     // swipe left via pointer events (touch)
     const sb = await box(p, g.stage); const a1 = await active(p, g);
     await p.evaluate(([sel, y]) => { const el = document.querySelector(sel); const mk = (t, x) => el.dispatchEvent(new PointerEvent(t, { bubbles: true, pointerType: "touch", clientX: x, clientY: y, isPrimary: true })); mk("pointerdown", 300); mk("pointermove", 220); mk("pointermove", 150); mk("pointerup", 150); }, [g.stage, sb.y + sb.h / 2]);
-    await sleep(500); ok(`mobile ${key}: swipe changes selection`, (await active(p, g)) !== a1);
+    await sleep(500); ok(`${L}: swipe changes selection`, (await active(p, g)) !== a1);
     void next; await p.close();
   }
   ok("no uncaught page errors", errs.length === 0, errs.slice(0, 2).join(" | "));

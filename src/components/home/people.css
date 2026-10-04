@@ -1,7 +1,9 @@
 /* People gallery: prominent selected card, receding neighbours in perspective. Transform/opacity only. */
-/* Home only (.tg-wide): the stage spans the viewport (.bleed in gallery.css); html clips horizontally, so nothing can widen the page. Elsewhere it stays contained. */
+/* Home: the gallery stage spans the viewport. Both galleries (home and /company/team) use .tg-wide, which clips its own 3D overflow to the viewport. */
 .tg { overflow-x: clip; padding-inline: 4px; }
-.tg-wide { overflow-x: visible; padding-inline: 0; }
+.tg-wide { --tg-x: var(--head-x, calc((100vw - min(100vw, var(--maxw))) / 2 + var(--gutter))); /* where the reading column starts: set by a homepage scene, else the plain container */
+  width: 100vw; margin-left: calc(var(--tg-x) * -1); padding-inline: var(--tg-x); overflow-x: clip; } /* the viewport-wide band clips its own 3D overflow */
+.tg-wide .tg-stage.bleed { width: auto; margin-inline: calc(var(--tg-x) * -1); }
 .tg-top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 30px; }
 .tg-chips { display: flex; gap: 8px; flex-wrap: wrap; }
 .tg-stage { --step: clamp(130px, 21vw, 300px); position: relative; height: clamp(500px, 56vw, 680px); margin-top: 18px; perspective: 1500px; display: grid; place-items: center; touch-action: pan-y; user-select: none; cursor: default; -webkit-user-select: none; }
@@ -14,14 +16,19 @@
 .tg-mono b { font-family: var(--font-display), sans-serif; font-size: clamp(3.2rem, 7vw, 5.6rem); color: var(--neon); letter-spacing: 0.04em; margin-top: -14%; text-shadow: 0 0 36px rgba(70, 233, 243, 0.5); }
 .tg-mono svg { position: absolute; width: 74%; height: auto; left: 13%; top: 8%; color: var(--neon); opacity: 0.2; }
 .tg-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 70px 20px 20px; background: linear-gradient(0deg, rgba(1, 5, 10, 0.97) 8%, transparent); display: grid; gap: 2px; }
-.tg-cap strong { font-family: var(--font-display), sans-serif; font-size: 1.25rem; line-height: 1.15; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.8); }
-.tg-cap span { color: #b6cdd2; font-size: 0.88rem; }
+.tg-cap strong { color: #fff; font-family: var(--font-display), sans-serif; font-size: 1.25rem; line-height: 1.15; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.8); }
+.tg-cap span { color: #d6e8eb; font-size: 0.88rem; text-shadow: 0 1px 10px rgba(0, 0, 0, 0.9); }
+/* neighbours dim their picture and background, not their words (an overlay under the caption, not opacity on the whole card) */
+.tg-dim { position: absolute; inset: 0; background: #01050a; opacity: var(--dim, 0); transition: opacity 0.5s; pointer-events: none; }
+/* a neighbour's inner side is hidden behind the next card: its words sit on its outer side */
+.tg-card[data-side="r"] .tg-cap { text-align: right; }
+.tg-card[data-side="l"] .tg-cap { text-align: left; }
 .tg-card[data-active="true"] .tg-cap::after { content: ""; display: block; width: 44px; height: 2px; margin-top: 10px; background: var(--neon); box-shadow: 0 0 12px var(--neon); }
 .tg-prev, .tg-next { position: absolute; top: 46%; z-index: 20; width: 50px; padding: 0; transform: translateY(-50%); }
 .tg-prev { left: 0; } .tg-next { right: 0; }
 .tg-wide .tg-stage { --step: clamp(130px, 23vw, 400px); }
 .tg-wide .tg-prev, .tg-wide .tg-next { top: auto; bottom: 0; transform: none; }
-.tg-wide .tg-prev { left: var(--head-x, 0px); } .tg-wide .tg-next { right: var(--head-x, 0px); }
+.tg-wide .tg-prev { left: var(--tg-x); } .tg-wide .tg-next { right: var(--tg-x); }
 .tg-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 .tg-dots button { width: 22px; height: 4px; padding: 0; border: 0; border-radius: 2px; background: rgba(70, 233, 243, 0.22); cursor: pointer; }
 .tg-dots button[aria-current="true"] { background: var(--neon); box-shadow: 0 0 8px var(--neon); }
@@ -40,3 +47,12 @@
 .tl li { display: flex; gap: 14px; align-items: center; padding: 12px; border-radius: 16px; border: 1px solid var(--line); background: rgba(5, 16, 26, 0.6); }
 .tl .av { position: relative; flex: none; width: 56px; height: 70px; border-radius: 10px; overflow: hidden; background: linear-gradient(180deg, #072230, #02070b); display: grid; place-items: center; color: var(--neon); font-family: var(--font-display), sans-serif; border: 1px solid var(--line); }
 .tl b { display: block; font-family: var(--font-display), sans-serif; } .tl span.r { color: var(--muted); font-size: 0.88rem; }
+/* Tablet and phone: the two arrows sit together in their own clear strip under the cards (never over a photo, name or role). */
+@media (max-width: 900px) {
+  .tg-wide .tg-stage { height: clamp(540px, 120vw, 620px); }
+  .tg-wide .tg-prev, .tg-wide .tg-next { width: 52px; height: 52px; bottom: 0; }
+  .tg-wide .tg-prev { left: calc(50% - 58px); }
+  .tg-wide .tg-next { left: auto; right: calc(50% - 58px); }
+}
+/* Phone: neighbours are only a glimpse, so their cut-off captions are left out (the card's accessible name still carries the person) */
+@media (max-width: 760px) { .tg-card[data-side="l"] .tg-cap, .tg-card[data-side="r"] .tg-cap { opacity: 0; } }

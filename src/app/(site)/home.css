@@ -19,7 +19,7 @@
 .rh-stage .pillar { position: absolute; bottom: 15%; width: clamp(50px, 5.6vw, 104px); background: repeating-linear-gradient(180deg, rgba(70, 233, 243, 0.5) 0 2px, rgba(7, 36, 48, 0.96) 2px 34px), linear-gradient(90deg, transparent, rgba(70, 233, 243, 0.3), transparent); border-left: 1px solid rgba(70, 233, 243, 0.5); border-right: 1px solid rgba(70, 233, 243, 0.25); box-shadow: 0 0 60px rgba(70, 233, 243, 0.22); }
 .rh-stage .p1 { left: 56%; height: 50%; } .rh-stage .p2 { left: 68%; height: 63%; } .rh-stage .p3 { left: 80%; height: 44%; }
 .rh-stage .floor, .film-stage .floor { position: absolute; left: -10%; right: -10%; bottom: 0; height: 40%; background: repeating-linear-gradient(90deg, rgba(70, 233, 243, 0.13) 0 1px, transparent 1px 90px), repeating-linear-gradient(0deg, rgba(70, 233, 243, 0.11) 0 1px, transparent 1px 46px); transform: perspective(520px) rotateX(58deg); transform-origin: 50% 100%; -webkit-mask-image: linear-gradient(transparent, #000 45%); mask-image: linear-gradient(transparent, #000 45%); }
-.rh-layer { position: absolute; inset: -16px; will-change: transform; }
+.rh-layer { position: absolute; inset: -16px; transform: scale(1.04); } /* static: never moved while the video plays */
 .rh-poster, .rh-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .rh-video { opacity: 0; transition: opacity 0.9s; }
 .rh-video[data-on] { opacity: 1; }
@@ -46,9 +46,12 @@
 @keyframes rsRun { from { transform: translateX(-120%); } to { transform: translateX(520%); } }
 .rs[data-neon]:not([data-live]) em { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .rs-l em { display: none; } }
-.rh-ctrl { position: absolute; right: clamp(20px, 3vw, 46px); bottom: clamp(26px, 4vh, 50px); z-index: 4; }
-.rh-pause { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line-strong); background: rgba(2, 7, 11, 0.62); color: #fff; cursor: pointer; font-size: 0.78rem; }
-.rh-pause:hover { border-color: var(--neon); }
+.rh-ctrl { position: absolute; right: clamp(20px, 3vw, 46px); bottom: clamp(26px, 4vh, 50px); z-index: 4; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; } /* stacked above the pause button, clear of the regional strip */
+.rh-pause, .rh-sound { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line-strong); background: rgba(2, 7, 11, 0.62); color: #fff; cursor: pointer; font-size: 0.78rem; }
+.rh-pause:hover, .rh-sound:hover { border-color: var(--neon); }
+.rh-pause:focus-visible, .rh-sound:focus-visible { outline: 2px solid var(--neon); outline-offset: 3px; }
+.rh-sound { display: grid; place-items: center; padding: 0; }
+@media (min-width: 901px) and (max-width: 1419px) { .rh-ctrl { bottom: 132px; } } /* the regional strip reaches this far right here: lift the controls above it */
 .rh-cue { position: absolute; left: 50%; bottom: 8px; width: 28px; height: 52px; margin-left: -14px; z-index: 4; }
 .rh-cue span { display: block; width: 2px; height: 100%; margin: auto; background: linear-gradient(var(--neon), transparent); }
 
@@ -72,7 +75,7 @@
   .rs-l { margin: 0 4px; width: 14px; } .rs-l em { display: none; }
   .rh-stage .p1 { left: 8%; } .rh-stage .p2 { left: 22%; } .rh-stage .p3 { left: 70%; } .rh-stage .ringd { right: 8%; top: 22%; }
   .rh-copy h1 { font-size: clamp(2rem, 9.2vw, 2.9rem); }
-  .rh-ctrl { top: 84px; bottom: auto; right: 22px; }
+  .rh-ctrl { top: 84px; bottom: auto; right: 22px; flex-direction: row; }
   .rh-copy { padding-block: 0 56px; }
   .rh-cue { display: none; }
   .rh-spot { display: none; }

@@ -11,8 +11,10 @@ import type { ShowreelConfig } from "@/content/media";
  *  - Poster and a designed stage are always painted first (fast LCP, and the hero is never empty).
  *  - The video fades in only when it is really playing. Nothing loads for reduced motion, Save-Data or 2G/3G;
  *    those visitors get the poster and a play button.
- *  - Muted loop, pauses offscreen, visible pause control (WCAG 2.2.2). Sound lives in the lightbox.
- *  - Restrained interactivity: pointer-driven light and three layers of depth (mouse only, one write per frame).
+ *  - Muted loop, pauses offscreen, visible pause control (WCAG 2.2.2). Starts muted; sound only after an explicit Unmute (and only while
+ *    the player really reports a mute state, so the control is never shown for a poster or an unavailable player). The lightbox has its own sound.
+ *  - Restrained interactivity: pointer-driven light and depth on the text and HUD layers (mouse only, one write per frame). The video layer itself is
+ *    static: moving a cross-origin video iframe every pointer event is the most expensive thing the page could do to a playing video.
  */
 
 type Net = { saveData?: boolean; effectiveType?: string };
@@ -30,7 +32,6 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
   const video = useRef<HTMLVideoElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   const spot = useRef<HTMLSpanElement>(null);
-  const layerV = useRef<HTMLDivElement>(null);
   const layerH = useRef<HTMLDivElement>(null);
   const layerT = useRef<HTMLDivElement>(null);
   const [auto, setAuto] = useState(false);
@@ -42,8 +43,11 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
   const [posterOk, setPosterOk] = useState(true);
   const [open, setOpen] = useState(false);
 
-  const command = useCallback((func: "playVideo" | "pauseVideo") => {
-    frame.current?.contentWindow?.postMessage(JSON.stringify({ event: "command", func, args: [] }), "*");
+  // sound: null until the player has actually reported it; then what the player says (never an optimistic guess)
+  const [sound, setSound] = useState<"on" | "off" | null>(null);
+
+  const command = useCallback((func: "playVideo" | "pauseVideo" | "mute" | "unMute" | "setVolume", args: unknown[] = []) => {
+    frame.current?.contentWindow?.postMessage(JSON.stringify({ event: "command", func, args }), "*");
   }, []);
 
   // ---- start (never block first paint; skip when motion is expensive)
@@ -55,6 +59,7 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
       else if (video.current) {
         video.current.src = cfg.mobileMp4 && window.innerWidth < 768 ? cfg.mobileMp4 : (cfg.mp4 ?? cfg.webm ?? "");
         video.current.play().catch(() => {});
+        setSound("off");
       }
     };
     const t = window.setTimeout(start, 350);
@@ -66,9 +71,13 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
     if (!src) return;
     const onMsg = (e: MessageEvent) => {
       if (!/youtube(-nocookie)?\.com$/.test(new URL(e.origin).hostname)) return;
-      let data: { event?: string; info?: { playerState?: number } | number };
+      let data: { event?: string; info?: { playerState?: number; muted?: boolean; volume?: number } | number };
       try { data = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch { return; }
       const st = typeof data.info === "number" ? data.info : data.info?.playerState;
+      if (data.event === "infoDelivery" && data.info && typeof data.info === "object" && typeof data.info.muted === "boolean") {
+        const on = !data.info.muted && (data.info.volume ?? 100) > 0;
+        setSound((cur) => (cur === (on ? "on" : "off") ? cur : on ? "on" : "off"));
+      }
       if (data.event === "onStateChange" || data.event === "infoDelivery") {
         if (st === 1) setPlaying(true);
         if (st === 2) setPaused(true);
@@ -110,7 +119,6 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
     const flush = () => {
       raf = 0;
       if (spot.current) spot.current.style.transform = `translate3d(${mx - 320}px, ${my - 320}px, 0)`;
-      if (layerV.current) layerV.current.style.transform = `translate3d(${(-px * 10).toFixed(1)}px, ${(-py * 6).toFixed(1)}px, 0) scale(1.04)`;
       if (layerH.current) layerH.current.style.transform = `translate3d(${(px * 14).toFixed(1)}px, ${(py * 9).toFixed(1)}px, 0)`;
       if (layerT.current) layerT.current.style.transform = `translate3d(${(px * 5).toFixed(1)}px, ${(py * 3).toFixed(1)}px, 0)`;
     };
@@ -135,6 +143,21 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
     } else command(next ? "pauseVideo" : "playVideo");
   };
 
+  const toggleSound = () => {
+    if (cfg.mode === "file") {
+      const v = video.current;
+      if (!v) return;
+      v.muted = !v.muted;
+      if (!v.muted && v.volume === 0) v.volume = 1;
+    } else if (sound === "on") command("mute");
+    else { command("unMute"); command("setVolume", [100]); }
+  };
+  // the lightbox plays its own sound: silence the background first, and never turn it back on by itself
+  const openReel = () => {
+    if (sound === "on") { if (cfg.mode === "file" && video.current) video.current.muted = true; else command("mute"); }
+    setOpen(true);
+  };
+
   const poster = posterOk && cfg.poster;
 
   return (
@@ -143,13 +166,13 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
         <div className="rh-stage" aria-hidden="true">
           <span className="beam b1" /><span className="beam b2" /><span className="beam b3" /><span className="ringd" /><span className="pillar p1" /><span className="pillar p2" /><span className="pillar p3" /><span className="floor" />
         </div>
-        <div ref={layerV} className="rh-layer">
+        <div className="rh-layer">
           {poster && (
             // eslint-disable-next-line @next/next/no-img-element
             <img className="rh-poster" src={cfg.poster} alt="" fetchPriority="high" decoding="async" onError={() => setPosterOk(false)} />
           )}
           {cfg.mode === "file" ? (
-            <video ref={video} className="rh-video" data-on={playing || undefined} muted loop playsInline preload="auto" aria-hidden="true" tabIndex={-1} onPlaying={() => setPlaying(true)} />
+            <video ref={video} className="rh-video" data-on={playing || undefined} muted loop playsInline preload="auto" aria-hidden="true" tabIndex={-1} onPlaying={() => setPlaying(true)} onVolumeChange={(e) => setSound(e.currentTarget.muted || e.currentTarget.volume === 0 ? "off" : "on")} />
           ) : (
             src && <iframe ref={frame} className="rh-yt" data-on={playing || undefined} src={src} title="Enginious showreel (background)" allow="autoplay; encrypted-media" aria-hidden="true" tabIndex={-1} onLoad={onFrameLoad} />
           )}
@@ -172,7 +195,7 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
         </p>
         <div className="rh-cta">
           <Link href="/contact" className="btn btn-primary btn-lg">Start a project →</Link>
-          <button type="button" className="btn btn-lg" onClick={() => setOpen(true)}>
+          <button type="button" className="btn btn-lg" onClick={openReel}>
             <span className="play" aria-hidden="true">▶</span> Watch the showreel
           </button>
         </div>
@@ -187,6 +210,14 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
       </nav>
 
       <div className="rh-ctrl">
+        {auto && playing && sound !== null && (
+          <button type="button" className="rh-sound" onClick={toggleSound} aria-label={sound === "on" ? "Mute video" : "Unmute video"}>
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 9.5v5h3.6L12.5 19V5L7.6 9.5H4z" fill="currentColor" stroke="none" />
+              {sound === "on" ? <><path d="M16 9a4.2 4.2 0 0 1 0 6" /><path d="M18.4 6.6a7.6 7.6 0 0 1 0 10.8" /></> : <path d="M16.2 9.4l5 5.2M21.2 9.4l-5 5.2" />}
+            </svg>
+          </button>
+        )}
         {auto && playing && (
           <button type="button" className="rh-pause" onClick={toggle} aria-label={paused ? "Play background video" : "Pause background video"}>
             {paused ? "▶" : "❚❚"}
