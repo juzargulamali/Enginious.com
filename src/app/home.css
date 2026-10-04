@@ -86,8 +86,8 @@
 .home-sec { content-visibility: auto; contain-intrinsic-size: auto 820px; }
 /* Measured heights so jumps to #anchors land where expected before off-screen sections have rendered. */
 #capabilities { contain-intrinsic-size: auto 1370px; } #engineering { contain-intrinsic-size: auto 1300px; } #technology { contain-intrinsic-size: auto 1170px; }
-#projects { contain-intrinsic-size: auto 1900px; } #clients { contain-intrinsic-size: auto 940px; } #people { contain-intrinsic-size: auto 1540px; } #global { contain-intrinsic-size: auto 1390px; }
-@media (max-width: 700px) { #capabilities { contain-intrinsic-size: auto 2220px; } #engineering { contain-intrinsic-size: auto 1465px; } #technology { contain-intrinsic-size: auto 1066px; } #projects { contain-intrinsic-size: auto 1290px; } #clients { contain-intrinsic-size: auto 640px; } #people { contain-intrinsic-size: auto 1366px; } #global { contain-intrinsic-size: auto 1950px; } }
+#projects { contain-intrinsic-size: auto 1900px; } #clients { contain-intrinsic-size: auto 860px; } #people { contain-intrinsic-size: auto 1480px; } #global { contain-intrinsic-size: auto 1390px; }
+@media (max-width: 700px) { #capabilities { contain-intrinsic-size: auto 2220px; } #engineering { contain-intrinsic-size: auto 1465px; } #technology { contain-intrinsic-size: auto 1066px; } #projects { contain-intrinsic-size: auto 1290px; } #clients { contain-intrinsic-size: auto 600px; } #people { contain-intrinsic-size: auto 1340px; } #global { contain-intrinsic-size: auto 1950px; } }
 .btn.play-btn { gap: 0.55rem; }
 
 /* ================================ 1. CAPABILITIES ================================ */
@@ -399,3 +399,9 @@ html[data-js] .pc2:not([data-reached]) .pc2-b, html[data-js] .pc2:not([data-reac
   .face::after { display: none; }
   .orbit, .pool { display: none; }
 }
+
+/* Tighter rhythm for Clients, Testimonials and People: the generic scene padding stacked to a 280px empty band between them.
+   Applies whether or not Testimonials is rendered (it is omitted when nothing is published). */
+#clients { padding-bottom: clamp(24px, 4vw, 56px); }
+#testimonials { padding-block: clamp(16px, 3vw, 40px) clamp(24px, 4vw, 56px); }
+#people { padding-top: clamp(40px, 6vw, 84px); }

@@ -54,3 +54,4 @@
 ## Round 6
 - Testimonials: samples are not shipped at all by production builds (`VERCEL_ENV=production` or `ALLOW_INDEXING=true`); with none published the section is omitted. Verified in both modes.
 - Image slots and exact specs: `docs/asset-handoff.md`. Still no images generated.
+- Spacing: Clients, Testimonials and People use a tighter section rhythm (about 140px between Clients and People at 1440 wide, 64px on phones), same with or without Testimonials.
