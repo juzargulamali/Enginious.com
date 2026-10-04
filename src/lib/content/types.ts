@@ -30,6 +30,8 @@ export interface SiteSettings {
   companyProfileUrl?: string;
   showreelYoutubeId?: string;
   filmYoutubeId?: string;
+  showreelMp4Url?: string;
+  showreelPoster?: string;
   privacyStatus: "provisional" | "approved";
 }
 

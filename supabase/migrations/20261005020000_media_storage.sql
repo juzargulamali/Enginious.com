@@ -29,6 +29,10 @@ alter table public.media_assets add constraint media_assets_dims_check check ((w
 alter table public.media_assets drop constraint if exists media_assets_status_check;
 alter table public.media_assets add constraint media_assets_status_check check (status in ('real', 'stock', 'preview-portrait', 'concept', 'fictional-portrait'));
 
+-- The public may read only the columns needed to render an image (not authorship, original file names or private paths).
+revoke select on public.media_assets from anon;
+grant select (id, kind, status, published, storage_path, width, height, focal_x, focal_y, crop_aspect, alt, caption, credit, source_url, licence, mime, variants, visibility, title) on public.media_assets to anon;
+
 -- Re-create policies: any CMS user (editor or administrator) manages media; deletion goes through cms_delete_media().
 drop policy if exists "admins read all media" on public.media_assets;
 drop policy if exists "admins write media" on public.media_assets;

@@ -69,7 +69,10 @@ create table if not exists public.redirects (
   id          uuid primary key default gen_random_uuid(),
   source_path text not null unique check (source_path ~ '^/[A-Za-z0-9/_.~%-]*$' and char_length(source_path) <= 200
                                           and source_path !~ '^/(admin|api|_next)(/|$)'),
-  target      text not null check (char_length(target) <= 500 and (target ~ '^/[A-Za-z0-9/_.~%?=&#-]*$' or target ~ '^https://[^\s]+$')),
+  target      text not null check (char_length(target) <= 500 and (
+                (target ~ '^/[A-Za-z0-9/_.~%?=&#-]*$' and target !~ '^//')               -- internal path (never protocol-relative //host)
+                or (target ~ '^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[^\s@\\]*)?$')        -- external: plain host only, no userinfo (@) or backslash
+              )),
   status_code integer not null default 301 check (status_code in (301, 302, 307, 308)),
   enabled     boolean not null default true,
   automatic   boolean not null default false,   -- created by a slug change
@@ -103,7 +106,8 @@ create policy "public reads live content" on public.content_published for select
 grant select on public.content_revisions to authenticated;
 create policy "staff read revisions" on public.content_revisions for select to authenticated using (public.cms_is_staff());
 
-grant select on public.redirects to anon, authenticated;
+grant select on public.redirects to authenticated;
+grant select (source_path, target, status_code, enabled) on public.redirects to anon;  -- notes and authorship stay private
 grant insert, update, delete on public.redirects to authenticated;
 create policy "public reads enabled redirects" on public.redirects for select to anon, authenticated using (enabled);
 create policy "staff read all redirects" on public.redirects for select to authenticated using (public.cms_is_staff());
@@ -298,8 +302,9 @@ create or replace function public.cms_redirect_host_allowed(p_target text)
 returns boolean language plpgsql stable security definer set search_path = '' as $$
 declare host text; allowed jsonb;
 begin
-  if p_target ~ '^/' then return true; end if;
-  host := lower(substring(p_target from '^https://([^/?#:]+)'));
+  if p_target ~ '^/[^/]' or p_target = '/' then return true; end if;
+  if p_target ~ '^//' or p_target ~ '[@\\]' then return false; end if;
+  host := lower(substring(p_target from '^https://([A-Za-z0-9.-]+)'));
   select data -> 'redirect_hosts' into allowed from public.content_published where type = 'setting' and slug = 'site';
   return allowed is not null and jsonb_typeof(allowed) = 'array' and allowed ? host;
 end $$;

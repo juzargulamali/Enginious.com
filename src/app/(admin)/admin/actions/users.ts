@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseAdmin, supabaseUser } from "@/lib/supabase/server";
 import { AuthError, assertAdministrator } from "@/lib/cms/auth";
 import { fail, friendlyDbError, type ActionResult } from "@/lib/cms/result";
+import { publicOrigin } from "@/lib/seo/indexing";
 
 const EMAIL = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[^\s@<>()[\]\\,;:"]{2,}$/;
 const ROLES = ["administrator", "editor"] as const;
@@ -14,6 +15,9 @@ const authFail = (e: unknown) => {
   throw e;
 };
 async function origin() {
+  // Prefer the configured public origin; headers are only a fallback for previews and local work.
+  const configured = publicOrigin();
+  if (configured) return configured;
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
@@ -36,9 +40,17 @@ export async function inviteUser(input: { email: string; role: string }): Promis
   if (error || !data.user) {
     if (/already|registered|exists/i.test(error?.message ?? "")) {
       // The person already has an account (for example another Enginious tool). Give them a role without sending a new invite.
-      const { data: list } = await svc.auth.admin.listUsers({ page: 1, perPage: 200 });
-      const existing = list?.users.find((u) => u.email?.toLowerCase() === email);
+      // Look through ALL pages (a project may be shared with other tools), and only grant access to an account whose email was
+      // actually confirmed: an unconfirmed account could have been registered by someone else in advance.
+      let existing: { id: string; email_confirmed_at?: string | null } | undefined;
+      for (let page = 1; page <= 20 && !existing; page++) {
+        const { data: list } = await svc.auth.admin.listUsers({ page, perPage: 200 });
+        if (!list?.users.length) break;
+        existing = list.users.find((u) => u.email?.toLowerCase() === email);
+        if (list.users.length < 200) break;
+      }
       if (!existing) return fail("That email already has an account but it could not be found. Try again.", "unavailable");
+      if (!existing.email_confirmed_at) return fail("That address has an account whose email was never confirmed, so access cannot be granted safely. Ask them to confirm it, or remove the account in Supabase, then invite again.", "validation");
       const ins = await svc.from("cms_roles").upsert({ user_id: existing.id, role: input.role, email, invited_by: admin.id, disabled: false }, { onConflict: "user_id" });
       if (ins.error) return fail("Could not grant access. Please try again.", "unavailable");
       revalidatePath("/admin/users");

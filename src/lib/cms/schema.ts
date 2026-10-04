@@ -265,6 +265,8 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
       { key: "company_profile", label: "Company profile (PDF)", type: "media", mediaKind: "document", group: "Downloads", help: "Upload the approved PDF in Media, then pick it here. Shown as a download only when set." },
       { key: "showreel_youtube_id", label: "Showreel YouTube ID", type: "text", max: 20, group: "Video", help: "Privacy-enhanced embed. Leave empty to use the built-in default." },
       { key: "film_youtube_id", label: "Second film YouTube ID", type: "text", max: 20, group: "Video" },
+      { key: "showreel_mp4_url", label: "Showreel video file address (optional)", type: "url", group: "Video", help: "An approved MP4 hosted on a video or CDN service (https). Muted looping background, 15 to 30 seconds, at most 12 MB, H.264. When set it replaces the YouTube background; the YouTube film stays available behind the Play button. Large videos are not uploaded here." },
+      { key: "showreel_poster", label: "Showreel poster image", type: "media", mediaKind: "image", group: "Video", help: "Still shown before the video loads and for visitors who reduce motion. 16:9, 1920 x 1080." },
       { key: "slot_cap_events", label: "Capability card: Events and exhibitions", type: "media", mediaKind: "image", group: "Image slots", help: "Replaces the designed card background. 3:4 portrait, see docs/asset-handoff.md." },
       { key: "slot_cap_centres", label: "Capability card: Experience centres", type: "media", mediaKind: "image", group: "Image slots" },
       { key: "slot_cap_permanent", label: "Capability card: Permanent installations", type: "media", mediaKind: "image", group: "Image slots" },

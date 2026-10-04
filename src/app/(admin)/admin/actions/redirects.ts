@@ -18,7 +18,9 @@ export async function saveRedirect(input: { id?: string; source: string; target:
   const errors: Record<string, string> = {};
   if (!/^\/[A-Za-z0-9/_.~%-]*$/.test(source) || source.length > 200) errors.source = "Start with / and use only letters, numbers and - _ . ~ / %.";
   if (/^\/(admin|api|_next)(\/|$)/.test(source)) errors.source = "Admin, API and internal paths cannot be redirected.";
-  if (!/^\/[A-Za-z0-9/_.~%?=&#-]*$/.test(target) && !/^https:\/\/[^\s]+$/.test(target)) errors.target = "Use a path on this site (starting with /) or a full https:// address.";
+  const internal = /^\/[A-Za-z0-9/_.~%?=&#-]*$/.test(target) && !target.startsWith("//");
+  const external = /^https:\/\/[A-Za-z0-9.-]+(:[0-9]{1,5})?(\/[^\s@\\]*)?$/.test(target);
+  if (!internal && !external) errors.target = "Use a path on this site (starting with a single /) or a plain https:// address (no @ or backslashes).";
   if (![301, 302, 307, 308].includes(input.status)) errors.status = "Choose a redirect type.";
   if (Object.keys(errors).length) return fail("Please fix the highlighted fields.", "validation", errors);
   const sb = await supabaseUser();

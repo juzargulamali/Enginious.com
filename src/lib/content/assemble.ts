@@ -16,10 +16,15 @@ import type { Article, CompanySection, Faq, JobRole, MediaRow, PublishedRow, Reg
 type D = Record<string, unknown>;
 const str = (v: unknown): string | undefined => (typeof v === "string" && v.trim() ? v : undefined);
 const strs = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+// The public mapping re-checks every value that becomes a link, so even content written around the admin forms (straight to the
+// database by a signed-in editor) cannot put an unsafe URL, canonical or address on a public page.
+const httpsUrl = (v: unknown): string | undefined => { const x = str(v); return x && /^https:\/\/[^\s<>"'\\]+$/.test(x) ? x : undefined; };
+const sitePath = (v: unknown): string | undefined => { const x = str(v); return x && /^\/(?!\/)[^\s\\]*$/.test(x) ? x : undefined; };
+const emailOf = (v: unknown): string | undefined => { const x = str(v); return x && /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[^\s@<>()[\]\\,;:"]{2,}$/.test(x) ? x : undefined; };
 const num = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
 const recs = (v: unknown): D[] => (Array.isArray(v) ? v.filter((x): x is D => typeof x === "object" && x !== null) : []);
 
-const seoOf = (d: D): SeoFields => ({ title: str(d.seo_title), description: str(d.seo_description), image: str(d.seo_image), canonical: str(d.seo_canonical), noindex: d.seo_noindex === true ? true : undefined });
+const seoOf = (d: D): SeoFields => ({ title: str(d.seo_title), description: str(d.seo_description), image: str(d.seo_image), canonical: sitePath(d.seo_canonical), noindex: d.seo_noindex === true ? true : undefined });
 
 export const REGION_KEYS: RegionKey[] = ["uae", "ksa", "europe"];
 
@@ -87,7 +92,7 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
 
   const clients: Client[] = byType.client.map((r) => ({
     id: r.slug, name: r.title, relationship: (str(r.data.relationship) as Client["relationship"]) ?? "unconfirmed", logo: str(r.data.logo), projects: strs(r.data.projects),
-    attribution: str(r.data.attribution), website: str(r.data.website),
+    attribution: str(r.data.attribution), website: httpsUrl(r.data.website),
   }));
 
   const testimonials: Testimonial[] = byType.testimonial.map((r, i) => ({
@@ -101,7 +106,7 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
     const base = REGIONS[key];
     regions[key] = r
       ? {
-          key, name: r.title, role: str(r.data.role_label) ?? base.role, email: str(r.data.email) ?? null, phone: str(r.data.phone) ?? null, city: str(r.data.city) ?? null, href: base.href,
+          key, name: r.title, role: str(r.data.role_label) ?? base.role, email: emailOf(r.data.email) ?? null, phone: str(r.data.phone) ?? null, city: str(r.data.city) ?? null, href: base.href,
           intro: str(r.data.intro), address: str(r.data.address), capabilities: strs(r.data.capabilities), projects: strs(r.data.projects),
         }
       : { ...base, capabilities: [], projects: [] }; // fixed routes always exist
@@ -111,11 +116,11 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
   const sd: D = sRow?.data ?? {};
   const settings: SiteSettings = {
     companyName: str(sd.company_name) ?? "Enginious", tagline: str(sd.tagline),
-    contactEmail: str(sd.contact_email) ?? GENERAL_CONTACT.email, contactPhone: str(sd.contact_phone) ?? GENERAL_CONTACT.phone,
-    social: { linkedin: str(sd.linkedin), instagram: str(sd.instagram), x: str(sd.x), youtube: str(sd.youtube) },
+    contactEmail: emailOf(sd.contact_email) ?? GENERAL_CONTACT.email, contactPhone: str(sd.contact_phone) ?? GENERAL_CONTACT.phone,
+    social: { linkedin: httpsUrl(sd.linkedin), instagram: httpsUrl(sd.instagram), x: httpsUrl(sd.x), youtube: httpsUrl(sd.youtube) },
     footerText: str(sd.footer_text),
     defaultSeo: { title: str(sd.default_seo_title), description: str(sd.default_seo_description), image: str(sd.default_seo_image) },
-    companyProfile: str(sd.company_profile), showreelYoutubeId: str(sd.showreel_youtube_id), filmYoutubeId: str(sd.film_youtube_id),
+    companyProfile: str(sd.company_profile), showreelYoutubeId: str(sd.showreel_youtube_id), filmYoutubeId: str(sd.film_youtube_id), showreelMp4Url: httpsUrl(sd.showreel_mp4_url), showreelPoster: str(sd.showreel_poster),
     privacyStatus: sd.privacy_status === "approved" ? "approved" : "provisional",
   };
   const doc = settings.companyProfile ? media.find((m) => m.id === settings.companyProfile && m.kind === "document" && m.visibility === "public") : undefined;
@@ -138,7 +143,7 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
   })).sort((a, b) => (b.publishedOn ?? "").localeCompare(a.publishedOn ?? ""));
   const roles: JobRole[] = byType.role.map((r) => ({
     slug: r.slug, title: r.title, department: str(r.data.department), location: str(r.data.location) ?? "", employmentType: str(r.data.employment_type),
-    description: str(r.data.description) ?? "", requirements: str(r.data.requirements), applyUrl: str(r.data.apply_url), applyEmail: str(r.data.apply_email),
+    description: str(r.data.description) ?? "", requirements: str(r.data.requirements), applyUrl: httpsUrl(r.data.apply_url), applyEmail: emailOf(r.data.apply_email),
     closesOn: str(r.data.closes_on), order: r.sort_order, seo: seoOf(r.data), publishedAt: r.published_at,
   }));
   const company: Record<string, CompanySection> = {};

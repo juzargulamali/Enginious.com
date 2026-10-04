@@ -92,6 +92,21 @@ async function login(ctx, email, password = "correct-horse-battery") {
   await p.getByRole("button", { name: /Save and publish/ }).click(); await sleep(2000);
   ok("a valid draft publishes", /Published\. The public page/.test(await p.locator("body").innerText()));
   await p.screenshot({ path: SHOTS + "/editor-published.png" });
+  // ---- redirects: unsafe targets and loops are refused with clear messages
+  await p.goto(BASE + "/admin/redirects", { waitUntil: "load" }); await sleep(400);
+  const addRedirect = async (from, to) => { await p.fill("#rd-src", from); await p.fill("#rd-tgt", to); await p.getByRole("button", { name: "Add redirect" }).click(); await sleep(1500); return (await p.locator("body").innerText()); };
+  let t = await addRedirect("/old-a", "//evil.example/login");
+  ok("a protocol-relative //host redirect target is refused", /single \/|Use a path/.test(t) && !/evil\.example/.test(await p.locator("table.adm-table").innerText().catch(() => "")));
+  t = await addRedirect("/old-b", "https://allowed.example@evil.example/");
+  ok("a userinfo (@) redirect target is refused", /no @|plain https/.test(t));
+  t = await addRedirect("/old-c", "https://not-allowed.example/page");
+  ok("an external redirect target is refused until its host is allowed in Site settings", /Allowed redirect hosts/.test(t));
+  t = await addRedirect("/old-d", "/work");
+  ok("an internal redirect is accepted", /\/old-d/.test(await p.locator("table.adm-table").innerText()));
+  t = await addRedirect("/work", "/old-d");
+  ok("a redirect loop is refused", /loop/i.test(t));
+  t = await addRedirect("/admin/x", "/");
+  ok("redirects cannot shadow /admin", /cannot be redirected/.test(t));
   await ctx.close();
 
   await b.close();

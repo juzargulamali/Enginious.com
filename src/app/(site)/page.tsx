@@ -40,7 +40,10 @@ export default async function Home() {
   const base = resolveShowreel();
   const reelId = c.settings.showreelYoutubeId ?? YOUTUBE.showreel;
   const filmId = c.settings.filmYoutubeId ?? YOUTUBE.film;
-  const showreel = { ...base, youtubeId: reelId, poster: base.poster.startsWith("https://i.ytimg.com") ? `https://i.ytimg.com/vi/${reelId}/maxresdefault.jpg` : base.poster };
+  const posterAsset = c.settings.showreelPoster ? c.images[c.settings.showreelPoster] : undefined;
+  const poster = posterAsset ? `${posterAsset.src}-${posterAsset.widths[posterAsset.widths.length - 1]}.webp` : base.poster.startsWith("https://i.ytimg.com") ? `https://i.ytimg.com/vi/${reelId}/maxresdefault.jpg` : base.poster;
+  const mp4 = c.settings.showreelMp4Url ?? base.mp4;
+  const showreel = { ...base, youtubeId: reelId, poster, mp4, mode: mp4 || base.webm ? ("file" as const) : ("youtube" as const) };
   // Selected projects: the CMS "featured" ones first, then the long-standing default picks, up to six.
   const byFeatured = c.projects.filter((p) => p.featured);
   const picks = [...byFeatured, ...REEL_SLUGS.map((s) => c.projects.find((p) => p.slug === s)).filter((p): p is NonNullable<typeof p> => !!p)];

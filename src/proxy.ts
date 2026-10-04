@@ -48,7 +48,11 @@ export async function proxy(request: NextRequest) {
   if (request.method === "GET" || request.method === "HEAD") {
     const rule = await findRedirect(pathname);
     if (rule) {
-      const dest = rule.target.startsWith("/") ? new URL(rule.target, request.url) : new URL(rule.target);
+      // Defence in depth (the database already refuses unsafe targets): an internal rule must stay on this origin, an external one must be plain https.
+      let dest: URL;
+      try { dest = new URL(rule.target, request.url); } catch { return NextResponse.next(); }
+      if (rule.target.startsWith("/") && dest.origin !== request.nextUrl.origin) return NextResponse.next();
+      if (!rule.target.startsWith("/") && (dest.protocol !== "https:" || dest.username || dest.password)) return NextResponse.next();
       if (rule.target.startsWith("/") && !dest.search && request.nextUrl.search) dest.search = request.nextUrl.search;
       return NextResponse.redirect(dest, rule.status as 301 | 302 | 307 | 308);
     }

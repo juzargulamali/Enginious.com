@@ -93,9 +93,14 @@ grant select on public.cms_audit to authenticated;
 create policy "administrators read audit" on public.cms_audit for select to authenticated using (public.cms_is_administrator());
 
 create or replace function public.cms_audit_log(p_action text, p_target text, p_detail jsonb default '{}'::jsonb)
-returns void language sql security definer set search_path = '' as $$
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  -- Only CMS users may write audit entries, and only from the app's fixed set of actions (no forging, no flooding).
+  if not public.cms_is_staff() then raise exception 'Not authorised.' using errcode = '42501'; end if;
+  if p_action !~ '^(user|content|media|enquiry|enquiries)\.[a-z_]+$' then raise exception 'Unknown audit action.' using errcode = 'P0001'; end if;
+  if pg_column_size(coalesce(p_detail, '{}'::jsonb)) > 2048 then raise exception 'Audit detail too large.' using errcode = 'P0001'; end if;
   insert into public.cms_audit (actor, actor_email, action, target, detail)
-  values (auth.uid(), (select email from public.cms_roles where user_id = auth.uid()), p_action, p_target, coalesce(p_detail, '{}'::jsonb));
-$$;
+  values (auth.uid(), (select email from public.cms_roles where user_id = auth.uid()), left(p_action, 80), left(p_target, 200), coalesce(p_detail, '{}'::jsonb));
+end $$;
 revoke all on function public.cms_audit_log(text, text, jsonb) from public, anon;
 grant execute on function public.cms_audit_log(text, text, jsonb) to authenticated;

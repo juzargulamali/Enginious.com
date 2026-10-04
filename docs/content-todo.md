@@ -55,3 +55,14 @@
 - Testimonials: samples are not shipped at all by production builds (`VERCEL_ENV=production` or `ALLOW_INDEXING=true`); with none published the section is omitted. Verified in both modes.
 - Image slots and exact specs: `docs/asset-handoff.md`. Still no images generated.
 - Spacing: Clients, Testimonials and People use a tighter section rhythm (about 140px between Clients and People at 1440 wide, 64px on phones), same with or without Testimonials.
+
+## Milestone 2 (CMS) additions
+- **Import the starter content** into the CMS (each type's list page -> "Import starter content"). Until you do, the public site serves the built-in copy for that type. The fictional sample testimonials and unapproved leadership messages are never imported.
+- **Client relationships:** all 35 clients are "not confirmed" (names only). To say "direct client" or "delivered through an agency" you must confirm each and enter the approved wording; the CMS blocks publishing otherwise.
+- **Testimonials:** none published. A testimonial can be published only with written permission ticked and cannot be a fictional sample. The Testimonials section stays hidden until one is published.
+- **Leadership messages / bios / responsibilities:** private until written and approved; the approval tick is internal and never public.
+- **Verified outcomes and confirmed specifications:** the CMS refuses to publish an outcome or specification not marked verified/confirmed. None are entered.
+- **Poland:** city, address, email and phone are still empty; enquiries for Europe go to the general contact (or the recipients you set on the Europe region).
+- **Notification recipients** per region (internal field on each Region) and the email provider are not set up.
+- **Privacy notice** is provisional; retention period undecided (`docs/privacy-retention.md`).
+- **Old-site URL list** needed for redirects (`docs/url-migration.md`).

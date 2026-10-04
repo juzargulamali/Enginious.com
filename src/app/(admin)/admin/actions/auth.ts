@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseUser } from "@/lib/supabase/server";
 import { getStaff } from "@/lib/cms/auth";
+import { publicOrigin } from "@/lib/seo/indexing";
 
 export interface AuthState { error?: string; message?: string }
 
@@ -14,6 +15,8 @@ const safeNext = (v: FormDataEntryValue | null) => {
 const EMAIL = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[^\s@<>()[\]\\,;:"]{2,}$/;
 
 async function origin() {
+  const configured = publicOrigin();
+  if (configured) return configured;
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");

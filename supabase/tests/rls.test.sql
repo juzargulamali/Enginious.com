@@ -145,7 +145,20 @@ select t.expect('redirects cannot shadow /admin', 'authenticated', :'E', $q$inse
 select t.expect('anon cannot write redirects', 'anon', null, $q$insert into public.redirects (source_path, target) values ('/z', '/')$q$, 'err:42501');
 select t.expect('allow a host in site settings', 'authenticated', :'A', $q$with i as (insert into public.content_items (type, slug, title, draft) values ('setting', 'site', 'Site', '{"redirect_hosts":["enginious.ae"]}') returning id) select public.cms_publish(id) from i$q$, 'ok:1');
 select t.expect('allowed external host now accepted', 'authenticated', :'E', $q$insert into public.redirects (source_path, target) values ('/ext2', 'https://enginious.ae/page')$q$, 'ok:1');
+select t.expect('protocol-relative //host target rejected', 'authenticated', :'E', $q$insert into public.redirects (source_path, target) values ('/pr1', '//evil.example/login')$q$, 'err:%');
+select t.expect('userinfo trick https://allowed@evil rejected', 'authenticated', :'E', $q$insert into public.redirects (source_path, target) values ('/pr2', 'https://enginious.ae:x@evil.example/')$q$, 'err:%');
+select t.expect('backslash trick rejected', 'authenticated', :'E', $q$insert into public.redirects (source_path, target) values ('/pr3', 'https://enginious.ae\@evil.example/')$q$, 'err:%');
 select t.expect('http (non-TLS) external target rejected', 'authenticated', :'E', $q$insert into public.redirects (source_path, target) values ('/ext3', 'http://enginious.ae/page')$q$, 'err:23514');
+
+-- ============ anon column-level reads and the audit log
+select t.expect('anon cannot read redirect notes or authorship', 'anon', null, 'select note from public.redirects', 'err:42501');
+select t.expect('anon can read the public redirect columns', 'anon', null, 'select source_path, target, status_code from public.redirects', 'ok:%');
+select t.expect('anon cannot read media authorship or private paths', 'anon', null, 'select created_by, original_path from public.media_assets', 'err:42501');
+select t.expect('outsider cannot write the audit log', 'authenticated', :'O', $q$select public.cms_audit_log('user.remove', 'admin@test.local', '{}')$q$, 'err:42501');
+select t.expect('anon cannot write the audit log', 'anon', null, $q$select public.cms_audit_log('user.remove', 'x', '{}')$q$, 'err:42501');
+select t.expect('staff cannot forge an unknown audit action', 'authenticated', :'E', $q$select public.cms_audit_log('root.takeover', 'x', '{}')$q$, 'err:P0001');
+select t.expect('staff cannot flood the audit log with huge detail', 'authenticated', :'E', $q$select public.cms_audit_log('content.delete', 'x', jsonb_build_object('a', repeat('x', 5000)))$q$, 'err:P0001');
+select t.expect('staff can write a valid audit entry', 'authenticated', :'E', $q$select public.cms_audit_log('content.delete', 'x', '{}')$q$, 'ok:%');
 
 -- ============ enquiries: private, server-written
 select t.expect('anon cannot read enquiries', 'anon', null, 'select * from public.enquiries', 'err:42501');
