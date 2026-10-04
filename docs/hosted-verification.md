@@ -8,7 +8,7 @@ Purpose: prove the real integration works after `docs/cms-setup.md` is complete.
 |---|---|
 | Local stand-in tests (Postgres + API shim) | run and passed, see `docs/test-report.md` |
 | Local rehearsal of the hosted script against the stand-ins | see `docs/test-report.md`; proves the script, **not** the hosted system |
-| **Hosted run against the real Supabase project and the preview** | **NOT RUN.** Needs the Supabase project set up (steps 1 to 7 of `docs/cms-setup.md`) and test credentials. The build environment cannot reach `*.vercel.app` or Supabase, so it has to be run from your machine or a session that can. |
+| **Hosted checks against the real Supabase project and the preview** | **Done by hand by the owner on 2026-10-04** (the scripted run was not used): see "Hosted results" below. |
 
 When you run it, paste the printed summary into the table below and commit nothing containing passwords.
 
@@ -52,6 +52,20 @@ Credentials are read from the environment only and are never printed or written.
 **I. Invitation (once SMTP is configured).** Invite an address you control as Editor; the email link opens `/admin/auth/callback`, then "set your password", then the dashboard with no Users menu.
 
 **D. Public API cannot read drafts (optional).** With your project URL and anon key, request `<project-url>/rest/v1/content_items?select=*` using headers `apikey: <anon key>` and `Authorization: Bearer <anon key>`. It must be refused (permission denied), and `/rest/v1/enquiries` likewise. `content_published` may be read: it holds only what is live.
+
+## Hosted results (manual, owner, 2026-10-04, commit 81c8e19)
+Preview: `https://enginious-com-git-claude-milestone-2-cms-enginious.vercel.app`, project `enginious-website`. Reported by the owner; not independently reproduced by Claude.
+
+| Check | Result |
+|---|---|
+| Sign in as the administrator (real Supabase Auth) | pass |
+| Logout, then `/admin` redirects to login | pass |
+| Password recovery email, link opens on the preview host, new password works | pass |
+| Draft is not public; publish makes it public; draft edit not public; unpublish removes it; delete | pass |
+| Image upload (private) with thumbnail; delete | pass |
+| Editor (real second account): no Users or Audit, no permanent delete, `/admin/users` refused | pass |
+| One test enquiry stored with a reference, shown in the inbox, deleted; no email sent | pass |
+| Enquiry notification status label | **OPEN**: showed `pending` instead of `skipped`. The same code path gives `skipped` on the local stand-in. Not investigated yet (owner deferred). Suspects: status read before the background step finished, or the background step not completing on Vercel. To check: submit a test enquiry, wait 15 s, reload; use Retry; query `notification_last_at`; check Vercel logs. |
 
 ## Record the result
 
