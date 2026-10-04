@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Edge } from "@/components/neon/Edge";
+import { reducedMotion, useScrollProgress } from "@/lib/scrollBus";
 
 /**
  * KINETIC TOWER inside the "Engineering experiences" scene.
@@ -52,6 +53,7 @@ export function TowerSection() {
   const [stage, setStage] = useState(LAST);
   const stageRef = useRef(LAST);
   const reduce = useRef(false);
+  const manual = useRef(false); // once the visitor takes the controls, scrolling stops steering the tower
   const stepRef = useRef<(now: number) => void>(() => {});
   const sim = useRef({ s: LAST, v: 0, target: LAST, raf: 0, last: 0, drag: null as null | { x: number; s: number; w: number; moved: boolean; t: number; lx: number; v: number } });
 
@@ -87,6 +89,16 @@ export function TowerSection() {
     if (!q.raf) { q.last = performance.now(); q.raf = requestAnimationFrame(stepRef.current); }
   }, [paint]);
 
+  const userGo = useCallback((t: number) => { manual.current = true; goTo(t); }, [goTo]);
+
+  // As the section moves through view the tower progresses Idea -> Engineering -> Experience. Manual controls always win.
+  useScrollProgress(root, (t) => {
+    if (t < 0.06 || t > 0.97) manual.current = false; // fully out of view: hand control back to the scroll
+    if (manual.current || reducedMotion()) return;
+    const target = t < 0.42 ? 0 : t < 0.6 ? 1 : 2;
+    if (target !== Math.round(sim.current.target)) goTo(target);
+  });
+
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     reduce.current = mq.matches;
@@ -112,6 +124,7 @@ export function TowerSection() {
     const q = sim.current;
     const w = scene.current?.getBoundingClientRect().width ?? 600;
     q.drag = { x: e.clientX, s: q.s, w, moved: false, t: performance.now(), lx: e.clientX, v: 0 };
+    manual.current = true;
     cancelAnimationFrame(q.raf); q.raf = 0; q.v = 0;
     scene.current?.setPointerCapture(e.pointerId);
   };
@@ -137,10 +150,10 @@ export function TowerSection() {
   };
   const key = (e: React.KeyboardEvent) => {
     const cur = Math.round(sim.current.target);
-    if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); goTo(cur + 1); }
-    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); goTo(cur - 1); }
-    else if (e.key === "Home") { e.preventDefault(); goTo(0); }
-    else if (e.key === "End") { e.preventDefault(); goTo(LAST); }
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); userGo(cur + 1); }
+    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); userGo(cur - 1); }
+    else if (e.key === "Home") { e.preventDefault(); userGo(0); }
+    else if (e.key === "End") { e.preventDefault(); userGo(LAST); }
   };
 
   const cur = STAGES[stage];
@@ -152,7 +165,7 @@ export function TowerSection() {
         {STAGES.map((s, i) => (
           <div key={s.key} className="tw-panel" data-on={i === stage} data-trace-scope>
             {i === stage && <Edge variant={s.edge} duration={8} />}
-            <button type="button" className="tw-head" aria-expanded={i === stage} aria-controls={`tw-body-${s.key}`} onClick={() => goTo(i)}>
+            <button type="button" className="tw-head" aria-expanded={i === stage} aria-controls={`tw-body-${s.key}`} onClick={() => userGo(i)}>
               <span className="n">{s.n}</span>
               <span className="l">{s.label}</span>
               <span className="chev" aria-hidden="true">{i === stage ? "−" : "+"}</span>

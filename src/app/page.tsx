@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./home.css";
 import "@/components/neon/neon.css";
+import { EvidenceFilm } from "@/components/home/EvidenceFilm";
 import { FilmFacade } from "@/components/home/FilmFacade";
-import { PeopleStage } from "@/components/home/PeopleStage";
+import { FinalCTA } from "@/components/home/FinalCTA";
+import { TeamGallery } from "@/components/home/TeamGallery";
 import { PortalCard } from "@/components/home/PortalCard";
 import { ShowreelHero } from "@/components/home/ShowreelHero";
 import { ShowroomTeaser } from "@/components/home/ShowroomTeaser";
@@ -13,10 +15,10 @@ import { NeonController } from "@/components/neon/NeonController";
 import { SceneHead } from "@/components/neon/SceneHead";
 import { Spine } from "@/components/neon/Spine";
 import { TechForm } from "@/components/TechForm";
-import { WorldMap } from "@/components/WorldMap";
+import { PlacesMap } from "@/components/PlacesMap";
 import { filmPoster, resolveShowreel, YOUTUBE } from "@/content/media";
 import { PROJECTS, projectBySlug } from "@/content/projects";
-import { GENERAL_CONTACT, REGIONS } from "@/content/site";
+import { GENERAL_CONTACT } from "@/content/site";
 import { techBySlug } from "@/content/technologies";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -58,9 +60,9 @@ export default function Home() {
               </p>
             </SceneHead>
             <div className="cap-grid" data-trace-scope>
-              <PortalCard n="01" title="Events, exhibitions & activations" tags={["Experience design", "Interactive applications", "Digital content"]} form="kinetic-wall-ceiling" href="/solutions" edge="perimeter" active />
-              <PortalCard n="02" title="Experience centres" tags={["Immersive rooms", "Interactive tables", "Touch & Throw"]} form="immersive-room" href="/solutions" edge="left" />
-              <PortalCard n="03" title="Permanent installations" tags={["Kinetic displays", "Content", "Maintenance & support"]} form="tri-helix" href="/solutions" edge="bottom-right" />
+              <PortalCard n="01" title="Events, exhibitions & activations" blurb="Technology and content for stands, roadshows and brand moments, built to draw a crowd and keep it." tags={["Experience design", "Interactive applications", "Digital content"]} form="kinetic-wall-ceiling" href="/solutions" edge="perimeter" slot="capEvents" />
+              <PortalCard n="02" title="Experience centres" blurb="Immersive, interactive spaces that explain a brand, product or place." tags={["Immersive rooms", "Interactive tables", "Touch & Throw"]} form="immersive-room" href="/solutions" edge="left" slot="capCentres" />
+              <PortalCard n="03" title="Permanent installations" blurb="Experiential spaces tailored to your needs, with maintenance and support that keeps them running." tags={["Kinetic displays", "Content", "Maintenance & support"]} form="tri-helix" href="/solutions" edge="bottom-right" slot="capPermanent" />
             </div>
             <ul className="cap-more">
               <li><TechForm slug="touch-and-throw" size={52} /><span><b>Interactive software &amp; content</b>Unity and Unreal applications, 2D and 3D content.</span></li>
@@ -98,16 +100,20 @@ export default function Home() {
         <section id="projects" className="scene home-sec" aria-labelledby="proj-h" style={{ paddingInline: 0 }}>
           <div className="container">
             <SceneHead eyebrow="Evidence" title="Seen on the show floor." id="proj-h" />
-            <div className="proj-top">
+            <div className="proj-top proj-stats">
               <div className="stats">
                 <div className="stat"><b>16</b><span>technology-led activations across nine booths in a single exhibition.</span><small>Global Health Exhibition · Riyadh · 2025</small></div>
                 <div className="stat"><b>5</b><span>countries activated in one roadshow: UAE, Qatar, Oman, Bahrain and Saudi Arabia.</span><small>FIFA Arab Cup Roadshow · 2025</small></div>
               </div>
+            </div>
+          </div>
+          <div className="container">
+            <EvidenceFilm>
               <div className="film-wrap" data-trace-scope>
                 <Edge variant="brackets" duration={12} />
                 <FilmFacade youtubeId={YOUTUBE.film} poster={filmPoster()} title="Watch more from Enginious" />
               </div>
-            </div>
+            </EvidenceFilm>
           </div>
           <div className="reel" tabIndex={0} aria-label="Selected projects. Scroll sideways.">
             {REEL.map((p, i) => {
@@ -130,7 +136,7 @@ export default function Home() {
         <section id="people" className="scene home-sec" aria-labelledby="ppl-h">
           <div className="container">
             <SceneHead eyebrow="People" title="Meet the minds behind the experience." id="ppl-h" />
-            <PeopleStage />
+            <TeamGallery showLink depth />
           </div>
         </section>
 
@@ -138,35 +144,13 @@ export default function Home() {
         <section id="global" className="scene home-sec" aria-labelledby="glob-h">
           <div className="container">
             <SceneHead eyebrow="Global presence" title="Dubai headquarters. Two branches." id="glob-h" />
-            <div className="glob" data-trace-scope>
-              <WorldMap />
-              <ul className="rglist">
-                {Object.values(REGIONS).map((r) => (
-                  <li key={r.key}>
-                    <Link href={r.href} className="rg">
-                      <strong>{r.name}</strong>
-                      <span>{r.role}</span>
-                    </Link>
-                    <Link href={`/contact?region=${r.key}`} className="rg-go">Start a project here →</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <p className="also">Projects have also been delivered in Qatar, Oman, Bahrain, Jeddah, Madinah and Belém, Brazil. Offices are solid; project locations hollow.</p>
+            <p className="lede" style={{ marginTop: "1.1rem" }}>Offices are solid diamonds; delivered-project locations are rings. Select a place to see what is there.</p>
+            <PlacesMap />
           </div>
         </section>
 
         {/* ---- 7. close ---- */}
-        <section className="scene final home-sec">
-          <div className="container">
-            <div className="final-box">
-              <Edge variant="perimeter" duration={9} />
-              <h2>Let&apos;s build something worth <span className="accent">experiencing.</span></h2>
-              <p className="lede">Tell us your idea. We&apos;ll connect you with the right team in Dubai, Saudi Arabia or Poland.</p>
-              <Link href="/contact" className="btn btn-primary btn-lg">Start a project →</Link>
-            </div>
-          </div>
-        </section>
+        <FinalCTA />
       </div>
     </>
   );

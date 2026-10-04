@@ -3,16 +3,21 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { Edge, type EdgeVariant } from "@/components/neon/Edge";
+import { Photo, hasPhoto } from "@/components/Photo";
 import { TechForm } from "@/components/TechForm";
+import { useReached } from "@/lib/scrollBus";
 
 /**
- * A capability "portal": tall glass card with a large form, lit floor and its OWN edge treatment.
+ * A capability "portal". The travelling light on the spine reaches the card, then it lights up: its edge starts running,
+ * its explanation opens and (when a photograph is registered for the slot) the photo fades in behind the form.
  * Pointer response (mouse only, one write per frame): the card leans toward the pointer and a light follows it.
+ * Without JavaScript everything is visible (the dim state is only applied once the page is running).
  */
-export function PortalCard({ title, tags, form, href, edge, active = false, n }: { title: string; tags: string[]; form: string; href: string; edge: EdgeVariant; active?: boolean; n: string }) {
+export function PortalCard({ title, blurb, tags, form, href, edge, n, slot }: { title: string; blurb: string; tags: string[]; form: string; href: string; edge: EdgeVariant; n: string; slot?: string }) {
   const card = useRef<HTMLAnchorElement>(null);
   const inner = useRef<HTMLSpanElement>(null);
   const spot = useRef<HTMLSpanElement>(null);
+  const reached = useReached(card, 0.72);
 
   useEffect(() => {
     const el = card.current;
@@ -29,22 +34,26 @@ export function PortalCard({ title, tags, form, href, edge, active = false, n }:
       x = e.clientX - r.left; y = e.clientY - r.top; w = r.width; h = r.height;
       if (!raf) raf = requestAnimationFrame(flush);
     };
-    const leave = () => { x = w / 2; y = h / 2; if (!raf) raf = requestAnimationFrame(flush); if (inner.current) inner.current.style.transform = ""; };
+    const leave = () => { if (inner.current) inner.current.style.transform = ""; };
     el.addEventListener("pointermove", move, { passive: true });
     el.addEventListener("pointerleave", leave);
     return () => { el.removeEventListener("pointermove", move); el.removeEventListener("pointerleave", leave); cancelAnimationFrame(raf); };
   }, []);
 
   return (
-    <Link ref={card} href={href} className="pc2" data-active={active || undefined} data-trace-scope>
+    <Link ref={card} href={href} className="pc2" data-reached={reached || undefined} data-trace-scope>
       <span ref={inner} className="pc2-in">
+        {slot && hasPhoto(slot) && <span className="pc2-photo"><Photo slot={slot} sizes="(max-width: 900px) 100vw, 33vw" /></span>}
         <span ref={spot} className="pc2-spot" aria-hidden="true" />
-        <Edge variant={edge} duration={active ? 7 : 11} />
+        {reached && <Edge variant={edge} duration={7} />}
         <span className="pc2-n">{n}</span>
         <span className="pc2-art"><TechForm slug={form} size={220} /></span>
         <span className="pc2-floor" aria-hidden="true" />
         <span className="pc2-t">{title}</span>
-        <span className="pc2-tags">{tags.map((t) => <span key={t}>{t}</span>)}</span>
+        <span className="pc2-more">
+          <span className="pc2-b">{blurb}</span>
+          <span className="pc2-tags">{tags.map((t) => <span key={t}>{t}</span>)}</span>
+        </span>
         <span className="pc2-go" aria-hidden="true">Explore →</span>
       </span>
     </Link>

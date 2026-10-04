@@ -32,3 +32,13 @@
 - Embedded YouTube (privacy-enhanced domain) loads third-party player code after first paint when motion is acceptable; decide on a consent approach before enabling analytics.
 - The People stage shows disciplines, not people; the two leaders appear by initials only. Leadership portraits/messages are still outstanding.
 - `juzargulamali.com` (private repo) was read for interaction patterns only; none of its preview renders are used.
+
+## Round 4 internal notes
+- **Photography:** five photos were attached in chat (immersive installations, interactive technology, events and exhibitions, a male and a female portrait) but arrived as inline images only, not files, so they could not be saved. Send them as file attachments (or place them in `incoming/` and run `bash scripts/images/ingest-supplied.sh`). Their licence must be confirmed by the owner per image; the events photo shows other companies' branded booths (illustrative only, label stays).
+- **Juzar's portrait** is the supplied photograph, used as supplied (cropped by focal point only).
+- **Preview portraits** (when added) appear on two team cards by ROLE only, labelled "Preview", never with an employee's name.
+- **Mission / Vision (DRAFT for approval):** Mission: "To help organisations captivate their audiences with experiential technology that is engineered, built and supported by one team." Vision: "To lead the way in innovative, immersive experiences: pioneering customisable technology for events, automation and robotics around the world." Source wording: Company Profile 2026 Q2.
+- **Leadership responsibilities** are derived only from the role titles (draft). **Leadership messages** are not published until approved (`approved: false` in `src/content/leaders.ts`).
+- **Project locations** are the 19 supplied by the owner. Related work is attached only where the profile records the place (Qatar for Doha, Oman for Muscat, Bahrain, Belém for Brazil are noted as such). Kuwait, Baku, Hannover, Vienna, Amsterdam, Miami, Barcelona, Paris, London, Las Vegas, Shanghai have no recorded work, so the panel says "Project details are being added." Bahrain, Kuwait, Brazil and Poland are country-level markers; Poland's office city is not shown.
+- **Company page lifecycle** (seven steps) is an explanation of how the supplied services connect, not a claim about internal process or tooling.
+- **Brief uploads** are not offered: storage, validation and failure handling are not built.

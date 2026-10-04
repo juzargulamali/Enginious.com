@@ -1,0 +1,32 @@
+.co-hero { position: relative; padding-block: clamp(110px, 11vw, 170px) clamp(40px, 6vw, 80px); overflow: clip; isolation: isolate; }
+.co-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(900px 520px at 80% 20%, rgba(39, 205, 216, 0.18), transparent 62%), radial-gradient(700px 500px at 5% 80%, rgba(38, 121, 141, 0.28), transparent 62%); }
+.co-hero h1 { max-width: 14ch; margin-top: 14px; }
+.co-two { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 6vw, 96px); align-items: start; }
+.co-story p { color: #b9ced2; font-size: 1.08rem; } .co-story p + p { margin-top: 1rem; }
+.co-mv { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px, 2vw, 28px); margin-top: 48px; }
+.co-card { position: relative; padding: clamp(24px, 3vw, 44px); border-radius: 22px; background: linear-gradient(165deg, rgba(39, 205, 216, 0.12), rgba(3, 16, 26, 0.9)); border: 1px solid rgba(39, 205, 216, 0.1); overflow: hidden; }
+.co-card h2 { font-size: clamp(1.6rem, 2.8vw, 2.4rem); margin-top: 10px; }
+.co-card p:not(.eyebrow) { margin-top: 12px; color: #cfe3e7; font-size: 1.1rem; }
+.co-life { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; margin-top: 56px; }
+.co-life::before { content: ""; position: absolute; left: 0; right: 0; top: 13px; height: 2px; background: linear-gradient(90deg, var(--neon-soft), var(--neon-dim)); }
+.co-step { position: relative; padding-top: 42px; }
+.co-step::before { content: ""; position: absolute; left: 0; top: 6px; width: 16px; height: 16px; border: 2px solid var(--neon); background: #02070b; transform: rotate(45deg); box-shadow: 0 0 14px var(--neon-soft); }
+.co-step .n { font-family: var(--font-code), monospace; font-size: 0.7rem; letter-spacing: 0.16em; color: var(--neon); }
+.co-step h3 { font-size: 1.05rem; margin-top: 4px; }
+.co-step p { color: #9fb8be; font-size: 0.86rem; margin-top: 6px; }
+.co-cap { list-style: none; margin: 40px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.co-cap li { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; padding: 18px 12px 18px 0; border-bottom: 1px solid var(--line); color: var(--neon); }
+.co-cap b { display: block; color: #fff; font-family: var(--font-display), sans-serif; } .co-cap span { color: var(--muted); font-size: 0.9rem; }
+.co-lead { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 36px; }
+.co-lead a { position: relative; display: flex; gap: 20px; align-items: center; padding: 22px; border-radius: 20px; background: rgba(5, 16, 26, 0.7); border: 1px solid var(--line); overflow: hidden; }
+.co-lead .av { position: relative; flex: none; width: 110px; aspect-ratio: 3 / 4; border-radius: 14px; overflow: hidden; display: grid; place-items: center; background: linear-gradient(180deg, #072230, #02070b); border: 1px solid var(--line); font-family: var(--font-display), sans-serif; font-size: 2rem; color: var(--neon); }
+.co-lead b { font-family: var(--font-display), sans-serif; font-size: 1.3rem; display: block; } .co-lead span { color: var(--neon); }
+.co-regions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 36px; }
+.co-regions a { position: relative; padding: 24px; border-radius: 20px; border: 1px solid var(--line); background: linear-gradient(170deg, rgba(39, 205, 216, 0.08), rgba(2, 7, 11, 0.8)); display: grid; gap: 6px; overflow: hidden; }
+.co-regions a:hover { border-color: var(--neon); }
+.co-regions b { font-family: var(--font-display), sans-serif; font-size: 1.5rem; } .co-regions span { color: var(--muted); } .co-regions em { font-style: normal; color: var(--neon); margin-top: 8px; }
+@media (max-width: 960px) {
+  .co-two, .co-mv, .co-lead, .co-regions, .co-cap { grid-template-columns: 1fr; }
+  .co-life { grid-template-columns: 1fr; padding-left: 0; gap: 0; } .co-life::before { left: 7px; right: auto; top: 0; bottom: 0; width: 2px; height: auto; background: linear-gradient(180deg, var(--neon-soft), var(--neon-dim)); }
+  .co-step { padding: 0 0 22px 40px; } .co-step::before { top: 2px; left: 0; }
+}

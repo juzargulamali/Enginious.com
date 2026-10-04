@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import "./contact.css";
+import "@/components/neon/neon.css";
 import { EnquiryForm } from "@/components/EnquiryForm";
-import { ReviewNote } from "@/components/ReviewNote";
+import { NeonController } from "@/components/neon/NeonController";
 
 export const metadata: Metadata = {
   title: "Contact / Start a project",
@@ -11,18 +13,16 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="container section" style={{ paddingTop: "clamp(32px, 5vw, 64px)" }}>
-      <p className="eyebrow">Contact / Start a project</p>
-      <h1 style={{ marginTop: 12, maxWidth: "16ch" }}>
-        Let&apos;s build something worth <span className="accent">experiencing.</span>
-      </h1>
-      <p className="lede" style={{ margin: "1.25rem 0 2.5rem" }}>Tell us your idea. We&apos;ll connect you with the right team.</p>
-      <Suspense fallback={<p className="muted">Loading form…</p>}>
-        <EnquiryForm />
-      </Suspense>
-      <div style={{ marginTop: 28, display: "grid", gap: 10 }}>
-        <ReviewNote>Dubai and Saudi Arabia contacts come from the Company Profile 2026 Q2 (KSA: Lubna). Poland has no confirmed contact, so Europe falls back to the general contact.</ReviewNote>
-        <ReviewNote>Not yet live: brief attachments, and email notification to the team (needs a provider and recipients). Enquiries are stored in the database once the enquiries migration is applied.</ReviewNote>
+    <div className="ct-hero">
+      <NeonController />
+      <div className="ct-stage" aria-hidden="true"><span className="beam b1" /><span className="beam b2" /><span className="beam b3" /><span className="shard s1" /><span className="shard s2" /><span className="shard s3" /></div>
+      <div className="container">
+        <p className="eyebrow">Contact / Start a project</p>
+        <h1 style={{ marginTop: 12 }}>Let&apos;s build something worth <span className="accent">experiencing.</span></h1>
+        <p className="lede" style={{ margin: "1.2rem 0 0" }}>Tell us your idea. We&apos;ll connect you with the right team.</p>
+        <Suspense fallback={<p className="muted" style={{ marginTop: 30 }}>Loading form…</p>}>
+          <EnquiryForm />
+        </Suspense>
       </div>
     </div>
   );

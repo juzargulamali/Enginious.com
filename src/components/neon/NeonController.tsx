@@ -8,6 +8,8 @@ import { useEffect } from "react";
  */
 export function NeonController() {
   useEffect(() => {
+    // Scroll-linked states only apply once the page is running; without JavaScript every scene stays fully visible.
+    document.documentElement.setAttribute("data-js", "1");
     const io = new IntersectionObserver(
       (entries) => entries.forEach((e) => e.target.toggleAttribute("data-live", e.isIntersecting)),
       { rootMargin: "80px 0px" },

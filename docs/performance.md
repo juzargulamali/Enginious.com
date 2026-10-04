@@ -91,3 +91,21 @@ With a playing self-hosted video (test clip), desktop CPU x4: idle 11.2% busy, 6
 - **Not measured at all:** the YouTube player, real devices, real networks, GPU paint cost.
 
 Reproduce: `scripts/perf/measure.cjs` (see section 5 above); behavioural checks `scripts/perf/home-test.cjs` (YouTube stubbed, 25 checks; `file` mode, 8 checks) and `scripts/perf/site-test.cjs`.
+
+
+---
+
+# Revision 4: photography system, world map, people, company, contact and scroll choreography (measured; separate from visual approval)
+
+Same harness and conditions as above (software rendering, CPU x4 ~ modest laptop/phone, median of 3). The YouTube player and real devices are still **not** measured; no photographs were added this round (see docs/licences/README.md), so image cost is not measured either.
+
+| Scenario (CPU x4) | Revision 3 | Revision 4 |
+|---|---|---|
+| Idle 5 s, desktop | 11% busy, 60 fps, 0 slow frames | 14.2% busy, 60.2 fps, 0 slow frames |
+| Pointer sweep, desktop | 29.5% busy, 59.9 fps, 0 slow frames | 32.6% busy, 60 fps, 0 slow frames |
+| **Scroll whole page, desktop** | 44.5% busy, 51 fps, 6 slow frames | **53% busy, 39.3 fps, 21 slow frames** |
+| Idle / pointer / scroll, phone viewport | n/a | 11% busy, 60.2 fps, 0 slow frames / 28.8% busy, 60.1 fps, 0 slow frames / 55.7% busy, 48.5 fps, 10 slow frames |
+
+**Regression, stated plainly:** idle and pointer interaction stay light, but **scrolling the whole page is clearly worse** (slow frames 6 to 21; about 21 React commits per scroll). The cause is the new scroll choreography itself: scenes that react to scroll (capability reveals, tower stage changes with its spring, showroom exhibit changes, evidence scale, people depth, map) do real work while the page moves, and the map and gallery add more elements. The test scroll (about 5,000 px/s on a throttled CPU, software renderer) is harsher than a real wheel or touch scroll, and a GPU will rasterise far faster, but that is not demonstrated here. Candidate fixes, not yet done: stop re-rendering React on stage changes during scroll (write class names directly), cheaper `content-visibility` hints for the map and gallery, and drop the showroom auto-step on touch.
+
+Checks: `scripts/perf/round4-test.cjs` (46), `home-test.cjs` (25), `site-test.cjs` (23): all pass.

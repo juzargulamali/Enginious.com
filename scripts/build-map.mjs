@@ -1,5 +1,5 @@
-// Generates src/content/map.ts: a static, projected map of Europe / Middle East / North Africa from real geographic
-// data (Natural Earth via the `world-atlas` package). Run: npm i -D d3-geo topojson-client world-atlas && node scripts/build-map.mjs
+// Generates the world basemap (public/art/map-land.svg) and projected marker positions (src/content/map.ts)
+// from real geographic data (Natural Earth via `world-atlas`). Run: node scripts/build-map.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { geoMercator, geoPath, geoGraticule } from "d3-geo";
@@ -7,29 +7,55 @@ import { feature, mesh } from "topojson-client";
 
 const require = createRequire(import.meta.url);
 const read = (n) => JSON.parse(readFileSync(require.resolve(`world-atlas/${n}`), "utf8"));
-const land = read("land-50m.json");
-const countries = read("countries-50m.json");
+const land = read("land-110m.json");
+const countries = read("countries-110m.json");
 
-const W = 1000, H = 560;
-const view = { type: "MultiPoint", coordinates: [[-12, 9], [70, 9], [70, 62], [-12, 62]] };
-const projection = geoMercator().fitExtent([[0, 0], [W, H]], view).clipExtent([[0, 0], [W, H]]);
+const W = 1200, H = 620;
+const extent = { type: "MultiPoint", coordinates: [[-128, -36], [128, -36], [128, 62], [-128, 62]] };
+const projection = geoMercator().fitExtent([[0, 0], [W, H]], extent);
 const path = geoPath(projection).digits(1);
+const pct = ([lon, lat]) => { const [x, y] = projection([lon, lat]); return [+((x / W) * 100).toFixed(3), +((y / H) * 100).toFixed(3)]; };
 
-const LOC = {
-  dubai: [55.27, 25.2], riyadh: [46.68, 24.71], poland: [19.4, 52.1],
-  jeddah: [39.17, 21.54], madinah: [39.61, 24.47], qatar: [51.2, 25.3], oman: [56.0, 20.6], bahrain: [50.55, 26.05],
-};
-const points = Object.fromEntries(Object.entries(LOC).map(([k, ll]) => { const [x, y] = projection(ll); return [k, { x: +x.toFixed(1), y: +y.toFixed(1) }]; }));
+// Real coordinates [lon, lat]. precision: "city" | "country" (country = a representative point; NOT a city).
+export const PLACES = [
+  { id: "dubai", name: "Dubai", country: "UAE", ll: [55.27, 25.2], precision: "city" },
+  { id: "abu-dhabi", name: "Abu Dhabi", country: "UAE", ll: [54.37, 24.47], precision: "city" },
+  { id: "muscat", name: "Muscat", country: "Oman", ll: [58.41, 23.59], precision: "city" },
+  { id: "doha", name: "Doha", country: "Qatar", ll: [51.53, 25.29], precision: "city" },
+  { id: "bahrain", name: "Bahrain", country: "Bahrain", ll: [50.55, 26.07], precision: "country" },
+  { id: "kuwait", name: "Kuwait", country: "Kuwait", ll: [47.6, 29.3], precision: "country" },
+  { id: "riyadh", name: "Riyadh", country: "Saudi Arabia", ll: [46.68, 24.71], precision: "city" },
+  { id: "jeddah", name: "Jeddah", country: "Saudi Arabia", ll: [39.17, 21.54], precision: "city" },
+  { id: "baku", name: "Baku", country: "Azerbaijan", ll: [49.87, 40.41], precision: "city" },
+  { id: "hannover", name: "Hannover", country: "Germany", ll: [9.73, 52.37], precision: "city" },
+  { id: "vienna", name: "Vienna", country: "Austria", ll: [16.37, 48.21], precision: "city" },
+  { id: "amsterdam", name: "Amsterdam", country: "Netherlands", ll: [4.9, 52.37], precision: "city" },
+  { id: "barcelona", name: "Barcelona", country: "Spain", ll: [2.17, 41.39], precision: "city" },
+  { id: "paris", name: "Paris", country: "France", ll: [2.35, 48.86], precision: "city" },
+  { id: "london", name: "London", country: "United Kingdom", ll: [-0.13, 51.51], precision: "city" },
+  { id: "miami", name: "Miami", country: "United States", ll: [-80.19, 25.76], precision: "city" },
+  { id: "las-vegas", name: "Las Vegas", country: "United States", ll: [-115.14, 36.17], precision: "city" },
+  { id: "brazil", name: "Brazil", country: "Brazil", ll: [-52, -12], precision: "country" },
+  { id: "shanghai", name: "Shanghai", country: "China", ll: [121.47, 31.23], precision: "city" },
+  // Poland: office marker stays country-level until the city is confirmed.
+  { id: "poland", name: "Poland", country: "Poland", ll: [19.1, 52.0], precision: "country" },
+];
+const points = Object.fromEntries(PLACES.map((p) => [p.id, pct(p.ll)]));
+
+// Zoom views: [lonMin, latMin, lonMax, latMax] -> projected percent box
+const VIEWS = { world: null, gulf: [34, 17, 64, 34], europe: [-10, 36, 30, 58] };
+const views = {};
+for (const [k, b] of Object.entries(VIEWS)) {
+  if (!b) { views[k] = { x: 0, y: 0, w: 100, h: 100 }; continue; }
+  const [x0, y1] = pct([b[0], b[3]]); const [x1, y0] = pct([b[2], b[1]]);
+  views[k] = { x: +x0.toFixed(2), y: +y1.toFixed(2), w: +(x1 - x0).toFixed(2), h: +(y0 - y1).toFixed(2) };
+}
 
 const landPath = path(feature(land, land.objects.land));
 const borders = path(mesh(countries, countries.objects.countries, (a, b) => a !== b));
-const grat = path(geoGraticule().step([10, 10])());
-
-// Heavy geometry goes to a static, cacheable SVG (not into the page HTML or JS bundle).
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"><defs><pattern id="d" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.25" fill="#27cdd8" fill-opacity=".46"/></pattern></defs><path d="${grat}" fill="none" stroke="#27cdd8" stroke-opacity=".1" stroke-width=".6"/><path d="${landPath}" fill="url(#d)" stroke="#27cdd8" stroke-opacity=".3" stroke-width=".6"/><path d="${borders}" fill="none" stroke="#27cdd8" stroke-opacity=".2" stroke-width=".5"/></svg>`;
+const grat = path(geoGraticule().step([15, 15])());
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"><path d="${grat}" fill="none" stroke="#27cdd8" stroke-opacity=".07" stroke-width=".6"/><path d="${landPath}" fill="#27cdd8" fill-opacity=".17" stroke="#46e9f3" stroke-opacity=".4" stroke-width=".7" stroke-linejoin="round"/><path d="${borders}" fill="none" stroke="#27cdd8" stroke-opacity=".16" stroke-width=".4"/></svg>`;
 writeFileSync(new URL("../public/art/map-land.svg", import.meta.url), svg);
-
-const ts = `// GENERATED by scripts/build-map.mjs from Natural Earth (world-atlas). Do not edit by hand.\nexport const MAP = ${JSON.stringify({ width: W, height: H, points })} as const;\n`;
+const ts = `// GENERATED by scripts/build-map.mjs from Natural Earth (world-atlas). Do not edit by hand.\nexport const MAP = ${JSON.stringify({ width: W, height: H, aspect: +(W / H).toFixed(4), points, views })} as const;\n`;
 writeFileSync(new URL("../src/content/map.ts", import.meta.url), ts);
-console.log("map-land.svg bytes:", svg.length, "| map.ts bytes:", ts.length);
-console.log(points);
+console.log("map-land.svg", svg.length, "bytes | views", JSON.stringify(views));

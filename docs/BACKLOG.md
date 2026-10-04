@@ -22,6 +22,13 @@ Home + Living Canvas, technologies showroom + Tri-Helix page, Work index + WHX c
 - [ ] Replace the YouTube background with the supplied file when available.
 - [ ] Test the deployed preview on real desktop and phone devices (not possible from the build environment).
 
+## Round 4 (this round)
+- [x] Image registry (focal point, alt, licence, status), optimiser, media_assets migration; Juzar portrait in.
+- [x] Hero regional strip, two-layer world map (19 project locations), people gallery, Company page, Contact redesign, scroll choreography.
+- [ ] **Blocked on files:** the five attached photos (send as files) and stock sources; then `bash scripts/images/ingest-supplied.sh`.
+- [ ] Reduce scroll cost (see docs/performance.md, revision 4).
+- [ ] Brief uploads (storage + validation); Poland city; real leadership messages.
+
 ## Milestone 2
 - [ ] CMS: Supabase content tables, draft/published, RLS, editor auth (cms_admins), admin UI, preview, slugs, ordering, alt text, SEO fields, redirects.
 - [ ] Storage buckets + validated uploads (media, downloads); enquiry/application attachments.

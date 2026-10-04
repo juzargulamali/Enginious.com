@@ -176,12 +176,15 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
             <span className="play" aria-hidden="true">▶</span> Watch the showreel
           </button>
         </div>
-        <ul className="rh-places" aria-label="Where we are">
-          <li><Link href="/uae">Dubai · HQ</Link></li>
-          <li><Link href="/saudi-arabia">Saudi Arabia</Link></li>
-          <li><Link href="/europe">Poland · Europe</Link></li>
-        </ul>
       </div>
+
+      <nav className="rs" aria-label="Where we are" data-neon>
+        <Link href="/uae" className="rs-n"><i aria-hidden="true" /><b>Dubai</b><span>Global Headquarters</span></Link>
+        <span className="rs-l" aria-hidden="true"><em /></span>
+        <Link href="/saudi-arabia" className="rs-n"><i aria-hidden="true" /><b>Riyadh</b><span>Saudi Arabia Branch</span></Link>
+        <span className="rs-l" aria-hidden="true"><em /></span>
+        <Link href="/europe" className="rs-n"><i aria-hidden="true" /><b>Poland</b><span>Europe</span></Link>
+      </nav>
 
       <div className="rh-ctrl">
         {auto && playing && (

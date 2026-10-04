@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { AddToBrief } from "@/components/AddToBrief";
 import { TechForm } from "@/components/TechForm";
 import { TECH_CATEGORIES, TECHNOLOGIES } from "@/content/technologies";
+import { isNarrow, reducedMotion, useScrollProgress } from "@/lib/scrollBus";
 
 /**
  * Digital showroom: six distinct exhibits (each drawn from the profile's description of that technology) standing on a
@@ -17,6 +18,16 @@ const POS = [
 
 export function ShowroomTeaser() {
   const [sel, setSel] = useState(2);
+  const manual = useRef(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const choose = (i: number) => { manual.current = true; setSel(i); };
+  // Scrolling through the showroom brings each exhibit forward in turn (desktop). Hover, tap or keys take over.
+  useScrollProgress(wrap, (t) => {
+    if (t < 0.05 || t > 0.97) manual.current = false;
+    if (manual.current || reducedMotion() || isNarrow()) return;
+    const i = Math.min(EXHIBITS.length - 1, Math.max(0, Math.floor(((t - 0.22) / 0.5) * EXHIBITS.length)));
+    setSel((cur) => (cur === i ? cur : i));
+  });
   const stage = useRef<HTMLDivElement>(null);
   const far = useRef<HTMLDivElement>(null);
   const near = useRef<HTMLDivElement>(null);
@@ -43,7 +54,7 @@ export function ShowroomTeaser() {
   }, []);
 
   return (
-    <div className="sr">
+    <div ref={wrap} className="sr" data-front>
       <div ref={stage} className="sr-stage" data-trace-scope>
         <div ref={far} className="sr-far" aria-hidden="true"><span className="cone c1" /><span className="cone c2" /><span className="cone c3" /><span className="cone c4" /><span className="cone c5" /><span className="cone c6" /></div>
         <span className="sr-floor" aria-hidden="true" />
@@ -61,8 +72,8 @@ export function ShowroomTeaser() {
                 data-on={sel === i}
                 style={{ left: `${p.x}%`, ["--z" as string]: p.z }}
                 onMouseEnter={() => setSel(i)}
-                onFocus={() => setSel(i)}
-                onClick={() => setSel(i)}
+                onFocus={() => choose(i)}
+                onClick={() => choose(i)}
               >
                 <span className="sr-art"><TechForm slug={slug} size={180} /></span>
                 <span className="sr-lbl">{tech.name}</span>

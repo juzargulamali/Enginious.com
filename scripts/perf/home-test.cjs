@@ -65,7 +65,7 @@ async function newCtx(b, opts = {}) {
     const y2 = await p.evaluate(() => getComputedStyle(document.querySelector('.spine-light')).transform);
     ok("spine light travels with the reader", y1 !== y2, `${y1.slice(0, 30)} -> ${y2.slice(0, 30)}`);
     // traces: WAAPI light exists and is paused offscreen
-    const tr = await p.evaluate(() => { const d = document.querySelector('.map-trace .tr-dot'); return d ? d.getAnimations().map((a) => a.playState) : null; });
+    const tr = await p.evaluate(() => { const d = document.querySelector('.pm-trace .tr-dot'); return d ? d.getAnimations().map((a) => a.playState) : null; });
     ok("map trace light is a compositor animation (Web Animations)", Array.isArray(tr) && tr.length === 1, JSON.stringify(tr));
     await ctx.close();
 
