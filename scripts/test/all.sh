@@ -12,4 +12,5 @@ run migration-guards bash scripts/test/migration-guards.sh
 for s in admin-e2e public-e2e auth-e2e enquiry-e2e media-e2e admin-visual hosted-rehearsal; do run $s bash scripts/test/e2e.sh $s; done
 run indexing bash scripts/test/indexing-check.sh
 run consent bash scripts/test/consent-check.sh
+run notify-unconfigured bash scripts/test/notify-unconfigured-check.sh
 echo ALLDONE >> "$O/summary.txt"

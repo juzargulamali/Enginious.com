@@ -2,7 +2,7 @@ import { after, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { makeReference, parseEnquiry } from "@/lib/enquiry";
 import { checkLimits, clientIp } from "@/lib/rate-limit";
-import { notifyEnquiry } from "@/lib/enquiry-notify";
+import { notifyEnquiry, recordSkippedIfUnconfigured } from "@/lib/enquiry-notify";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +71,10 @@ export async function POST(request: Request) {
 
     if (!error && data) {
       // The enquiry is STORED. Notifying staff happens afterwards and can fail without affecting this response.
-      after(() => notifyEnquiry(data.id as string));
+      const id = data.id as string;
+      if (!(await recordSkippedIfUnconfigured(id))) {
+        after(async () => { try { await notifyEnquiry(id); } catch { console.error("enquiry notification task failed"); } });
+      }
       return json({ ok: true, reference }, 201);
     }
 
