@@ -6,7 +6,7 @@ type Rule = { target: string; status: number };
 let rules = new Map<string, Rule>();
 let loadedAt = 0;
 let inflight: Promise<void> | null = null;
-const TTL_MS = 60_000;
+const TTL_MS = Number(process.env.REDIRECT_MAP_TTL_MS) || 60_000; // tests set a short TTL
 
 async function refresh(): Promise<void> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
