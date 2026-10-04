@@ -41,5 +41,5 @@ Because Preview and Production share one Supabase project for now, a preview wri
 ## Auth URLs the app uses (for Supabase -> Authentication -> URL Configuration -> Redirect URLs)
 
 - `/admin/auth/callback` (invitations) and `/admin/auth/confirm` (password recovery), on every host that should be able to sign people in.
-- Preview branch alias, expected form: `https://enginious-git-claude-milestone-2-cms-enginious.vercel.app` (Vercel: `<project>-git-<branch>-<team>.vercel.app`). Confirm the exact host under Vercel -> project -> Deployments -> the branch deployment -> Domains. Each deployment also has its own host, for example `https://enginious-ov43s1uyh-enginious.vercel.app`.
+- Preview branch alias, expected form: `https://enginious-com-git-claude-milestone-2-cms-enginious.vercel.app` (Vercel: `<project>-git-<branch>-<team>.vercel.app`). Confirm the exact host under Vercel -> project -> Deployments -> the branch deployment -> Domains. Each deployment also has its own host, for example `https://enginious-4l0pn12wl-enginious.vercel.app`.
 - Wildcard that covers all previews: `https://enginious-*-enginious.vercel.app/admin/**`.

@@ -124,8 +124,8 @@ Authentication -> **URL Configuration**:
 
 - **Site URL:** a placeholder is fine until launch; use the main Vercel project URL, for example `https://enginious-com.vercel.app` (not a domain you do not control yet). The CMS builds its own links from the host you are on; Site URL is only a fallback.
 - **Redirect URLs** (add all; see `docs/environment.md` for how to confirm the real host):
-  - `https://enginious-git-claude-milestone-2-cms-enginious.vercel.app/admin/auth/callback`
-  - `https://enginious-git-claude-milestone-2-cms-enginious.vercel.app/admin/auth/confirm`
+  - `https://enginious-com-git-claude-milestone-2-cms-enginious.vercel.app/admin/auth/callback`
+  - `https://enginious-com-git-claude-milestone-2-cms-enginious.vercel.app/admin/auth/confirm`
   - Every individual deployment gets its own hostname such as `https://enginious-ov43s1uyh-enginious.vercel.app`. To avoid adding each one, use wildcard entries:
     - `https://enginious-*-enginious.vercel.app/admin/**`
   - Later, at launch (not now): `https://<production-domain>/admin/auth/callback` and `.../admin/auth/confirm`.
