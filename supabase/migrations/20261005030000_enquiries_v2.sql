@@ -7,7 +7,6 @@ alter table public.enquiries
   add column if not exists notification_attempts integer not null default 0,
   add column if not exists notification_last_at  timestamptz,
   add column if not exists attachment_count      integer not null default 0 check (attachment_count between 0 and 3),
-  add column if not exists ip_hash               text check (char_length(ip_hash) <= 80),   -- salted hash, used only for rate limiting
   add column if not exists updated_at            timestamptz not null default now(),
   add column if not exists handled_by            uuid references auth.users (id) on delete set null;
 

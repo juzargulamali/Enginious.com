@@ -17,6 +17,14 @@ export interface Project {
   summary: string;
   technologies: string[];
   caseStudy?: boolean;
+  /** CMS-only fields (absent for the built-in starter content). */
+  clientAttribution?: string;
+  challenge?: string;
+  experience?: string;
+  outcomes?: { label: string; value: string; source?: string }[];
+  media?: string[];
+  featured?: boolean;
+  seo?: import("@/lib/content/types").SeoFields;
 }
 
 export const PROJECTS: Project[] = [
