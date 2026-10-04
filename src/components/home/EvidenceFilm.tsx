@@ -3,20 +3,28 @@
 import { useRef, type ReactNode } from "react";
 import { reducedMotion, useScrollProgress } from "@/lib/scrollBus";
 
-/** Project media takes over more of the composition as the reader reaches the evidence: scale-up on the compositor (one transform write per frame). */
+/**
+ * The project media is a monument standing on the floor. On arrival it stands up: it starts tilted back and a little smaller, then
+ * rises to face the reader (rotateX, scale and lift on ONE compositor layer, one transform write per frame, pivoting on its base).
+ * Reduced motion: it simply stands, full size.
+ */
 export function EvidenceFilm({ children }: { children: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
   const el = useRef<HTMLDivElement>(null);
   useScrollProgress(root, (t) => {
     if (!el.current) return;
     if (reducedMotion()) { el.current.style.transform = ""; return; }
-    const p = Math.min(1, Math.max(0, (t - 0.22) / 0.3));
-    const s = 0.8 + 0.2 * p;
-    el.current.style.transform = `scale(${s.toFixed(3)})`;
+    const p = Math.min(1, Math.max(0, (t - 0.16) / 0.3));
+    const e = 1 - Math.pow(1 - p, 3);
+    el.current.style.transform = `perspective(1800px) translateY(${((1 - e) * 46).toFixed(1)}px) rotateX(${((1 - e) * 22).toFixed(2)}deg) scale(${(0.86 + 0.14 * e).toFixed(3)})`;
   });
   return (
     <div ref={root} className="film-full">
-      <div ref={el} className="film-grow" style={{ transform: "scale(0.8)" }}>{children}</div>
+      <span className="film-bloom" aria-hidden="true" />
+      <div ref={el} className="film-grow">
+        {children}
+        <span className="film-refl" aria-hidden="true" />
+      </div>
     </div>
   );
 }

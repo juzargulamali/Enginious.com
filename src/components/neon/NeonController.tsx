@@ -23,6 +23,9 @@ export function NeonController() {
         }
       });
     scan();
+    // the neon thread leads to the scene at the middle of the viewport: mark it so its node, branch and thread light up
+    const act = new IntersectionObserver((entries) => entries.forEach((e) => e.target.toggleAttribute("data-active", e.isIntersecting)), { rootMargin: "-46% 0px -46% 0px" });
+    document.querySelectorAll<HTMLElement>(".scenes .scene").forEach((el) => act.observe(el));
     // Re-scan at most once per frame, and only when something was added.
     let raf = 0;
     const mo = new MutationObserver((records) => {
@@ -32,6 +35,7 @@ export function NeonController() {
     mo.observe(document.body, { childList: true, subtree: true });
     return () => {
       io.disconnect();
+      act.disconnect();
       mo.disconnect();
       cancelAnimationFrame(raf);
     };

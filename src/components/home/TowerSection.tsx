@@ -178,6 +178,10 @@ export function TowerSection() {
         onPointerCancel={up}
         onKeyDown={key}
       >
+        <span className="tw-floor" aria-hidden="true" />
+        <span className="tw-far" aria-hidden="true"><i className="fm fm1" /><i className="fm fm2" /><i className="fm fm3" /><i className="fm fm4" /></span>
+        <span className="tw-cast" aria-hidden="true" />
+        <span className="tw-plinth" aria-hidden="true"><i className="pl pl3" /><i className="pl pl2" /><i className="pl pl1" /></span>
         <span ref={orbit} className="orbit" aria-hidden="true" style={{ transform: orbitT(LAST) }}>
           <svg viewBox="0 0 400 400"><circle cx="200" cy="200" r="186" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="540 70 260 40" strokeLinecap="round" /></svg>
         </span>

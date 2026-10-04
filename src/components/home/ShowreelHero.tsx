@@ -3,20 +3,17 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Edge } from "@/components/neon/Edge";
-import { AtriumEnv, AtriumFrame, AtriumPlanes } from "./AtriumScene";
 import { ShowreelDialog } from "./ShowreelDialog";
+import { YtPoster } from "./YtPoster";
 import type { ShowreelConfig } from "@/content/media";
 
 /**
- * The Enginious Digital Atrium (design exploration): the approved showreel, framed as the lit screen at the far end of a hall.
- *  - Three depths: distant environment (AtriumEnv + AtriumFrame: static, painted once), middle (the screen in real CSS 3D, with
- *    its receding planes, light rails and floor light baked into ONE SVG), foreground (headline, buttons, regional strip).
- *  - The poster and a neutral dark screen are always painted first (fast LCP; the hero is never empty). The video fades in only
- *    when it is really playing. Nothing loads for reduced motion, Save-Data or 2G/3G; those visitors get the poster and a play cue.
+ * Cinematic opening: the approved showreel, full bleed.
+ *  - Poster and a designed stage are always painted first (fast LCP, and the hero is never empty).
+ *  - The video fades in only when it is really playing. Nothing loads for reduced motion, Save-Data or 2G/3G;
+ *    those visitors get the poster and a play button.
  *  - Muted loop, pauses offscreen, visible pause control (WCAG 2.2.2). Sound lives in the lightbox.
- *  - Motion: pointer parallax (mouse only) and a small scroll transition. One rAF scheduler writes four transforms (planes, screen,
- *    two copy blocks), no React state, no filters; layers are promoted only while something is moving (will-change is set on
- *    the first movement and removed when the scene is at rest); the loop stops off-screen, with the tab hidden or motion reduced.
+ *  - Restrained interactivity: pointer-driven light and three layers of depth (mouse only, one write per frame).
  */
 
 type Net = { saveData?: boolean; effectiveType?: string };
@@ -33,17 +30,16 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
   const hero = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
-  const planesRef = useRef<HTMLDivElement>(null);
-  const midRef = useRef<HTMLDivElement>(null);
-  const fgA = useRef<HTMLDivElement>(null);
-  const fgB = useRef<HTMLDivElement>(null);
+  const spot = useRef<HTMLSpanElement>(null);
+  const layerV = useRef<HTMLDivElement>(null);
+  const layerH = useRef<HTMLDivElement>(null);
+  const layerT = useRef<HTMLDivElement>(null);
   const [auto, setAuto] = useState(false);
   const [src, setSrc] = useState<string | null>(null); // youtube iframe src (set after first paint)
   const [playing, setPlaying] = useState(false);
   const [paused, setPaused] = useState(false);
   const pausedRef = useRef(false);
   const visibleRef = useRef(true);
-  const [posterOk, setPosterOk] = useState(true);
   const [open, setOpen] = useState(false);
 
   const command = useCallback((func: "playVideo" | "pauseVideo") => {
@@ -106,65 +102,27 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
     return () => io.disconnect();
   }, [cfg.mode, command]);
 
-  // ---- depth: pointer parallax (mouse only) + a small scroll transition. Nearer layers move more; the environment never moves.
-  // State lives in plain variables; one rAF writes four transforms; the loop sleeps as soon as everything is at rest, and
-  // the layers are only promoted (will-change) while they are actually moving.
+  // ---- pointer light + depth: mouse only, one write per frame
   useEffect(() => {
-    const root = hero.current;
-    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const wide = window.matchMedia("(min-width: 901px)");
-    const layers = () => [planesRef.current, midRef.current, fgA.current, fgB.current];
-    let raf = 0, tx = 0, ty = 0, x = 0, y = 0, s = 0, onScreen = true, promoted = false, idle = 0;
-    const promote = (on: boolean) => {
-      if (promoted === on) return;
-      promoted = on;
-      for (const el of layers()) if (el) el.style.willChange = on ? "transform" : "";
-    };
-    const apply = () => {
+    const el = hero.current;
+    if (!el) return;
+    let raf = 0, px = 0, py = 0, mx = 0, my = 0;
+    const flush = () => {
       raf = 0;
-      x += (tx - x) * 0.1; y += (ty - y) * 0.1;
-      const settled = Math.abs(tx - x) < 0.002 && Math.abs(ty - y) < 0.002;
-      if (settled) { x = tx; y = ty; }
-      const pl = planesRef.current, mid = midRef.current, a = fgA.current, b = fgB.current;
-      // nearer = larger pointer shift and faster scroll (the hero leaves in front of its own environment)
-      if (pl) pl.style.transform = `translate3d(${(-x * 6).toFixed(2)}px, ${(-y * 4 - s * 10).toFixed(2)}px, 0)`;
-      if (mid) mid.style.transform = `translate3d(${(-x * 9).toFixed(2)}px, ${(-y * 6 - s * 22).toFixed(2)}px, 0)`;
-      const fg = `translate3d(${(-x * 11).toFixed(2)}px, ${(-y * 7 - s * 44).toFixed(2)}px, 0)`;
-      if (a) a.style.transform = fg;
-      if (b) b.style.transform = fg;
-      if (!settled && onScreen) raf = requestAnimationFrame(apply);
-      else { window.clearTimeout(idle); idle = window.setTimeout(() => promote(false), 700); }
+      if (spot.current) spot.current.style.transform = `translate3d(${mx - 320}px, ${my - 320}px, 0)`;
+      if (layerV.current) layerV.current.style.transform = `translate3d(${(-px * 10).toFixed(1)}px, ${(-py * 6).toFixed(1)}px, 0) scale(1.04)`;
+      if (layerH.current) layerH.current.style.transform = `translate3d(${(px * 14).toFixed(1)}px, ${(py * 9).toFixed(1)}px, 0)`;
+      if (layerT.current) layerT.current.style.transform = `translate3d(${(px * 5).toFixed(1)}px, ${(py * 3).toFixed(1)}px, 0)`;
     };
-    const kick = () => { if (!raf && onScreen && !document.hidden) { window.clearTimeout(idle); promote(true); raf = requestAnimationFrame(apply); } };
     const move = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse" || !wide.matches) return;
-      // links and buttons must hold still under the cursor: freeze the layers where they are the moment the pointer is over one
-      if ((e.target as Element | null)?.closest?.("a, button")) { tx = x; ty = y; return; }
-      const r = root.getBoundingClientRect();
-      tx = ((e.clientX - r.left) / r.width) * 2 - 1; ty = ((e.clientY - r.top) / r.height) * 2 - 1;
-      kick();
+      if (e.pointerType !== "mouse") return;
+      const r = el.getBoundingClientRect();
+      mx = e.clientX - r.left; my = e.clientY - r.top;
+      px = (mx / r.width) * 2 - 1; py = (my / r.height) * 2 - 1;
+      if (!raf) raf = requestAnimationFrame(flush);
     };
-    const leave = () => { tx = 0; ty = 0; kick(); };
-    const scroll = () => {
-      const h = root.offsetHeight || 1;
-      const next = Math.min(1, Math.max(0, window.scrollY / h));
-      if (next !== s) { s = next; kick(); }
-    };
-    const onVis = () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; promote(false); } else kick(); };
-    // only listen to scrolling while the hero is actually on screen
-    const io = new IntersectionObserver(([e]) => {
-      onScreen = e.isIntersecting;
-      if (onScreen) { window.addEventListener("scroll", scroll, { passive: true }); scroll(); }
-      else { window.removeEventListener("scroll", scroll); cancelAnimationFrame(raf); raf = 0; promote(false); }
-    }, { threshold: 0 });
-    io.observe(root);
-    root.addEventListener("pointermove", move, { passive: true });
-    root.addEventListener("pointerleave", leave);
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      io.disconnect(); window.removeEventListener("scroll", scroll); cancelAnimationFrame(raf); window.clearTimeout(idle);
-      root.removeEventListener("pointermove", move); root.removeEventListener("pointerleave", leave); document.removeEventListener("visibilitychange", onVis);
-    };
+    el.addEventListener("pointermove", move, { passive: true });
+    return () => { el.removeEventListener("pointermove", move); cancelAnimationFrame(raf); };
   }, []);
 
   const toggle = () => {
@@ -177,54 +135,33 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
     } else command(next ? "pauseVideo" : "playVideo");
   };
 
-  const poster = posterOk && cfg.poster;
-
   return (
     <section ref={hero} className="rh" aria-label="Enginious showreel">
-      {/* 1. distant environment + the dark opening (decorative) */}
-      <div className="rh-env" aria-hidden="true"><AtriumEnv /></div>
-      <AtriumFrame />
+      <div className="rh-media">
+        <div className="rh-stage" aria-hidden="true">
+          <span className="beam b1" /><span className="beam b2" /><span className="beam b3" /><span className="ringd" /><span className="pillar p1" /><span className="pillar p2" /><span className="pillar p3" /><span className="floor" />
+        </div>
+        <div ref={layerV} className="rh-layer">
+          {cfg.poster && <YtPoster className="rh-poster" src={cfg.poster} eager />}
+          {cfg.mode === "file" ? (
+            <video ref={video} className="rh-video" data-on={playing || undefined} muted loop playsInline preload="auto" aria-hidden="true" tabIndex={-1} onPlaying={() => setPlaying(true)} />
+          ) : (
+            src && <iframe ref={frame} className="rh-yt" data-on={playing || undefined} src={src} title="Enginious showreel (background)" allow="autoplay; encrypted-media" aria-hidden="true" tabIndex={-1} onLoad={onFrameLoad} />
+          )}
+        </div>
+        <span className="rh-shade" aria-hidden="true" />
+        <span ref={spot} className="rh-spot" aria-hidden="true" />
+      </div>
 
-      {/* 3. foreground: headline, actions, regional presence. DOM order = reading order: headline, showreel (with its pause control), description and actions */}
-      <div ref={fgA} className="container rh-copy rh-copy-a">
+      <div ref={layerH} className="rh-hud" aria-hidden="true">
+        <Edge variant="perimeter" duration={10} />
+      </div>
+
+      <div ref={layerT} className="container rh-copy">
         <p className="eyebrow">Enginious · Experiential technology</p>
         <h1>
           We engineer experiences <span className="accent">people step into.</span>
         </h1>
-      </div>
-
-      {/* 2. middle: the showreel screen, set in two receding planes and a pair of light rails (real 3D, one transform) */}
-      <div className="rh-midpos">
-        <div ref={planesRef} className="rh-planes" aria-hidden="true"><AtriumPlanes /></div>
-        <div ref={midRef} className="rh-mid">
-          <div className="rh-screen" onClick={() => setOpen(true)}>
-            <div className="rh-media">
-              <div className="rh-screen-base" aria-hidden="true"><span>Enginious showreel</span></div>
-              {poster && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="rh-poster" src={cfg.poster} alt="" fetchPriority="high" decoding="async" onError={() => setPosterOk(false)} />
-              )}
-              {cfg.mode === "file" ? (
-                <video ref={video} className="rh-video" data-on={playing || undefined} muted loop playsInline preload="auto" aria-hidden="true" tabIndex={-1} onPlaying={() => setPlaying(true)} />
-              ) : (
-                src && <iframe ref={frame} className="rh-yt" data-on={playing || undefined} src={src} title="Enginious showreel (background)" allow="autoplay; encrypted-media" aria-hidden="true" tabIndex={-1} onLoad={onFrameLoad} />
-              )}
-              <span className="rh-glass" aria-hidden="true" />
-              <span className="rh-playcue" data-hide={(auto && playing) || undefined} aria-hidden="true">▶</span>
-            </div>
-            <Edge variant="perimeter" duration={10} />
-            <div className="rh-ctrl">
-              {auto && playing && (
-                <button type="button" className="rh-pause" onClick={(e) => { e.stopPropagation(); toggle(); }} aria-label={paused ? "Play background video" : "Pause background video"}>
-                  {paused ? "▶" : "❚❚"}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div ref={fgB} className="container rh-copy rh-copy-b">
         <p className="rh-sub">
           Kinetic displays, interactive installations and immersive environments for events, exhibitions and permanent spaces. Headquartered in Dubai, with branches in Saudi Arabia and Poland serving Europe.
         </p>
@@ -244,6 +181,13 @@ export function ShowreelHero({ cfg }: { cfg: ShowreelConfig }) {
         <Link href="/europe" className="rs-n"><i aria-hidden="true" /><b>Poland</b><span>Europe</span></Link>
       </nav>
 
+      <div className="rh-ctrl">
+        {auto && playing && (
+          <button type="button" className="rh-pause" onClick={toggle} aria-label={paused ? "Play background video" : "Pause background video"}>
+            {paused ? "▶" : "❚❚"}
+          </button>
+        )}
+      </div>
       <a href="#capabilities" className="rh-cue" aria-label="Scroll to what we deliver"><span /></a>
       <ShowreelDialog open={open} onClose={() => setOpen(false)} youtubeId={cfg.youtubeId} file={cfg.mode === "file" ? (cfg.mp4 ?? cfg.webm) : undefined} />
     </section>
