@@ -2,6 +2,7 @@ import { BriefProvider } from "@/components/BriefProvider";
 import { ContentProvider } from "@/components/ContentProvider";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ConsentGate } from "@/components/ConsentGate";
 import { getContent } from "@/lib/content/load";
 import { toClientContent } from "@/lib/content/lean";
 
@@ -16,6 +17,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
           <SiteHeader />
           <main id="main">{children}</main>
           <SiteFooter content={content} />
+          <ConsentGate />
         </BriefProvider>
       </ContentProvider>
     </>

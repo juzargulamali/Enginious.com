@@ -158,7 +158,7 @@ export function ContentEditor({ item, def, media, refs, revisions, role }: { ite
       <div className="adm-editor">
         <form onSubmit={(e) => { e.preventDefault(); start(async () => { await doSave(); }); }} noValidate>
           <fieldset className="adm-fieldset">
-            <legend>Basics</legend>
+            <legend>Title and address</legend>
             <div className="adm-field" data-invalid={!!errors.title}>
               <label htmlFor="ed-title">{def.titleLabel}<span className="req">*</span></label>
               <input id="ed-title" type="text" value={state.title} maxLength={200} onChange={(e) => setState((s) => ({ ...s, title: e.target.value }))} aria-invalid={!!errors.title} aria-describedby={errors.title ? "ed-title-err" : undefined} />

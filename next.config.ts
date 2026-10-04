@@ -17,10 +17,25 @@ const indexingEnabled = () => {
 
 const NOINDEX = { key: "X-Robots-Tag", value: "noindex, nofollow" };
 
+// Baseline security headers for every response. (A full Content-Security-Policy needs a nonce strategy because the site embeds
+// YouTube on demand and uses inline JSON-LD; see docs/security.md for the planned policy.)
+const SECURITY = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+];
+// The CMS must never be framed (clickjacking) and must not leak its URLs in referrers.
+const ADMIN_ONLY = [
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+];
+
 const nextConfig: NextConfig = {
   async headers() {
     const always = [
-      { source: "/admin/:path*", headers: [NOINDEX, { key: "Cache-Control", value: "no-store" }] },
+      { source: "/:path*", headers: SECURITY },
+      { source: "/admin/:path*", headers: [NOINDEX, { key: "Cache-Control", value: "no-store" }, ...ADMIN_ONLY] },
       { source: "/api/:path*", headers: [NOINDEX] },
       { source: "/setup-check", headers: [NOINDEX] },
     ];
