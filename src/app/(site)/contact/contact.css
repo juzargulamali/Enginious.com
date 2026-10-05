@@ -44,3 +44,24 @@
   .ct-reg { grid-template-columns: 1fr; min-height: 92px; padding: 12px; justify-items: start; gap: 6px; } .ct-reg .t b { font-size: 1rem; } .ct-reg .t span { font-size: 0.7rem; } .ct-reg svg { width: 60%; opacity: 0.2; }
   .ct-main { grid-template-columns: 1fr; } .ct-side { position: static; } .ct-side-d { display: none; } .ct-acc { display: block; }
 }
+
+/* ---- regional cards with a photograph: a taller landscape composition, label in a readable lower area ---- */
+.ct-reg[data-media="pending"], .ct-reg[data-media="loaded"] { aspect-ratio: 3 / 2; min-height: 0; padding: 0 18px 16px; align-content: end; overflow: hidden; background: #03101a; }
+.ct-ph { position: absolute; inset: 0; z-index: 0; }
+.ct-ph .photo { opacity: 0; transition: opacity 0.5s; }
+.ct-reg[data-media="loaded"] .ct-ph .photo { opacity: 1; }
+/* only a subtle gradient behind the text, so the photograph stays clearly visible */
+.ct-reg[data-media="pending"]::after, .ct-reg[data-media="loaded"]::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(0deg, rgba(1, 5, 10, 0.86) 0%, rgba(1, 5, 10, 0.5) 24%, rgba(1, 5, 10, 0) 52%); }
+.ct-reg[data-media="pending"] > .radio, .ct-reg[data-media="loaded"] > .radio, .ct-reg[data-media="pending"] > .t, .ct-reg[data-media="loaded"] > .t { position: relative; z-index: 2; }
+.ct-reg[data-media="pending"] svg, .ct-reg[data-media="loaded"] svg { display: none; } /* fallback artwork: hidden while a photograph is assigned, back if it fails */
+.ct-reg[data-media="pending"] .t b, .ct-reg[data-media="loaded"] .t b { text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8); }
+.ct-reg[data-media="pending"] .t span, .ct-reg[data-media="loaded"] .t span { color: #dcebee; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8); }
+.ct-reg[data-media="pending"] .radio, .ct-reg[data-media="loaded"] .radio { background: rgba(2, 7, 11, 0.55); }
+@media (max-width: 960px) {
+  .ct-reg[data-media="pending"], .ct-reg[data-media="loaded"] { padding: 0 12px 12px; }
+}
+@media (max-width: 760px) {
+  .ct-regions { grid-template-columns: 1fr; gap: 12px; }
+  .ct-reg[data-media="pending"], .ct-reg[data-media="loaded"] { grid-template-columns: auto 1fr; padding: 0 16px 14px; justify-items: stretch; gap: 0 12px; }
+  .ct-reg[data-media="pending"] .t b, .ct-reg[data-media="loaded"] .t b { font-size: 1.25rem; } .ct-reg[data-media="pending"] .t span, .ct-reg[data-media="loaded"] .t span { font-size: 0.82rem; }
+}

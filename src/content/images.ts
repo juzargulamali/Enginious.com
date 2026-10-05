@@ -34,6 +34,18 @@ import generated from "./images.generated.json";
 
 export const IMAGES: Record<string, ImageAsset> = {
   ...(generated as unknown as Record<string, ImageAsset>),
+  "region-dubai": {
+      "id": "region-dubai", "kind": "scene", "status": "stock", "src": "/photos/region-dubai", "widths": [480, 960, 1600, 2000], "width": 2000, "height": 1250, "focal": [0.3, 0.45],
+      "alt": "Dubai skyline at night with the Burj Khalifa and the Sheikh Zayed Road interchanges", "credit": "Atul Mohan, Pexels", "source": "https://www.pexels.com/photo/17914746/", "licence": "Free to use under the Pexels licence"
+  } as unknown as ImageAsset,
+  "region-riyadh": {
+      "id": "region-riyadh", "kind": "scene", "status": "stock", "src": "/photos/region-riyadh", "widths": [480, 960, 1600, 2000], "width": 2000, "height": 1334, "focal": [0.4, 0.45],
+      "alt": "Riyadh at dusk with the Kingdom Centre tower lit in blue", "credit": "Abul Lais, Pexels", "source": "https://www.pexels.com/photo/39470846/", "licence": "Free to use under the Pexels licence"
+  } as unknown as ImageAsset,
+  "region-poznan": {
+      "id": "region-poznan", "kind": "scene", "status": "stock", "src": "/photos/region-poznan", "widths": [480, 960, 1500], "width": 1500, "height": 1001, "focal": [0.48, 0.1],
+      "alt": "Poznań old town square at night with the town hall tower and café terraces", "credit": "Supplied by the site owner", "source": "Supplied by the site owner", "licence": "Free to use under the Pexels licence"
+  } as unknown as ImageAsset,
   "juzar-gulamali": {
       "id": "juzar-gulamali",
       "kind": "portrait",
@@ -66,6 +78,9 @@ export const SLOTS = {
   previewMale: "preview-portrait-male",
   previewFemale: "preview-portrait-female",
   contactScene: "contact-scene",
+  regionUae: "region-dubai",
+  regionKsa: "region-riyadh",
+  regionEurope: "region-poznan",
   heroPoster: "hero-poster",
 } as const;
 export type SlotName = keyof typeof SLOTS | (string & {});

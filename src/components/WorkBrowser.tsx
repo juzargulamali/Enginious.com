@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import type { Region3 } from "@/content/projects";
 import { useContent } from "./ContentProvider";
 import { Placeholder } from "./Placeholder";
+import { PreviewProvider } from "./video/PreviewProvider";
+import { CardMedia } from "./video/CardMedia";
 
 const REGION_LABEL: Record<Region3 | "all", string> = { all: "All regions", uae: "UAE", ksa: "Saudi Arabia", international: "International" };
 
@@ -32,10 +34,11 @@ export function WorkBrowser() {
         </div>
       </div>
       <p className="muted" role="status" style={{ marginBottom: 16 }}>{list.length} project{list.length === 1 ? "" : "s"}</p>
+      <PreviewProvider>
       <ul className="tech-grid" style={{ ["--min" as string]: "300px" }}>
         {list.map((p) => (
-          <li key={p.slug} id={p.slug} className="panel tech-item" style={{ padding: 14 }}>
-            <Placeholder title="Project media" note="Approved photography / video to be supplied" style={{ minHeight: 150 }} />
+          <li key={p.slug} id={p.slug} className="panel tech-item" style={{ padding: 14 }} data-vcard>
+            <CardMedia id={`work-${p.slug}`} title={p.title} video={p.video} posterImageId={p.media?.[0]} fallback={<Placeholder title="Project media" note="Approved photography / video to be supplied" style={{ minHeight: 150 }} />} />
             <p className="eyebrow" style={{ marginTop: 14 }}>{p.location} · {p.year}</p>
             <h3 style={{ marginTop: 6 }}>{p.title}</h3>
             {p.client && <p className="muted" style={{ fontSize: "0.85rem", marginTop: 4 }}>Client: {p.client}</p>}
@@ -59,6 +62,7 @@ export function WorkBrowser() {
           </li>
         ))}
       </ul>
+      </PreviewProvider>
     </>
   );
 }

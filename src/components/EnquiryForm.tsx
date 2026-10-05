@@ -7,6 +7,7 @@ import { Edge } from "@/components/neon/Edge";
 import { BUDGETS, PROJECT_TYPES, type RegionKey } from "@/content/site";
 import { useBrief } from "./BriefProvider";
 import { useContent } from "./ContentProvider";
+import { Photo } from "./Photo";
 
 type Errors = Record<string, string>;
 type State = { s: "idle" } | { s: "sending" } | { s: "error"; message: string } | { s: "done"; reference: string; attach?: { stored: number; failed: string[] } };
@@ -15,6 +16,8 @@ const MAX_TOTAL = 4 * 1024 * 1024;
 const ALLOWED_EXT = /\.(pdf|jpe?g|png|webp)$/i;
 const isRegion = (v: string | null): v is RegionKey => v === "uae" || v === "ksa" || v === "europe";
 
+// Card text defaults (the CMS region record can override title and subtitle) and the built-in photograph slot for each office.
+const CARD: Record<RegionKey, { title: string; sub: string; slot: string }> = { uae: { title: "Dubai", sub: "Global Headquarters", slot: "regionUae" }, ksa: { title: "Riyadh", sub: "Saudi Arabia Branch", slot: "regionKsa" }, europe: { title: "Poznań, Poland", sub: "Europe", slot: "regionEurope" } };
 const LABEL: Record<RegionKey, string> = { uae: "Global Headquarters", ksa: "Saudi Arabia Branch", europe: "Branch serving Europe" };
 // Abstract crystalline forms, one per region (illustrations, not landmarks).
 const SHARDS: Record<RegionKey, React.ReactNode> = {
@@ -26,7 +29,7 @@ const SHARDS: Record<RegionKey, React.ReactNode> = {
 export function EnquiryForm() {
   const params = useSearchParams();
   const brief = useBrief();
-  const { regions: REGIONS, general: GENERAL_CONTACT, techBySlug } = useContent();
+  const { regions: REGIONS, general: GENERAL_CONTACT, techBySlug, imageById, imageForSlot } = useContent();
   const [picked, setPicked] = useState<RegionKey | null>(null);
   const [projectType, setProjectType] = useState<string>("event");
   const [errors, setErrors] = useState<Errors>({});
@@ -137,15 +140,20 @@ export function EnquiryForm() {
   return (
     <>
       <div className="ct-regions" role="radiogroup" aria-label="Choose the team you would like to contact">
-        {(Object.values(REGIONS)).map((x) => (
-          <label key={x.key} className="ct-reg" data-on={region === x.key}>
-            <input type="radio" name="region" value={x.key} checked={region === x.key} onChange={() => setPicked(x.key)} className="sr-only" />
-            {region === x.key && <Edge variant="perimeter" duration={9} />}
-            <span className="radio" aria-hidden="true" />
-            <span className="t"><b>{x.name}</b><span>{LABEL[x.key]}</span></span>
-            {SHARDS[x.key]}
-          </label>
-        ))}
+        {(Object.values(REGIONS)).map((x) => {
+          const d = CARD[x.key];
+          const asset = (x.cardImage ? imageById(x.cardImage) : undefined) ?? imageForSlot(d.slot);
+          return (
+            <label key={x.key} className="ct-reg" data-on={region === x.key} data-media={asset ? "pending" : undefined}>
+              <input type="radio" name="region" value={x.key} checked={region === x.key} onChange={() => setPicked(x.key)} className="sr-only" />
+              {asset && <span className="ct-ph" aria-hidden="true"><Photo id={asset.id} sizes="(max-width: 760px) 100vw, 420px" /></span>}
+              {region === x.key && <Edge variant="perimeter" duration={9} />}
+              <span className="radio" aria-hidden="true" />
+              <span className="t"><b>{x.cardTitle ?? d.title}</b><span>{x.cardSubtitle ?? d.sub}</span></span>
+              {SHARDS[x.key]}
+            </label>
+          );
+        })}
       </div>
 
       <div className="ct-main">

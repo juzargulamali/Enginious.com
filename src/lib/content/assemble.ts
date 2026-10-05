@@ -5,6 +5,7 @@ import { REGIONS, GENERAL_CONTACT, type RegionKey } from "@/content/site";
 import { IMAGES } from "@/content/images";
 import { publicUrl } from "@/lib/media";
 import type { Project } from "@/content/projects";
+import { toVideoSpec } from "@/lib/video";
 import type { Technology } from "@/content/technologies";
 import type { Person } from "@/content/team";
 import type { LeaderInfo } from "@/content/leaders";
@@ -70,14 +71,14 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
     summary: str(r.data.summary) ?? "", technologies: strs(r.data.technologies), caseStudy: r.data.case_study === true,
     clientAttribution: str(r.data.client_attribution), challenge: str(r.data.challenge), experience: str(r.data.experience),
     outcomes: recs(r.data.outcomes).filter((o) => o.verified === true && str(o.label) && str(o.value)).map((o) => ({ label: String(o.label), value: String(o.value), source: str(o.source) })),
-    media: strs(r.data.media), featured: r.featured, seo: seoOf(r.data),
+    media: strs(r.data.media), video: toVideoSpec(r.data), featured: r.featured, seo: seoOf(r.data),
   }));
 
   const technologies: Technology[] = byType.technology.map((r) => ({
     slug: r.slug, name: r.title, category: (str(r.data.category) as Technology["category"]) ?? "interactive", summary: str(r.data.summary) ?? "",
     projects: strs(r.data.projects), detailed: r.data.detailed === true, description: str(r.data.description), useCases: strs(r.data.use_cases),
     specs: recs(r.data.specs).filter((s) => s.confirmed === true && str(s.label) && str(s.value)).map((s) => ({ label: String(s.label), value: String(s.value) })),
-    media: strs(r.data.media), showcaseImage: str(r.data.showcase_image), showcaseAnimation: str(r.data.showcase_animation), showcaseScale: num(r.data.showcase_scale), showcaseY: num(r.data.showcase_y), featured: r.featured, seo: seoOf(r.data),
+    media: strs(r.data.media), video: toVideoSpec(r.data), showcaseImage: str(r.data.showcase_image), showcaseAnimation: str(r.data.showcase_animation), showcaseScale: num(r.data.showcase_scale), showcaseY: num(r.data.showcase_y), featured: r.featured, seo: seoOf(r.data),
   }));
 
   const people: Person[] = [];
@@ -106,7 +107,7 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
     const base = REGIONS[key];
     regions[key] = r
       ? {
-          key, name: r.title, role: str(r.data.role_label) ?? base.role, email: emailOf(r.data.email) ?? null, phone: str(r.data.phone) ?? null, city: str(r.data.city) ?? null, href: base.href,
+          key, name: r.title, role: str(r.data.role_label) ?? base.role, email: emailOf(r.data.email) ?? null, phone: str(r.data.phone) ?? null, city: str(r.data.city) ?? null, href: base.href, cardTitle: str(r.data.card_title), cardSubtitle: str(r.data.card_subtitle), cardImage: str(r.data.card_image),
           intro: str(r.data.intro), address: str(r.data.address), capabilities: strs(r.data.capabilities), projects: strs(r.data.projects),
         }
       : { ...base, capabilities: [], projects: [] }; // fixed routes always exist

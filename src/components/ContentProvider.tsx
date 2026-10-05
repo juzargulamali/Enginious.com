@@ -14,7 +14,7 @@ import type { RegionKey } from "@/content/site";
  * The slice of published content that client components need, supplied once by the (site) layout from the CMS (or the
  * built-in starter content). Kept lean on purpose: long text (challenge, article bodies, ...) stays on the server.
  */
-export interface LeanRegion { key: RegionKey; name: string; role: string; email: string | null; phone: string | null; city: string | null; href: string }
+export interface LeanRegion { key: RegionKey; name: string; role: string; email: string | null; phone: string | null; city: string | null; href: string; cardTitle?: string; cardSubtitle?: string; cardImage?: string }
 export interface ClientContent {
   projects: Project[];
   technologies: Technology[];

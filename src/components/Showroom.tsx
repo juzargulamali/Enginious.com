@@ -6,6 +6,8 @@ import { TECH_CATEGORIES, type TechCategory, type Technology } from "@/content/t
 import { useContent } from "./ContentProvider";
 import { useBrief } from "./BriefProvider";
 import { AddToBrief } from "./AddToBrief";
+import { PreviewProvider } from "./video/PreviewProvider";
+import { CardMedia } from "./video/CardMedia";
 
 /** Abstract exhibit glyphs: stylised category icons, NOT models of the real equipment. */
 function Glyph({ category, seed }: { category: TechCategory; seed: number }) {
@@ -194,9 +196,11 @@ export function Showroom() {
             <button key={c.key} type="button" className="chip" aria-pressed={filter === c.key} onClick={() => setFilter(c.key)}>{c.label}</button>
           ))}
         </div>
+        <PreviewProvider>
         <ul className="tech-grid">
           {list.map((t) => (
-            <li key={t.slug} id={`cat-${t.category}-${t.slug}`} className="panel tech-item">
+            <li key={t.slug} id={`cat-${t.category}-${t.slug}`} className="panel tech-item" data-vcard>
+              <CardMedia id={`tech-${t.slug}`} title={t.name} video={t.video} posterImageId={t.media?.[0]} />
               <p className="eyebrow">{TECH_CATEGORIES.find((c) => c.key === t.category)!.label}</p>
               <h3 style={{ marginTop: 6 }}>
                 {t.detailed ? <Link href={`/technologies/${t.slug}`} className="accent">{t.name}</Link> : t.name}
@@ -210,6 +214,7 @@ export function Showroom() {
             </li>
           ))}
         </ul>
+        </PreviewProvider>
       </section>
     </>
   );

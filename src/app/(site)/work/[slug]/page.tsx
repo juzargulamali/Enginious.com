@@ -1,3 +1,4 @@
+import { VideoPlayer } from "@/components/video/VideoPlayer";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: PageProps<"/work/[slug]">): P
   return buildMetadata({ path: `/work/${p.slug}`, title: `${p.title}: case study`, description: p.summary, seo: p.seo, image: p.media?.[0] });
 }
 
-const CHAPTERS = [["overview", "Overview"], ["challenge", "Challenge"], ["experience", "The experience"], ["scope", "Scope"], ["media", "Media"]] as const;
+const CHAPTERS = [["overview", "Overview"], ["video", "Video"], ["challenge", "Challenge"], ["experience", "The experience"], ["scope", "Scope"], ["media", "Media"]] as const;
 
 export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
   const { slug } = await params;
@@ -30,7 +31,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
   if (!p || !p.caseStudy) notFound();
   const techs = p.technologies.map((s) => c.technologies.find((t) => t.slug === s)).filter((t): t is NonNullable<typeof t> => !!t);
   const media = (p.media ?? []).filter((id) => c.images[id]);
-  const chapters = CHAPTERS.filter(([id]) => id === "overview" || id === "scope" || id === "media" || (id === "challenge" && p.challenge) || (id === "experience" && (p.experience || p.slug === "whx")));
+  const chapters = CHAPTERS.filter(([id]) => id === "overview" || (id === "video" && !!p.video) || id === "scope" || id === "media" || (id === "challenge" && p.challenge) || (id === "experience" && (p.experience || p.slug === "whx")));
 
   return (
     <article className="container section" style={{ paddingTop: "clamp(24px, 4vw, 56px)" }}>
@@ -59,6 +60,11 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
         </nav>
 
         <div className="stack" style={{ ["--stack" as string]: "3.2rem" }}>
+          {p.video && (
+            <section id="video" className="stack" style={{ ["--stack" as string]: "0.8rem" }} aria-label="Project video">
+              <VideoPlayer video={p.video} title={p.title} posterImageId={p.media?.[0]} />
+            </section>
+          )}
           {p.challenge && (
             <section id="challenge" className="stack" style={{ ["--stack" as string]: "0.8rem" }}>
               <h2>The challenge</h2>

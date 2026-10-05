@@ -1,3 +1,4 @@
+import { VideoPlayer } from "@/components/video/VideoPlayer";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -54,6 +55,12 @@ export default async function TechnologyPage({ params }: PageProps<"/technologie
         </div>
         {t.slug === "tri-helix" ? <TriHelixDemo /> : media[0] ? <div style={{ position: "relative", aspectRatio: "4 / 3", borderRadius: 14, overflow: "hidden" }}><Photo id={media[0]} sizes="(max-width: 900px) 100vw, 560px" priority /></div> : <Placeholder title={`${t.name}`} style={{ minHeight: 280 }} />}
       </div>
+
+      {t.video && (
+        <section className="section" style={{ paddingBottom: 0 }} aria-label={`${t.name} video`}>
+          <VideoPlayer video={t.video} title={t.name} posterImageId={t.media?.[0]} />
+        </section>
+      )}
 
       {body && (
         <section className="section" style={{ paddingBottom: 0 }}>

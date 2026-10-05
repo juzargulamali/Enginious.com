@@ -42,6 +42,10 @@ export interface JobRole { slug: string; title: string; department?: string; loc
 export interface CompanySection { slug: string; title: string; body: string; steps: { title: string; body?: string }[] }
 
 export interface RegionContent extends Region {
+  /** Contact-page card: optional title, subtitle and photograph (media id) from the CMS. */
+  cardTitle?: string;
+  cardSubtitle?: string;
+  cardImage?: string;
   intro?: string;
   address?: string;
   capabilities: string[];

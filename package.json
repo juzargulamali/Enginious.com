@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test src/lib/enquiry.test.ts src/lib/markdown.test.ts src/lib/upload.test.ts src/lib/consent.test.ts src/lib/cms/schema.test.ts",
+    "test": "node --test src/lib/enquiry.test.ts src/lib/markdown.test.ts src/lib/upload.test.ts src/lib/consent.test.ts src/lib/cms/schema.test.ts src/lib/video.test.ts",
     "typecheck": "tsc --noEmit",
     "test:db": "bash scripts/test/pg-start.sh && bash scripts/test/rls.sh",
     "test:e2e": "bash scripts/test/e2e.sh admin-e2e public-e2e auth-e2e enquiry-e2e media-e2e"
