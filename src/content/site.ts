@@ -54,7 +54,8 @@ export const REGIONS: Record<RegionKey, Region> = {
     // Not supplied: enquiries from Europe fall back to the general contact.
     email: null,
     phone: null,
-    city: null,
+    city: "Poznań, Poland", // confirmed by the owner (Contact card brief); the map still shows a country-level marker
+    // address, staff and local capabilities are not supplied and are not shown
     href: "/europe",
   },
 };

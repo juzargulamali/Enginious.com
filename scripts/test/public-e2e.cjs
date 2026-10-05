@@ -79,7 +79,7 @@ const publish = async (p) => { await p.getByRole("button", { name: /Save and (pu
   ok("after the reviewed publish /work lists the same number of projects", /World Health Expo|IMPORTED DRAFT EDIT/.test(afterWork) && nAfter === nBefore, `${nAfter} vs ${nBefore}`);
   r = await get("/company"); ok("company page shows the imported mission wording", /engineered, built and supported by one team/.test(r.text));
   r = await get("/uae"); ok("UAE page shows the confirmed Dubai contact", /info@enginious\.ae/.test(r.text) && /Dubai/.test(r.text));
-  r = await get("/europe"); ok("Europe page says no Europe projects are listed and has no invented email", /do not list projects delivered in Europe/.test(r.text));
+  r = await get("/europe"); ok("Europe page says no Europe projects are listed and has no invented email", /Individual European projects are not listed yet/.test(r.text) && !/@enginious\.eu/.test(r.text));
   r = await get("/work/whx"); ok("WHX case study still renders", r.status === 200 && /Case study/.test(r.text) && /American Hospital needed to stand out/.test(r.text));
   r = await get("/technologies/tri-helix"); ok("Tri-Helix page renders its imported description", r.status === 200 && /Suitable applications/.test(r.text));
 

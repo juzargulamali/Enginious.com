@@ -46,6 +46,19 @@ export interface RegionContent extends Region {
   cardTitle?: string;
   cardSubtitle?: string;
   cardImage?: string;
+  /** Regional page content (all optional; the page has built-in defaults and hides empty sections). */
+  eyebrow?: string;
+  headline?: string;
+  heroImage?: string;
+  video?: import("@/lib/video").VideoSpec;
+  storyTitle?: string;
+  story?: string;
+  facts: { label: string; value: string }[];
+  servicesLocal: string[];
+  servicesDubai: string[];
+  process: { title: string; body?: string }[];
+  ctaTitle?: string;
+  ctaText?: string;
   intro?: string;
   address?: string;
   capabilities: string[];

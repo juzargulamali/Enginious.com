@@ -16,8 +16,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fixed = Object.entries(PAGE_SEO_PATHS).filter(([key]) => key !== "privacy" && !pageHidden(key)).map(([, path]) => ({ url: `${origin}${path === "/" ? "" : path}` }));
   return [
     ...fixed,
-    ...c.technologies.filter((t) => t.detailed && t.seo?.noindex !== true).map((t) => ({ url: `${origin}/technologies/${t.slug}` })),
-    ...c.projects.filter((p) => p.caseStudy && p.seo?.noindex !== true).map((p) => ({ url: `${origin}/work/${p.slug}` })),
+    ...c.technologies.filter((t) => t.seo?.noindex !== true).map((t) => ({ url: `${origin}/technologies/${t.slug}` })),
+    ...c.projects.filter((p) => p.seo?.noindex !== true).map((p) => ({ url: `${origin}/work/${p.slug}` })),
     ...c.articles.filter((a) => a.seo.noindex !== true).map((a) => ({ url: `${origin}/insights/${a.slug}`, lastModified: a.updatedAt })),
     ...c.roles.filter((r) => r.seo.noindex !== true).map((r) => ({ url: `${origin}/careers/${r.slug}`, lastModified: r.publishedAt })),
   ];

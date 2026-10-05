@@ -169,7 +169,7 @@ export function ShowroomTeaser() {
   if (N === 0) return null;
   const open = (i: number) => {
     const t = TECHNOLOGIES.find((x) => x.slug === EXHIBITS[i]);
-    if (t?.detailed) router.push(`/technologies/${t.slug}`);
+    if (t) router.push(`/technologies/${t.slug}`);
   };
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); step(1); (stage.current?.querySelectorAll<HTMLElement>(".sr-ex")[current.current])?.focus(); }
@@ -226,7 +226,7 @@ export function ShowroomTeaser() {
               <h3>{t.name}</h3>
               <p>{t.summary}</p>
               <div className="sr-actions">
-                {t.detailed && <Link href={`/technologies/${t.slug}`} className="btn">Open details →</Link>}
+                <Link href={`/technologies/${t.slug}`} className="btn">Open details →</Link>
                 <AddToBrief slug={t.slug} name={t.name} />
                 <Link href="/technologies" className="btn btn-primary">Enter the showroom →</Link>
               </div>

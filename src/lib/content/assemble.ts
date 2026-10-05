@@ -109,8 +109,13 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
       ? {
           key, name: r.title, role: str(r.data.role_label) ?? base.role, email: emailOf(r.data.email) ?? null, phone: str(r.data.phone) ?? null, city: str(r.data.city) ?? null, href: base.href, cardTitle: str(r.data.card_title), cardSubtitle: str(r.data.card_subtitle), cardImage: str(r.data.card_image),
           intro: str(r.data.intro), address: str(r.data.address), capabilities: strs(r.data.capabilities), projects: strs(r.data.projects),
+          eyebrow: str(r.data.eyebrow), headline: str(r.data.headline), heroImage: str(r.data.hero_image), video: toVideoSpec(r.data), storyTitle: str(r.data.story_title), story: str(r.data.story),
+          facts: recs(r.data.facts).filter((f) => str(f.label) && str(f.value)).map((f) => ({ label: String(f.label), value: String(f.value) })),
+          servicesLocal: strs(r.data.services_local), servicesDubai: strs(r.data.services_dubai),
+          process: recs(r.data.process).filter((p) => str(p.title)).map((p) => ({ title: String(p.title), body: str(p.body) })),
+          ctaTitle: str(r.data.cta_title), ctaText: str(r.data.cta_text),
         }
-      : { ...base, capabilities: [], projects: [] }; // fixed routes always exist
+      : { ...base, capabilities: [], projects: [], facts: [], servicesLocal: [], servicesDubai: [], process: [] }; // fixed routes always exist
   }
 
   const sRow = byType.setting.find((x) => x.slug === "site");
