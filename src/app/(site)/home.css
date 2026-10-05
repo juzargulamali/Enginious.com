@@ -303,6 +303,8 @@
 .pc2-photo { position: absolute; inset: 0; opacity: 0; transition: opacity 0.9s; }
 .pc2-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(2, 7, 11, 0.2), rgba(2, 7, 11, 0.92) 70%); }
 .pc2[data-reached] .pc2-photo { opacity: 0.55; }
+/* with a supplied photograph the picture is the card: visible from the start, dimmed only by the fade that keeps the text readable */
+.pc2[data-photo] .pc2-photo, .pc2[data-photo][data-reached] .pc2-photo { opacity: 0.9; }
 .pc2-more { position: relative; display: grid; }
 .pc2-b { color: #bcd2d6; font-size: 0.95rem; margin-top: 10px; }
 html[data-js] .pc2:not([data-reached]) .pc2-in { border-color: rgba(39, 205, 216, 0.06); }

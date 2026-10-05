@@ -25,6 +25,8 @@ export interface Technology {
   useCases?: string[];
   specs?: { label: string; value: string }[];
   media?: string[];
+  /** CMS media id of a transparent-background image shown in the homepage showroom instead of the line drawing. */
+  showcaseImage?: string;
   featured?: boolean;
   seo?: import("@/lib/content/types").SeoFields;
 }

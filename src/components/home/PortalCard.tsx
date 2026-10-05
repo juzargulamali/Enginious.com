@@ -20,6 +20,7 @@ export function PortalCard({ title, blurb, tags, form, href, edge, n, slot }: { 
   const inner = useRef<HTMLSpanElement>(null);
   const spot = useRef<HTMLSpanElement>(null);
   const reached = useReached(card, 0.72);
+  const hasPhoto = !!(slot && imageForSlot(slot)); // a supplied photograph stands on its own: no line illustration over it
 
   useEffect(() => {
     const el = card.current;
@@ -43,14 +44,14 @@ export function PortalCard({ title, blurb, tags, form, href, edge, n, slot }: { 
   }, []);
 
   return (
-    <Link ref={card} href={href} className="pc2" data-reached={reached || undefined} data-trace-scope>
+    <Link ref={card} href={href} className="pc2" data-reached={reached || undefined} data-photo={hasPhoto || undefined} data-trace-scope>
       <span ref={inner} className="pc2-in">
-        {slot && imageForSlot(slot) && <span className="pc2-photo"><Photo slot={slot} sizes="(max-width: 900px) 100vw, 33vw" /></span>}
+        {hasPhoto && slot && <span className="pc2-photo"><Photo slot={slot} sizes="(max-width: 900px) 100vw, 33vw" /></span>}
         <span ref={spot} className="pc2-spot" aria-hidden="true" />
         {reached && <Edge variant={edge} duration={7} />}
         <span className="pc2-n">{n}</span>
-        <span className="pc2-art"><TechForm slug={form} size={220} /></span>
-        <span className="pc2-floor" aria-hidden="true" />
+        {!hasPhoto && <span className="pc2-art"><TechForm slug={form} size={220} /></span>}
+        {!hasPhoto && <span className="pc2-floor" aria-hidden="true" />}
         <span className="pc2-t">{title}</span>
         <span className="pc2-more">
           <span className="pc2-b">{blurb}</span>

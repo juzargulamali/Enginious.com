@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { AddToBrief } from "@/components/AddToBrief";
 import { TechForm } from "@/components/TechForm";
+import { Photo } from "@/components/Photo";
 import { TECH_CATEGORIES } from "@/content/technologies";
 import { useContent } from "@/components/ContentProvider";
 import { useStageSteer } from "@/lib/useStageSteer";
@@ -42,7 +43,7 @@ function arrange(active: number, n: number, w: number): Pose[] {
 const vars = (p: Pose) => ({ ["--x" as string]: `${p.x.toFixed(1)}px`, ["--y" as string]: `${p.y}px`, ["--s" as string]: p.s, ["--o" as string]: p.o, zIndex: p.z });
 
 export function ShowroomTeaser() {
-  const { technologies: TECHNOLOGIES } = useContent();
+  const { technologies: TECHNOLOGIES, imageById } = useContent();
   const router = useRouter();
   const EXHIBITS = ALL_EXHIBITS.filter((s) => TECHNOLOGIES.some((t) => t.slug === s));
   const N = EXHIBITS.length;
@@ -129,10 +130,10 @@ export function ShowroomTeaser() {
                   if (swipe.current?.done) return;
                   if (was === i) open(i); else choose(i);
                 }} onFocus={() => { if (current.current !== i) choose(i); }}>
-                <span className="sr-art"><TechForm slug={slug} size={180} /></span>
+                <span className="sr-art">{tech.showcaseImage && imageById(tech.showcaseImage) ? <Photo id={tech.showcaseImage} className="sr-cut" label={false} sizes="(max-width: 760px) 40vw, 320px" /> : <TechForm slug={slug} size={180} />}</span>
                 <span className="sr-pod" aria-hidden="true" />
                 <span className="sr-lbl">{tech.name}</span>
-                <span className="sr-refl" aria-hidden="true"><TechForm slug={slug} size={180} /></span>
+                <span className="sr-refl" aria-hidden="true">{tech.showcaseImage && imageById(tech.showcaseImage) ? <Photo id={tech.showcaseImage} className="sr-cut" label={false} sizes="160px" /> : <TechForm slug={slug} size={180} />}</span>
               </button>
             );
           })}

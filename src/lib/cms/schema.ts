@@ -117,6 +117,7 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
           { key: "confirmed", label: "Confirmed", type: "boolean" },
         ] },
       { key: "projects", label: "Related projects", type: "refs", refType: "project", group: "Links" },
+      { key: "showcase_image", label: "Showroom image (transparent background)", type: "media", mediaKind: "image", group: "Media", help: "Shown in the homepage showroom in place of the line drawing. Use a PNG or WebP with a transparent background, the product only, about 1200 px wide, with a little empty space around it. Leave empty to keep the line drawing." },
       { key: "media", label: "Media", type: "mediaList", mediaKind: "image", group: "Media" },
       ...seo(),
     ],
