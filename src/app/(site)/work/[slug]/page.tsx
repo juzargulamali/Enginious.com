@@ -1,3 +1,4 @@
+import { VideoPlayer } from "@/components/video/VideoPlayer";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -5,32 +6,32 @@ import { ExperienceTabs } from "@/components/ExperienceTabs";
 import { JsonLd } from "@/components/JsonLd";
 import { Markdown } from "@/components/Markdown";
 import { Photo } from "@/components/Photo";
-import { Placeholder } from "@/components/Placeholder";
 import { getContent } from "@/lib/content/load";
 import { breadcrumbLd } from "@/lib/seo/jsonld";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 export async function generateStaticParams() {
-  return (await getContent()).projects.filter((p) => p.caseStudy).map((p) => ({ slug: p.slug }));
+  return (await getContent()).projects.map((p) => ({ slug: p.slug })); // every published project has a page; new CMS items render on demand
 }
 
 export async function generateMetadata({ params }: PageProps<"/work/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const p = (await getContent()).projects.find((x) => x.slug === slug && x.caseStudy);
+  const p = (await getContent()).projects.find((x) => x.slug === slug);
   if (!p) return { title: "Not found", robots: { index: false } };
-  return buildMetadata({ path: `/work/${p.slug}`, title: `${p.title}: case study`, description: p.summary, seo: p.seo, image: p.media?.[0] });
+  return buildMetadata({ path: `/work/${p.slug}`, title: p.caseStudy ? `${p.title}: case study` : p.title, description: p.summary, seo: p.seo, image: p.media?.[0] });
 }
 
-const CHAPTERS = [["overview", "Overview"], ["challenge", "Challenge"], ["experience", "The experience"], ["scope", "Scope"], ["media", "Media"]] as const;
+const CHAPTERS = [["overview", "Overview"], ["video", "Video"], ["challenge", "Challenge"], ["experience", "The experience"], ["scope", "Scope"], ["media", "Media"]] as const;
 
 export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
   const { slug } = await params;
   const c = await getContent();
   const p = c.projects.find((x) => x.slug === slug);
-  if (!p || !p.caseStudy) notFound();
+  if (!p) notFound(); // unpublished and archived items are not in the content at all
   const techs = p.technologies.map((s) => c.technologies.find((t) => t.slug === s)).filter((t): t is NonNullable<typeof t> => !!t);
   const media = (p.media ?? []).filter((id) => c.images[id]);
-  const chapters = CHAPTERS.filter(([id]) => id === "overview" || id === "scope" || id === "media" || (id === "challenge" && p.challenge) || (id === "experience" && (p.experience || p.slug === "whx")));
+  const more = c.projects.filter((x) => x.slug !== p.slug && x.region === p.region).slice(0, 3);
+  const chapters = CHAPTERS.filter(([id]) => id === "overview" || (id === "video" && !!p.video) || (id === "scope" && (techs.length > 0 || (p.outcomes?.length ?? 0) > 0)) || (id === "media" && media.length > 0) || (id === "challenge" && p.challenge) || (id === "experience" && (p.experience || p.slug === "whx")));
 
   return (
     <article className="container section" style={{ paddingTop: "clamp(24px, 4vw, 56px)" }}>
@@ -40,7 +41,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
       </nav>
 
       <header id="overview" style={{ marginTop: 24 }}>
-        <p className="eyebrow">Case study · Completed project</p>
+        <p className="eyebrow">{p.caseStudy ? "Case study · Completed project" : "Completed project"}</p>
         <h1 style={{ marginTop: 12, maxWidth: "16ch" }}>{p.title}</h1>
         <p className="lede" style={{ marginTop: 14, maxWidth: "62ch" }}>{p.summary}</p>
         <dl className="facts">
@@ -59,6 +60,11 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
         </nav>
 
         <div className="stack" style={{ ["--stack" as string]: "3.2rem" }}>
+          {p.video && (
+            <section id="video" className="stack" style={{ ["--stack" as string]: "0.8rem" }} aria-label="Project video">
+              <VideoPlayer video={p.video} title={p.title} posterImageId={p.media?.[0]} />
+            </section>
+          )}
           {p.challenge && (
             <section id="challenge" className="stack" style={{ ["--stack" as string]: "0.8rem" }}>
               <h2>The challenge</h2>
@@ -80,15 +86,16 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
             </section>
           )}
 
+          {(techs.length > 0 || (p.outcomes?.length ?? 0) > 0) && (
           <section id="scope" className="stack" style={{ ["--stack" as string]: "0.8rem" }}>
             <h2>Enginious&apos;s scope</h2>
-            {techs.length > 0 ? (
+            {techs.length > 0 && (
               <ul style={{ display: "flex", gap: 8, flexWrap: "wrap", listStyle: "none", padding: 0 }}>
                 {techs.map((t) => (
-                  <li key={t.slug}>{t.detailed ? <Link href={`/technologies/${t.slug}`} className="chip">{t.name}</Link> : <span className="chip" style={{ cursor: "default" }}>{t.name}</span>}</li>
+                  <li key={t.slug}><Link href={`/technologies/${t.slug}`} className="chip">{t.name}</Link></li>
                 ))}
               </ul>
-            ) : <p className="muted">Technologies for this project will be listed here.</p>}
+            )}
             {p.outcomes && p.outcomes.length > 0 && (
               <>
                 <h3 style={{ marginTop: 18 }}>Confirmed results</h3>
@@ -96,15 +103,29 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
               </>
             )}
           </section>
+          )}
 
+          {media.length > 0 && (
           <section id="media" className="stack" style={{ ["--stack" as string]: "1rem" }}>
             <h2>Media</h2>
-            {media.length > 0 ? (
-              <div className="three">{media.map((id) => <div key={id} style={{ position: "relative", aspectRatio: "4 / 3", overflow: "hidden", borderRadius: 12 }}><Photo id={id} sizes="(max-width: 900px) 100vw, 400px" /></div>)}</div>
-            ) : (
-              <Placeholder title="Project media" style={{ minHeight: 260 }} />
-            )}
+            <div className="three">{media.map((id) => <div key={id} style={{ position: "relative", aspectRatio: "4 / 3", overflow: "hidden", borderRadius: 12 }}><Photo id={id} sizes="(max-width: 900px) 100vw, 400px" /></div>)}</div>
           </section>
+          )}
+
+          {more.length > 0 && (
+            <section className="stack" style={{ ["--stack" as string]: "1rem" }} aria-label="More projects">
+              <h2>More projects{p.region === "uae" ? " in the UAE" : p.region === "ksa" ? " in Saudi Arabia" : ""}</h2>
+              <ul className="tech-grid" style={{ ["--min" as string]: "220px" }}>
+                {more.map((m) => (
+                  <li key={m.slug} className="panel tech-item">
+                    <p className="eyebrow">{m.location}{m.year ? ` · ${m.year}` : ""}</p>
+                    <h3 style={{ marginTop: 6, fontSize: "1.1rem" }}><Link href={`/work/${m.slug}`}>{m.title}</Link></h3>
+                    <p style={{ marginTop: "auto", paddingTop: 12 }}><Link href={`/work/${m.slug}`} className="accent">View project →</Link></p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           <section className="panel" style={{ padding: "clamp(20px, 3vw, 36px)" }}>
             <h2 style={{ fontSize: "1.6rem" }}>Planning something similar?</h2>

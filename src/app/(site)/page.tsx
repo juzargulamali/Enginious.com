@@ -129,7 +129,7 @@ export default async function Home() {
             {REEL.map((p, i) => {
               const names = p.technologies.slice(0, 3).map(techName).filter(Boolean);
               return (
-                <Link key={p.slug} href={p.caseStudy ? `/work/${p.slug}` : `/work#${p.slug}`} className="pr" data-v={i % 3}>
+                <Link key={p.slug} href={`/work/${p.slug}`} className="pr" data-v={i % 3}>
                   <TechForm slug={REEL_FORM[p.slug] ?? "mark"} size={260} className="art" />
                   <span className="meta">{p.location} · {p.year}</span>
                   <h3>{p.title}</h3>

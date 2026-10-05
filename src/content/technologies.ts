@@ -25,6 +25,8 @@ export interface Technology {
   useCases?: string[];
   specs?: { label: string; value: string }[];
   media?: string[];
+  /** One video for the card preview and the full player on the technology page. */
+  video?: import("@/lib/video").VideoSpec;
   /** CMS media id of a transparent-background image shown in the homepage showroom instead of the line drawing. */
   showcaseImage?: string;
   /** Optional transparent animated WebP, played only while this exhibit is the selected one. Needs showcaseImage (the resting pose). */

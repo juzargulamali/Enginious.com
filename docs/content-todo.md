@@ -66,3 +66,9 @@
 - **Notification recipients** per region (internal field on each Region) and the email provider are not set up.
 - **Privacy notice** is provisional; retention period undecided (`docs/privacy-retention.md`).
 - **Old-site URL list** needed for redirects (`docs/url-migration.md`).
+
+## Regional pages (to confirm)
+- Poznań address, local contact details and team
+- Which services are delivered locally in Riyadh and Poznań (CMS: Region > services)
+- Confirmed European projects
+- Regional hero videos and fuller Saudi and Europe stories

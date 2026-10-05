@@ -61,7 +61,7 @@ export function ClientsField() {
           <ul>
             {related.map((p) => (
               <li key={p!.slug}>
-                <Link href={p!.caseStudy ? `/work/${p!.slug}` : `/work#${p!.slug}`}>
+                <Link href={`/work/${p!.slug}`}>
                   <b>{p!.title}</b>
                   <span>{p!.location} · {p!.year}</span>
                 </Link>

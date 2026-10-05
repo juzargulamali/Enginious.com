@@ -60,7 +60,7 @@ export function Testimonials({ published, samples: sampleList }: { published: Te
               {t.sample && <span className="tm-sample">Sample · fictional · not a real client</span>}
               <blockquote>{t.quote}</blockquote>
               <figcaption><b>{t.name}</b><span>{t.role}, {t.organisation}</span></figcaption>
-              {project && <Link href={project.caseStudy ? `/work/${project.slug}` : `/work#${project.slug}`} className="accent">View project →</Link>}
+              {project && <Link href={`/work/${project.slug}`} className="accent">View project →</Link>}
             </figure>
           </div>
           <div className="tm-ctrl">

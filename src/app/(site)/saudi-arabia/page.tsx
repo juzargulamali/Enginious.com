@@ -4,7 +4,7 @@ import { getContent } from "@/lib/content/load";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return buildMetadata({ path: "/saudi-arabia", pageKey: "saudi-arabia", title: "Saudi Arabia", description: "Enginious in Saudi Arabia: our branch in the Kingdom." });
+  return buildMetadata({ path: "/saudi-arabia", pageKey: "saudi-arabia", title: "Saudi Arabia", description: "Enginious in Saudi Arabia: our Riyadh branch, working with Dubai on experiential technology projects across the Kingdom." });
 }
 
 export default async function Page() {

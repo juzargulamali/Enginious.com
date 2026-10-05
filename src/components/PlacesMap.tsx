@@ -130,7 +130,7 @@ export function PlacesMap() {
               <p className="eyebrow">Delivered projects</p>
               {place.related?.length ? (
                 <ul>
-                  {place.related.map((s) => { const p = projectBySlug(s); return p ? <li key={s}><Link href={p.caseStudy ? `/work/${p.slug}` : `/work#${p.slug}`}>{p.title}<span>{p.year}</span></Link></li> : null; })}
+                  {place.related.map((s) => { const p = projectBySlug(s); return p ? <li key={s}><Link href={`/work/${p.slug}`}>{p.title}<span>{p.year}</span></Link></li> : null; })}
                 </ul>
               ) : (
                 <p className="muted">Project details are being added.</p>

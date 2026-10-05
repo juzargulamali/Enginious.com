@@ -1,4 +1,5 @@
 // The content model. Pure data + small helpers (no server-only imports) so the admin editor and the server share it.
+import { parseVideoUrl } from "../video.ts";
 // Every content item is a row in public.content_items: title + slug + a `draft` JSON object whose shape is defined here.
 // Keys that start with "_" are internal (approval flags, notes); the database strips them from the public snapshot.
 
@@ -25,6 +26,8 @@ export interface Field {
   max?: number;
   /** Smallest allowed value for a number. */
   min?: number;
+  /** A video address: YouTube or a direct https video file (validated by parseVideoUrl). */
+  video?: boolean | "file";
   options?: Option[];
   refType?: ContentType;
   mediaKind?: "image" | "logo" | "document";
@@ -91,7 +94,12 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
       { key: "challenge", label: "Challenge", type: "markdown", group: "Story" },
       { key: "experience", label: "The experience", type: "markdown", group: "Story" },
       { key: "technologies", label: "Technologies used", type: "refs", refType: "technology", group: "Links" },
-      { key: "case_study", label: "Has a full case-study page", type: "boolean", group: "Links" },
+      { key: "case_study", label: "Show as a case study", type: "boolean", group: "Links", help: "Every published project has its own page. This only adds the Case study label and wording." },
+      { key: "video_url", label: "Main video (YouTube link or direct video file)", type: "url", video: true, group: "Video", help: "One link used for both the card preview and the full player on the page. YouTube (public or unlisted) or a direct https link to a .mp4 / .webm file. SharePoint, OneDrive and Google Drive sharing pages do not work. Leave empty for no video." },
+      { key: "video_preview_start", label: "Card preview start (seconds)", type: "number", min: 0, max: 36000, group: "Video", help: "Where the card preview begins. Default 0. The full player is not affected." },
+      { key: "video_preview_seconds", label: "Card preview length (seconds)", type: "number", min: 3, max: 60, group: "Video", help: "How long the preview plays before it repeats. Default 10. Note: this limits what is shown, not what the browser may download." },
+      { key: "video_poster", label: "Video poster image", type: "media", mediaKind: "image", group: "Video", help: "Optional. Shown before play. If empty, the first project/technology image is used, then the YouTube thumbnail." },
+      { key: "video_preview_url", label: "Separate preview video (advanced, optional)", type: "url", video: "file", group: "Video", help: "Optional. A short direct video file used only for the card preview (never required)." },
       { key: "media", label: "Project media", type: "mediaList", mediaKind: "image", group: "Media", help: "Only authentic project media. Concepts and previews are labelled as such." },
       { key: "outcomes", label: "Verified outcomes", type: "records", group: "Outcomes", help: "Only results the client has confirmed. An outcome must be marked verified to publish.",
         fields: [
@@ -110,7 +118,7 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
     fields: [
       { key: "category", label: "Category", type: "select", required: true, options: TECH_CATEGORY_OPTS, group: "Basics" },
       { key: "summary", label: "Summary", type: "textarea", required: true, max: 400, group: "Basics" },
-      { key: "detailed", label: "Has a full page", type: "boolean", group: "Basics", help: "Turn on only when the page has enough approved content." },
+      { key: "detailed", label: "Mark as a fully written page", type: "boolean", group: "Basics", help: "Every published technology has its own page. This only records that the page text is complete; it does not turn the page on or off." },
       { key: "description", label: "Description", type: "markdown", group: "Content" },
       { key: "use_cases", label: "Use cases", type: "strings", group: "Content" },
       { key: "specs", label: "Confirmed specifications", type: "records", group: "Content", help: "Only specifications Enginious has confirmed. Each must be marked confirmed to publish.",
@@ -124,6 +132,11 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
       { key: "showcase_animation", label: "Showroom animation (optional, transparent animated WebP)", type: "media", mediaKind: "image", group: "Showroom", help: "Optional. Plays only while this technology is the selected one in the centre; neighbours and reduced-motion visitors see the resting pose. Animated WebP only (not GIF or APNG), same framing as the resting image, up to 4 MB uploaded, 1200 px wide, 240 frames, 3.5 MB after processing. It loops for as long as the exhibit stays selected; it cannot hold the last frame or play backwards." },
       { key: "showcase_scale", label: "Showroom size (%)", type: "number", min: 50, max: 150, group: "Showroom", help: "Optional. 100 is the default. The same value is used for the resting image and the animation, so switching never jumps." },
       { key: "showcase_y", label: "Showroom height offset (%)", type: "number", min: -20, max: 20, group: "Showroom", help: "Optional. Moves the product up (positive) or down (negative) on its podium. 0 is the default." },
+      { key: "video_url", label: "Main video (YouTube link or direct video file)", type: "url", video: true, group: "Video", help: "One link used for both the card preview and the full player on the page. YouTube (public or unlisted) or a direct https link to a .mp4 / .webm file. SharePoint, OneDrive and Google Drive sharing pages do not work. Leave empty for no video." },
+      { key: "video_preview_start", label: "Card preview start (seconds)", type: "number", min: 0, max: 36000, group: "Video", help: "Where the card preview begins. Default 0. The full player is not affected." },
+      { key: "video_preview_seconds", label: "Card preview length (seconds)", type: "number", min: 3, max: 60, group: "Video", help: "How long the preview plays before it repeats. Default 10. Note: this limits what is shown, not what the browser may download." },
+      { key: "video_poster", label: "Video poster image", type: "media", mediaKind: "image", group: "Video", help: "Optional. Shown before play. If empty, the first project/technology image is used, then the YouTube thumbnail." },
+      { key: "video_preview_url", label: "Separate preview video (advanced, optional)", type: "url", video: "file", group: "Video", help: "Optional. A short direct video file used only for the card preview (never required)." },
       { key: "media", label: "Media", type: "mediaList", mediaKind: "image", group: "Media" },
       ...seo(),
     ],
@@ -175,11 +188,29 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
       { key: "role_label", label: "Role", type: "text", required: true, max: 80, group: "Basics", placeholder: "Global headquarters" },
       { key: "city", label: "City", type: "text", max: 80, group: "Basics", help: "Leave empty until the city is confirmed." },
       { key: "intro", label: "Introduction", type: "markdown", group: "Basics" },
+      { key: "card_title", label: "Contact card title", type: "text", max: 60, group: "Contact card", placeholder: "Riyadh", help: "Optional. The name shown on this office's card on the Contact page. Empty uses the built-in text." },
+      { key: "card_subtitle", label: "Contact card subtitle", type: "text", max: 80, group: "Contact card", placeholder: "Saudi Arabia Branch", help: "Optional. Empty uses the built-in text." },
+      { key: "card_image", label: "Contact card photograph", type: "media", mediaKind: "image", group: "Contact card", help: "A landscape photograph (about 3:2, 1800 px wide or more; the original is kept). Set the focal point in the Media library so the landmark stays in frame. Alt text is edited there too. Empty keeps the built-in photograph." },
+      { key: "eyebrow", label: "Page label above the headline", type: "text", max: 80, group: "Page", placeholder: "UAE · Global headquarters", help: "Optional. Empty uses the built-in text." },
+      { key: "headline", label: "Page headline", type: "text", max: 120, group: "Page", help: "Optional. Plain text. Empty uses the built-in headline." },
+      { key: "hero_image", label: "Hero photograph", type: "media", mediaKind: "image", group: "Page", help: "The large picture beside the headline: a landscape photograph (about 3:2, 1800 px or more) with the landmark fully in frame. Set the focal point and alt text in the Media library. Empty uses the built-in city photograph." },
+      { key: "video_url", label: "Hero video (optional)", type: "url", video: true, group: "Page", help: "YouTube link or a direct video file. When set, the video player replaces the photograph in the hero (the photograph becomes its poster). Pressing Play watches the full video." },
+      { key: "video_poster", label: "Video poster image (optional)", type: "media", mediaKind: "image", group: "Page", help: "Optional. Empty uses the hero photograph." },
+      { key: "story_title", label: "Regional story: heading", type: "text", max: 120, group: "Page", help: "Optional. Empty uses the built-in heading." },
+      { key: "story", label: "Regional story: text", type: "markdown", group: "Page", help: "What makes this office distinct. Confirmed facts only. Empty uses the built-in text." },
+      { key: "facts", label: "At a glance", type: "records", group: "Page", help: "Short confirmed facts shown as a strip (for example Role, City, Languages). Leave empty to show only automatic facts (office role, contact, number of listed projects).",
+        fields: [{ key: "label", label: "Label", type: "text", max: 40 }, { key: "value", label: "Value", type: "text", max: 120 }] },
+      { key: "services_local", label: "Services delivered locally from this office", type: "refs", refType: "solution", group: "Services and work", help: "Pick from the existing Solutions. Shown with a 'Delivered from this office' label. Leave both lists empty until it is confirmed what is local." },
+      { key: "services_dubai", label: "Services supported by the Dubai team", type: "refs", refType: "solution", group: "Services and work", help: "Shown with a 'Supported by the Dubai team' label." },
+      { key: "process", label: "Delivery process for this region", type: "records", group: "Services and work", help: "Optional. Steps of how a project runs with this office. Empty uses the company's delivery process.",
+        fields: [{ key: "title", label: "Step", type: "text", max: 80 }, { key: "body", label: "What happens", type: "textarea", max: 300 }] },
+      { key: "cta_title", label: "Contact section heading", type: "text", max: 120, group: "Contact", help: "Optional." },
+      { key: "cta_text", label: "Contact section text", type: "textarea", max: 400, group: "Contact", help: "Optional. One or two plain sentences." },
       { key: "email", label: "Contact email", type: "email", group: "Contact", help: "Confirmed addresses only. If empty, enquiries use the general contact." },
       { key: "phone", label: "Contact phone", type: "text", max: 40, group: "Contact" },
       { key: "address", label: "Address", type: "textarea", max: 300, group: "Contact" },
-      { key: "capabilities", label: "Capabilities from this office", type: "strings", group: "Content" },
-      { key: "projects", label: "Related work", type: "refs", refType: "project", group: "Content" },
+      { key: "capabilities", label: "Focus areas (short phrases)", type: "strings", group: "Services and work", help: "Optional short phrases shown as chips under the services." },
+      { key: "projects", label: "Featured projects", type: "refs", refType: "project", group: "Services and work", help: "Pick from the existing Projects. Empty shows the projects recorded for this region." },
       { key: "_notify_to", label: "Enquiry notification recipients", type: "strings", internal: true, group: "Enquiries", help: "Internal. Email addresses notified about enquiries sent to this region." },
     ],
   },
@@ -331,7 +362,12 @@ function cleanField(f: Field, v: unknown, errors: FieldErrors, path: string): un
     }
     case "url": {
       const s = asStr(v, 500).trim(); if (!s) return undefined;
-      if (!/^https:\/\/[^\s]+$/.test(s)) errors[path] = `${f.label} must be a full https:// address.`; return s;
+      if (!/^https:\/\/[^\s]+$/.test(s)) { errors[path] = `${f.label} must be a full https:// address.`; return s; }
+      if (f.video) {
+        const pv = parseVideoUrl(s);
+        if (!pv || (f.video === "file" && pv.kind !== "file")) errors[path] = f.video === "file" ? `${f.label} must be a direct link to a video file (ending .mp4, .webm, .m4v or .mov), not a sharing page.` : `${f.label} must be a YouTube link or a direct link to a video file (.mp4, .webm, .m4v, .mov). SharePoint, OneDrive and Google Drive sharing pages are not supported.`;
+      }
+      return s;
     }
     case "number": {
       if (v === "" || v === undefined || v === null) return undefined;

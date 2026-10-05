@@ -65,3 +65,13 @@ test("technology showroom fields: size and offset are range-checked, media ids a
   assert.ok(cleanData(TYPE_DEFS.technology, { showcase_scale: 400 }).errors.showcase_scale);
   assert.ok(cleanData(TYPE_DEFS.technology, { showcase_y: -90 }).errors.showcase_y);
 });
+
+test("video fields: YouTube and direct files pass, sharing pages are refused, region card fields exist", () => {
+  assert.deepEqual(cleanData(TYPE_DEFS.project, { video_url: "https://youtu.be/aqz-KE-bpKQ", video_preview_start: 12, video_preview_seconds: 8 }).errors, {});
+  assert.ok(cleanData(TYPE_DEFS.project, { video_url: "https://1drv.ms/v/s!abc" }).errors.video_url);
+  assert.ok(cleanData(TYPE_DEFS.technology, { video_preview_url: "https://youtu.be/aqz-KE-bpKQ" }).errors.video_preview_url);
+  assert.deepEqual(cleanData(TYPE_DEFS.technology, { video_preview_url: "https://cdn.example.com/p.mp4" }).errors, {});
+  assert.ok(cleanData(TYPE_DEFS.project, { video_preview_seconds: 900 }).errors.video_preview_seconds);
+  const keys = TYPE_DEFS.region.fields.map((f) => f.key);
+  assert.ok(["card_title", "card_subtitle", "card_image"].every((k) => keys.includes(k)));
+});

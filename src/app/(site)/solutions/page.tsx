@@ -38,8 +38,8 @@ export default async function Solutions() {
                 {s.process.length > 0 && <ol style={{ marginTop: 14, paddingLeft: "1.2rem" }}>{s.process.map((p) => <li key={p.title}><b>{p.title}</b>{p.body ? `: ${p.body}` : ""}</li>)}</ol>}
                 {(techs.length > 0 || projects.length > 0) && (
                   <p style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {techs.map((t) => <Link key={t.slug} href={t.detailed ? `/technologies/${t.slug}` : "/technologies"} className="chip" style={{ minHeight: 30, padding: "0 .7rem", fontSize: ".8rem" }}>{t.name}</Link>)}
-                    {projects.map((p) => <Link key={p.slug} href={p.caseStudy ? `/work/${p.slug}` : `/work#${p.slug}`} className="chip" style={{ minHeight: 30, padding: "0 .7rem", fontSize: ".8rem" }}>{p.title}</Link>)}
+                    {techs.map((t) => <Link key={t.slug} href={`/technologies/${t.slug}`} className="chip" style={{ minHeight: 30, padding: "0 .7rem", fontSize: ".8rem" }}>{t.name}</Link>)}
+                    {projects.map((p) => <Link key={p.slug} href={`/work/${p.slug}`} className="chip" style={{ minHeight: 30, padding: "0 .7rem", fontSize: ".8rem" }}>{p.title}</Link>)}
                   </p>
                 )}
               </article>

@@ -23,6 +23,8 @@ export interface Project {
   experience?: string;
   outcomes?: { label: string; value: string; source?: string }[];
   media?: string[];
+  /** One video for the card preview and the full player on the case study. */
+  video?: import("@/lib/video").VideoSpec;
   featured?: boolean;
   seo?: import("@/lib/content/types").SeoFields;
 }

@@ -6,6 +6,8 @@ import { TECH_CATEGORIES, type TechCategory, type Technology } from "@/content/t
 import { useContent } from "./ContentProvider";
 import { useBrief } from "./BriefProvider";
 import { AddToBrief } from "./AddToBrief";
+import { PreviewProvider } from "./video/PreviewProvider";
+import { CardMedia } from "./video/CardMedia";
 
 /** Abstract exhibit glyphs: stylised category icons, NOT models of the real equipment. */
 function Glyph({ category, seed }: { category: TechCategory; seed: number }) {
@@ -164,11 +166,7 @@ export function Showroom() {
                 <p className="muted" style={{ marginTop: 8 }}>{chosen.summary}</p>
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                {chosen.detailed ? (
-                  <Link href={`/technologies/${chosen.slug}`} className="btn">Open details →</Link>
-                ) : (
-                  null
-                )}
+                <Link href={`/technologies/${chosen.slug}`} className="btn">Open details →</Link>
                 <AddToBrief slug={chosen.slug} name={chosen.name} />
               </div>
             </div>
@@ -194,12 +192,14 @@ export function Showroom() {
             <button key={c.key} type="button" className="chip" aria-pressed={filter === c.key} onClick={() => setFilter(c.key)}>{c.label}</button>
           ))}
         </div>
+        <PreviewProvider>
         <ul className="tech-grid">
           {list.map((t) => (
-            <li key={t.slug} id={`cat-${t.category}-${t.slug}`} className="panel tech-item">
+            <li key={t.slug} id={`cat-${t.category}-${t.slug}`} className="panel tech-item" data-vcard>
+              <CardMedia id={`tech-${t.slug}`} title={t.name} video={t.video} posterImageId={t.media?.[0]} />
               <p className="eyebrow">{TECH_CATEGORIES.find((c) => c.key === t.category)!.label}</p>
               <h3 style={{ marginTop: 6 }}>
-                {t.detailed ? <Link href={`/technologies/${t.slug}`} className="accent">{t.name}</Link> : t.name}
+                <Link href={`/technologies/${t.slug}`} className="accent">{t.name}</Link>
               </h3>
               <p className="muted" style={{ marginTop: 8, fontSize: "0.92rem" }}>{t.summary}</p>
               <div style={{ marginTop: "auto", paddingTop: 14, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -210,6 +210,7 @@ export function Showroom() {
             </li>
           ))}
         </ul>
+        </PreviewProvider>
       </section>
     </>
   );

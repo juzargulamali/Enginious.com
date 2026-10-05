@@ -42,6 +42,23 @@ export interface JobRole { slug: string; title: string; department?: string; loc
 export interface CompanySection { slug: string; title: string; body: string; steps: { title: string; body?: string }[] }
 
 export interface RegionContent extends Region {
+  /** Contact-page card: optional title, subtitle and photograph (media id) from the CMS. */
+  cardTitle?: string;
+  cardSubtitle?: string;
+  cardImage?: string;
+  /** Regional page content (all optional; the page has built-in defaults and hides empty sections). */
+  eyebrow?: string;
+  headline?: string;
+  heroImage?: string;
+  video?: import("@/lib/video").VideoSpec;
+  storyTitle?: string;
+  story?: string;
+  facts: { label: string; value: string }[];
+  servicesLocal: string[];
+  servicesDubai: string[];
+  process: { title: string; body?: string }[];
+  ctaTitle?: string;
+  ctaText?: string;
   intro?: string;
   address?: string;
   capabilities: string[];

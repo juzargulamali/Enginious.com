@@ -44,8 +44,8 @@ export default async function Article({ params }: { params: Promise<{ slug: stri
           <aside style={{ marginTop: 40 }} aria-label="Related">
             <p className="eyebrow">Related</p>
             <p style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {techs.map((t) => <Link key={t.slug} href={t.detailed ? `/technologies/${t.slug}` : "/technologies"} className="chip">{t.name}</Link>)}
-              {projects.map((p) => <Link key={p.slug} href={p.caseStudy ? `/work/${p.slug}` : `/work#${p.slug}`} className="chip">{p.title}</Link>)}
+              {techs.map((t) => <Link key={t.slug} href={`/technologies/${t.slug}`} className="chip">{t.name}</Link>)}
+              {projects.map((p) => <Link key={p.slug} href={`/work/${p.slug}`} className="chip">{p.title}</Link>)}
             </p>
           </aside>
         )}

@@ -1,3 +1,4 @@
+import { VideoPlayer } from "@/components/video/VideoPlayer";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -5,7 +6,8 @@ import { AddToBrief } from "@/components/AddToBrief";
 import { JsonLd } from "@/components/JsonLd";
 import { Markdown } from "@/components/Markdown";
 import { Photo } from "@/components/Photo";
-import { Placeholder } from "@/components/Placeholder";
+import { TechForm } from "@/components/TechForm";
+import "@/components/techart.css";
 import { TriHelixDemo } from "@/components/TriHelixDemo";
 import { TECH_CATEGORIES } from "@/content/technologies";
 import { getContent } from "@/lib/content/load";
@@ -13,12 +15,12 @@ import { breadcrumbLd } from "@/lib/seo/jsonld";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 export async function generateStaticParams() {
-  return (await getContent()).technologies.filter((t) => t.detailed).map((t) => ({ slug: t.slug }));
+  return (await getContent()).technologies.map((t) => ({ slug: t.slug })); // every published technology has a page; new CMS items render on demand
 }
 
 export async function generateMetadata({ params }: PageProps<"/technologies/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const t = (await getContent()).technologies.find((x) => x.slug === slug && x.detailed);
+  const t = (await getContent()).technologies.find((x) => x.slug === slug);
   if (!t) return { title: "Not found", robots: { index: false } };
   return buildMetadata({ path: `/technologies/${t.slug}`, title: t.name, description: t.summary, seo: t.seo, image: t.media?.[0] });
 }
@@ -27,7 +29,7 @@ export default async function TechnologyPage({ params }: PageProps<"/technologie
   const { slug } = await params;
   const c = await getContent();
   const t = c.technologies.find((x) => x.slug === slug);
-  if (!t || !t.detailed) notFound();
+  if (!t) notFound();
   const cat = TECH_CATEGORIES.find((x) => x.key === t.category)!;
   const related = t.projects.map((s) => c.projects.find((p) => p.slug === s)).filter((p): p is NonNullable<typeof p> => !!p);
   // The first paragraph of the description is the introduction; the rest is the body.
@@ -52,8 +54,14 @@ export default async function TechnologyPage({ params }: PageProps<"/technologie
             <Link href={`/contact?tech=${t.slug}`} className="btn">Enquire about {t.name}</Link>
           </div>
         </div>
-        {t.slug === "tri-helix" ? <TriHelixDemo /> : media[0] ? <div style={{ position: "relative", aspectRatio: "4 / 3", borderRadius: 14, overflow: "hidden" }}><Photo id={media[0]} sizes="(max-width: 900px) 100vw, 560px" priority /></div> : <Placeholder title={`${t.name}`} style={{ minHeight: 280 }} />}
+        {t.slug === "tri-helix" ? <TriHelixDemo /> : media[0] ? <div style={{ position: "relative", aspectRatio: "4 / 3", borderRadius: 14, overflow: "hidden" }}><Photo id={media[0]} sizes="(max-width: 900px) 100vw, 560px" priority /></div> : <div className="tech-art" aria-hidden="true"><TechForm slug={t.slug} size={260} /></div>}
       </div>
+
+      {t.video && (
+        <section className="section" style={{ paddingBottom: 0 }} aria-label={`${t.name} video`}>
+          <VideoPlayer video={t.video} title={t.name} posterImageId={t.media?.[0]} />
+        </section>
+      )}
 
       {body && (
         <section className="section" style={{ paddingBottom: 0 }}>
@@ -91,8 +99,8 @@ export default async function TechnologyPage({ params }: PageProps<"/technologie
                 <p className="eyebrow">{p.location} · {p.year}</p>
                 <h3 style={{ marginTop: 6 }}>{p.title}</h3>
                 <p className="muted" style={{ marginTop: 8, fontSize: "0.92rem" }}>{p.summary}</p>
-                <Link href={p.caseStudy ? `/work/${p.slug}` : "/work"} className="accent" style={{ marginTop: "auto", paddingTop: 14 }}>
-                  {p.caseStudy ? "Read case study →" : "View in Work →"}
+                <Link href={`/work/${p.slug}`} className="accent" style={{ marginTop: "auto", paddingTop: 14 }}>
+                  {p.caseStudy ? "Read case study →" : "View project →"}
                 </Link>
               </li>
             ))}
