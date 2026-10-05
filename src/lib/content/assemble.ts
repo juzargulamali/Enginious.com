@@ -77,7 +77,7 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
     slug: r.slug, name: r.title, category: (str(r.data.category) as Technology["category"]) ?? "interactive", summary: str(r.data.summary) ?? "",
     projects: strs(r.data.projects), detailed: r.data.detailed === true, description: str(r.data.description), useCases: strs(r.data.use_cases),
     specs: recs(r.data.specs).filter((s) => s.confirmed === true && str(s.label) && str(s.value)).map((s) => ({ label: String(s.label), value: String(s.value) })),
-    media: strs(r.data.media), featured: r.featured, seo: seoOf(r.data),
+    media: strs(r.data.media), showcaseImage: str(r.data.showcase_image), showcaseAnimation: str(r.data.showcase_animation), showcaseScale: num(r.data.showcase_scale), showcaseY: num(r.data.showcase_y), featured: r.featured, seo: seoOf(r.data),
   }));
 
   const people: Person[] = [];

@@ -21,7 +21,10 @@ export interface Field {
   placeholder?: string;
   /** Required to PUBLISH (saving a draft may leave it empty). */
   required?: boolean;
+  /** Text length, or the largest allowed value for a number. */
   max?: number;
+  /** Smallest allowed value for a number. */
+  min?: number;
   options?: Option[];
   refType?: ContentType;
   mediaKind?: "image" | "logo" | "document";
@@ -117,6 +120,10 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
           { key: "confirmed", label: "Confirmed", type: "boolean" },
         ] },
       { key: "projects", label: "Related projects", type: "refs", refType: "project", group: "Links" },
+      { key: "showcase_image", label: "Showroom image (transparent background)", type: "media", mediaKind: "image", group: "Showroom", help: "The resting pose, shown in the homepage showroom in place of the line drawing. PNG or WebP with a transparent background, the product only, about 1200 px wide with a little empty space around it. Leave empty to keep the line drawing." },
+      { key: "showcase_animation", label: "Showroom animation (optional, transparent animated WebP)", type: "media", mediaKind: "image", group: "Showroom", help: "Optional. Plays only while this technology is the selected one in the centre; neighbours and reduced-motion visitors see the resting pose. Animated WebP only (not GIF or APNG), same framing as the resting image, up to 4 MB uploaded, 1200 px wide, 240 frames, 3.5 MB after processing. It loops for as long as the exhibit stays selected; it cannot hold the last frame or play backwards." },
+      { key: "showcase_scale", label: "Showroom size (%)", type: "number", min: 50, max: 150, group: "Showroom", help: "Optional. 100 is the default. The same value is used for the resting image and the animation, so switching never jumps." },
+      { key: "showcase_y", label: "Showroom height offset (%)", type: "number", min: -20, max: 20, group: "Showroom", help: "Optional. Moves the product up (positive) or down (negative) on its podium. 0 is the default." },
       { key: "media", label: "Media", type: "mediaList", mediaKind: "image", group: "Media" },
       ...seo(),
     ],
@@ -330,6 +337,7 @@ function cleanField(f: Field, v: unknown, errors: FieldErrors, path: string): un
       if (v === "" || v === undefined || v === null) return undefined;
       const n = typeof v === "number" ? v : Number(v);
       if (!Number.isFinite(n)) { errors[path] = `${f.label} must be a number.`; return undefined; }
+      if ((f.min !== undefined && n < f.min) || (f.max !== undefined && n > f.max)) { errors[path] = `${f.label} must be between ${f.min ?? "-"} and ${f.max ?? "-"}.`; return undefined; }
       return n;
     }
     case "boolean": return v === true || v === "true" || v === "on";

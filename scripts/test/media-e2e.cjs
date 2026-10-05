@@ -67,6 +67,24 @@ const sql = (q) => require("child_process").execFileSync("psql", ["-h", "/var/tm
   const id2 = p.url().split("/").pop();
   ok("small images are not upscaled (variants stop at the original width)", sql(`select variants::text from media_assets where id = '${id2}'`) === "{480,700}");
 
+  // ---- transparent cut-outs and animated WebP (technology showroom): alpha and animation must survive processing
+  { const alphaPng = await sharp({ create: { width: 800, height: 800, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite([{ input: await sharp({ create: { width: 300, height: 400, channels: 4, background: { r: 140, g: 240, b: 250, alpha: 1 } } }).png().toBuffer(), left: 250, top: 200 }]).png().toBuffer();
+    const alphaWebp = await sharp(alphaPng).webp({ lossless: true }).toBuffer();
+    const animBuf = require("fs").readFileSync(require("path").join(__dirname, "fixtures", "test-anim-transparent.webp"));
+    const alphaAt = async (url) => { const m = await sharp(Buffer.from(await (await fetch(url)).arrayBuffer())).ensureAlpha().raw().toBuffer({ resolveWithObject: true }); return m.data[3]; }; // alpha of the top-left pixel
+    for (const [label, file, expectPages] of [["png", { name: "cut.png", mimeType: "image/png", buffer: alphaPng }, 1], ["webp", { name: "cut.webp", mimeType: "image/webp", buffer: alphaWebp }, 1], ["animated webp", { name: "anim.webp", mimeType: "image/webp", buffer: animBuf }, 12]]) {
+      await upload(file, { alt: `Test asset (${label}), not a real product`, status: "concept" });
+      await p.waitForURL(/\/admin\/media\/[a-z0-9-]+$/, { timeout: 15000 }).catch(() => {});
+      const mid = p.url().split("/").pop();
+      const r = sql(`select width || 'x' || height || '|' || variants::text || '|' || storage_path from media_assets where id = '${mid}'`).split("|");
+      const ws = r[1].replace(/[{}]/g, "").split(",").map(Number); const big = ws[ws.length - 1];
+      const url = `${MOCK}/storage/v1/object/public/media/${r[2]}-${big}.webp`;
+      const meta = await sharp(Buffer.from(await (await fetch(url)).arrayBuffer()), { animated: true }).metadata();
+      ok(`${label}: transparency is preserved (corner pixel stays transparent)`, meta.hasAlpha === true && (await alphaAt(url)) === 0, `alpha=${meta.hasAlpha}`);
+      ok(`${label}: ${expectPages > 1 ? "animation is kept (all " + expectPages + " frames), not flattened to a still" : "stays a single still image"}`, (meta.pages ?? 1) === expectPages, `pages=${meta.pages ?? 1} variants=${r[1]} dims=${r[0]}`);
+    }
+  }
+
   // ---- metadata editing, focal point
   await p.goto(`${BASE}/admin/media/${id1}`, { waitUntil: "load" });
   await p.locator('div[role="presentation"] img').click({ position: { x: 100, y: 60 } });

@@ -25,6 +25,13 @@ export interface Technology {
   useCases?: string[];
   specs?: { label: string; value: string }[];
   media?: string[];
+  /** CMS media id of a transparent-background image shown in the homepage showroom instead of the line drawing. */
+  showcaseImage?: string;
+  /** Optional transparent animated WebP, played only while this exhibit is the selected one. Needs showcaseImage (the resting pose). */
+  showcaseAnimation?: string;
+  /** Framing shared by the resting image and the animation: size in percent (100 = default) and height offset in percent. */
+  showcaseScale?: number;
+  showcaseY?: number;
   featured?: boolean;
   seo?: import("@/lib/content/types").SeoFields;
 }
