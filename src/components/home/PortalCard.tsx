@@ -20,6 +20,7 @@ export function PortalCard({ title, blurb, tags, form, href, edge, n, slot }: { 
   const inner = useRef<HTMLSpanElement>(null);
   const spot = useRef<HTMLSpanElement>(null);
   const reached = useReached(card, 0.72);
+  const assigned = !!(slot && imageForSlot(slot)); // a photograph is assigned: Photo flips data-media to loaded/failed (see Photo.tsx)
 
   useEffect(() => {
     const el = card.current;
@@ -43,9 +44,9 @@ export function PortalCard({ title, blurb, tags, form, href, edge, n, slot }: { 
   }, []);
 
   return (
-    <Link ref={card} href={href} className="pc2" data-reached={reached || undefined} data-trace-scope>
+    <Link ref={card} href={href} className="pc2" data-reached={reached || undefined} data-media={assigned ? "pending" : undefined} data-trace-scope>
       <span ref={inner} className="pc2-in">
-        {slot && imageForSlot(slot) && <span className="pc2-photo"><Photo slot={slot} sizes="(max-width: 900px) 100vw, 33vw" /></span>}
+        {assigned && slot && <span className="pc2-photo"><Photo slot={slot} sizes="(max-width: 900px) 100vw, 33vw" /></span>}
         <span ref={spot} className="pc2-spot" aria-hidden="true" />
         {reached && <Edge variant={edge} duration={7} />}
         <span className="pc2-n">{n}</span>

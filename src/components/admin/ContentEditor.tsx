@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { archiveItem, checkSlug, deleteItem, publishItem, restoreItem, restoreRevision, saveDraft, unpublishItem } from "@/app/(admin)/admin/actions/content";
 import { FieldInput } from "./fields/Fields";
+import { ShowroomPreview } from "./ShowroomPreview";
 import type { MediaOption, RefMap } from "./fields/types";
 import type { Data, Field } from "@/lib/cms/schema";
 import { dateTime, timeAgo } from "@/lib/cms/format";
@@ -193,6 +194,7 @@ export function ContentEditor({ item, def, media, refs, revisions, role }: { ite
         </form>
 
         <aside className="adm-sidepanel" aria-label="Workflow and history">
+          {item.type === "technology" && <ShowroomPreview data={state.data} media={media} />}
           <section className="adm-card">
             <h2>Status</h2>
             <dl className="adm-kv" style={{ marginTop: 10 }}>

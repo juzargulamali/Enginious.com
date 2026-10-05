@@ -56,3 +56,6 @@
 }
 /* Phone: neighbours are only a glimpse, so their cut-off captions are left out (the card's accessible name still carries the person) */
 @media (max-width: 760px) { .tg-card[data-side="l"] .tg-cap, .tg-card[data-side="r"] .tg-cap { opacity: 0; } }
+
+/* A supplied portrait replaces the monogram artwork; the monogram only shows if the image fails to load. */
+.tg-face[data-media="pending"] .tg-mono, .tg-face[data-media="loaded"] .tg-mono { display: none; }

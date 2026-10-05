@@ -56,3 +56,12 @@ test("slugs are normalised to safe URL parts", () => {
   assert.equal(slugify("Café & Résumé"), "cafe-and-resume");
   assert.equal(slugify("../../etc"), "etc");
 });
+
+test("technology showroom fields: size and offset are range-checked, media ids are kept", () => {
+  const ok = cleanData(TYPE_DEFS.technology, { showcase_image: "pose-1", showcase_animation: "anim-1", showcase_scale: 110, showcase_y: -5 });
+  assert.deepEqual(ok.errors, {});
+  assert.equal(ok.data.showcase_scale, 110);
+  assert.equal(ok.data.showcase_animation, "anim-1");
+  assert.ok(cleanData(TYPE_DEFS.technology, { showcase_scale: 400 }).errors.showcase_scale);
+  assert.ok(cleanData(TYPE_DEFS.technology, { showcase_y: -90 }).errors.showcase_y);
+});

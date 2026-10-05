@@ -5,9 +5,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { AddToBrief } from "@/components/AddToBrief";
 import { TechForm } from "@/components/TechForm";
+import { Photo } from "@/components/Photo";
 import { TECH_CATEGORIES } from "@/content/technologies";
 import { useContent } from "@/components/ContentProvider";
 import { useStageSteer } from "@/lib/useStageSteer";
+import { reducedMotion } from "@/lib/scrollBus";
+import type { Technology } from "@/content/technologies";
+import type { ImageAsset } from "@/content/images";
 import "./gallery.css";
 
 /**
@@ -15,6 +19,11 @@ import "./gallery.css";
  * the others stay visible in a back row, further away (higher, smaller, dimmer) on either side. Selection: click or tap a side exhibit,
  * arrows, keys, swipe, a deliberate hover (about 300 ms, only after fresh pointer movement) or gentle steering by resting the cursor in
  * the left or right edge zone (see useStageSteer). Clicking the centred exhibit opens its details page. Scrolling the page never rotates it.
+ *
+ * SUPPLIED ASSETS (CMS, no code change): a technology may have a transparent resting image and, optionally, a transparent animated WebP. The resting image
+ * replaces the line drawing once it loads (Photo flips data-media on the exhibit; the drawing returns if it fails). The animation is mounted ONLY while that
+ * exhibit is the selected one, only while the stage is on screen and motion is allowed, and is unmounted (back to the resting image) as soon as it is not.
+ * A plain <img> WebP loops from its first frame each time it is mounted; it cannot hold a last frame or reverse (see docs/design/showroom-assets).
  *
  * PERFORMANCE: all explanations render once; a change writes CSS variables on a handful of elements (no React render) and the move is a
  * compositor transition (transform and opacity). No pointer-driven per-frame motion, no filters, no inherited colour transitions.
@@ -41,8 +50,22 @@ function arrange(active: number, n: number, w: number): Pose[] {
 }
 const vars = (p: Pose) => ({ ["--x" as string]: `${p.x.toFixed(1)}px`, ["--y" as string]: `${p.y}px`, ["--s" as string]: p.s, ["--o" as string]: p.o, zIndex: p.z });
 
+const bigUrl = (a: ImageAsset) => `${a.src}-${a.widths[a.widths.length - 1]}.webp`;
+
+/** The resting image, framed. Static and animated share this box and transform, so switching between them never changes size or position. */
+function Fig({ tech, sizes }: { tech: Technology; sizes: string }) {
+  const scale = Math.min(1.5, Math.max(0.5, (tech.showcaseScale ?? 100) / 100));
+  const y = Math.min(20, Math.max(-20, tech.showcaseY ?? 0));
+  return (
+    <span className="sr-fig" style={{ ["--fit-s" as string]: scale, ["--fit-y" as string]: `${-y}%` }}>
+      <Photo id={tech.showcaseImage} className="sr-cut" label={false} sizes={sizes} />
+      <span className="sr-anim-slot" aria-hidden="true" />
+    </span>
+  );
+}
+
 export function ShowroomTeaser() {
-  const { technologies: TECHNOLOGIES } = useContent();
+  const { technologies: TECHNOLOGIES, imageById } = useContent();
   const router = useRouter();
   const EXHIBITS = ALL_EXHIBITS.filter((s) => TECHNOLOGIES.some((t) => t.slug === s));
   const N = EXHIBITS.length;
@@ -53,6 +76,36 @@ export function ShowroomTeaser() {
   const current = useRef(MID);
   const pressed = useRef<number | null>(null); // which exhibit was centred when the press began (focus moves selection before click fires)
   const swipe = useRef<{ x: number; done: boolean } | null>(null);
+  const playing = useRef<HTMLImageElement | null>(null);
+  const onScreen = useRef(false);
+
+  // Animation of the selected exhibit only. Rapid changes just stop the previous one and start the next; stale loads are ignored.
+  const stopAnim = () => {
+    const img = playing.current;
+    if (!img) return;
+    playing.current = null;
+    img.onload = null; img.onerror = null;
+    img.removeAttribute("src"); // cancels a download still in flight
+    const fig = img.closest<HTMLElement>(".sr-fig");
+    img.remove();
+    if (fig) delete fig.dataset.anim;
+  };
+  const playAnim = (i: number) => {
+    stopAnim();
+    if (!onScreen.current || reducedMotion() || document.hidden) return;
+    const ex = stage.current?.querySelectorAll<HTMLElement>(".sr-ex")[i];
+    const url = ex?.dataset.anim;
+    const fig = ex?.querySelector<HTMLElement>(".sr-art .sr-fig");
+    const slot = fig?.querySelector<HTMLElement>(".sr-anim-slot");
+    if (!url || !fig || !slot || ex?.dataset.media === "failed") return;
+    const img = new Image();
+    img.className = "sr-anim"; img.alt = ""; img.decoding = "async"; img.draggable = false;
+    img.onload = () => { if (playing.current === img) fig.dataset.anim = "ready"; };
+    img.onerror = () => { if (playing.current === img) stopAnim(); }; // failed load: stay on the resting image
+    playing.current = img;
+    slot.appendChild(img);
+    img.src = url;
+  };
 
   const layout = (i: number) => {
     const st = stage.current;
@@ -74,6 +127,7 @@ export function ShowroomTeaser() {
     r.querySelectorAll<HTMLElement>(".sr-i").forEach((el, k) => { el.hidden = k !== i; });
     const cnt = r.querySelector(".sr-count"); if (cnt) cnt.textContent = `${i + 1} / ${N}`;
     layout(i);
+    playAnim(i);
   };
   const choose = (i: number) => activate(i);
   const step = (d: number) => choose((current.current + d + N) % N);
@@ -85,6 +139,21 @@ export function ShowroomTeaser() {
     const ro = new ResizeObserver(() => layout(current.current));
     ro.observe(el);
     return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [N]);
+
+  // Off-screen, hidden tab or reduced motion: back to the resting image. Back on screen: the selected exhibit plays again.
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => { onScreen.current = e.isIntersecting; if (e.isIntersecting) playAnim(current.current); else stopAnim(); }, { threshold: 0.25 });
+    io.observe(el);
+    const vis = () => { if (document.hidden) stopAnim(); else playAnim(current.current); };
+    const mq = matchMedia("(prefers-reduced-motion: reduce)");
+    const rm = () => { if (mq.matches) stopAnim(); else playAnim(current.current); };
+    document.addEventListener("visibilitychange", vis);
+    mq.addEventListener("change", rm);
+    return () => { io.disconnect(); document.removeEventListener("visibilitychange", vis); mq.removeEventListener("change", rm); stopAnim(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [N]);
 
@@ -119,20 +188,23 @@ export function ShowroomTeaser() {
       >
         <span className="sr-wall" aria-hidden="true" />
         <span className="sr-floor" aria-hidden="true" />
+        <span className="sr-halo" aria-hidden="true" />
         <span className="sr-spot" aria-hidden="true" />
         <div className="sr-near" role="listbox" aria-label="Technologies" onKeyDown={onKey}>
           {EXHIBITS.map((slug, i) => {
             const tech = TECHNOLOGIES.find((x) => x.slug === slug)!;
+            const still = tech.showcaseImage ? imageById(tech.showcaseImage) : undefined;
+            const anim = still && tech.showcaseAnimation ? imageById(tech.showcaseAnimation) : undefined;
             return (
-              <button key={slug} type="button" role="option" aria-selected={i === MID} tabIndex={i === MID ? 0 : -1} className="sr-ex" data-on={i === MID} style={vars(POSES[i])} data-i={i} onPointerDown={() => { pressed.current = current.current; }} onClick={() => {
+              <button key={slug} type="button" role="option" aria-selected={i === MID} tabIndex={i === MID ? 0 : -1} className="sr-ex" data-on={i === MID} data-media={still ? "pending" : undefined} data-anim={anim ? bigUrl(anim) : undefined} style={vars(POSES[i])} data-i={i} onPointerDown={() => { pressed.current = current.current; }} onClick={() => {
                   const was = pressed.current ?? current.current; pressed.current = null;
                   if (swipe.current?.done) return;
                   if (was === i) open(i); else choose(i);
                 }} onFocus={() => { if (current.current !== i) choose(i); }}>
-                <span className="sr-art"><TechForm slug={slug} size={180} /></span>
+                <span className="sr-art"><TechForm slug={slug} size={180} />{still && <Fig tech={tech} sizes="(max-width: 760px) 40vw, 320px" />}</span>
                 <span className="sr-pod" aria-hidden="true" />
                 <span className="sr-lbl">{tech.name}</span>
-                <span className="sr-refl" aria-hidden="true"><TechForm slug={slug} size={180} /></span>
+                <span className="sr-refl" aria-hidden="true"><TechForm slug={slug} size={180} />{still && <span className="sr-fig" style={{ ["--fit-s" as string]: Math.min(1.5, Math.max(0.5, (tech.showcaseScale ?? 100) / 100)), ["--fit-y" as string]: `${-Math.min(20, Math.max(-20, tech.showcaseY ?? 0))}%` }}><Photo id={tech.showcaseImage} className="sr-cut" label={false} sizes="160px" /></span>}</span>
               </button>
             );
           })}

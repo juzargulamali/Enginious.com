@@ -17,7 +17,7 @@ export default async function ContactPage() {
   const content = await getContent();
   const scene = content.images[content.slots.contactScene ?? "contact-scene"];
   return (
-    <div className="ct-hero">
+    <div className="ct-hero" data-media={scene ? "pending" : undefined}>
       <NeonController />
       {scene && <div className="ct-scene" aria-hidden="true"><Photo slot="contactScene" sizes="100vw" priority /></div>}
       <div className="ct-stage" aria-hidden="true"><span className="haze" /><span className="floor" /><span className="beam b1" /><span className="beam b2" /><span className="beam b3" /><span className="shard s1" /><span className="shard s2" /><span className="shard s3" /></div>
