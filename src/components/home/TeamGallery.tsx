@@ -87,10 +87,11 @@ export function TeamGallery({ showLink = false, depth = false }: { showLink?: bo
     const l = LEADERS[p.id];
     if (isPreview(p.id)) return <Photo slot={PREVIEW[p.id]} sizes="(max-width: 760px) 58vw, 340px" />;
     const asset = l?.photo ? imageById(l.photo) : undefined;
-    return asset ? <Photo id={asset.id} sizes="(max-width: 760px) 58vw, 340px" /> : (
-      <span className="tg-mono" aria-hidden="true"><TechForm slug={FORM[p.dept]} size={240} /><b>{initials(p.name)}</b></span>
-    );
+    const mono = <span className="tg-mono" aria-hidden="true"><TechForm slug={FORM[p.dept]} size={240} /><b>{initials(p.name)}</b></span>;
+    // With a portrait assigned the monogram is only the fallback: Photo flips the face's data-media, CSS hides the monogram unless the image fails.
+    return asset ? <>{mono}<Photo id={asset.id} sizes="(max-width: 760px) 58vw, 340px" /></> : mono;
   };
+  const hasPortrait = (p: (typeof ORDER)[number]) => isPreview(p.id) || !!(LEADERS[p.id]?.photo && imageById(LEADERS[p.id].photo!));
 
   return (
     <div className="tg tg-wide" ref={wrap}>
@@ -150,7 +151,7 @@ export function TeamGallery({ showLink = false, depth = false }: { showLink?: bo
                   onClick={() => { const was = pressed.current ?? idx; pressed.current = null; if (drag.current?.moved) return; if (was === i) openProfile(); else setActive(i); }}
                   style={{ transform: `translateX(calc(${off} * var(--step))) translateZ(${-abs * 190}px) rotateY(${off * -20}deg) scale(${off === 0 ? 1.1 : 1})`, zIndex: 10 - abs, ["--dim" as string]: off === 0 ? 0 : 0.14 + abs * 0.14 }}
                 >
-                  <span className="tg-face">
+                  <span className="tg-face" data-media={hasPortrait(p) ? "pending" : undefined}>
                     {face(p)}
                     <span className="tg-dim" aria-hidden="true" />
                     <span className="tg-cap"><strong>{isPreview(p.id) ? p.role : p.name}</strong>{!isPreview(p.id) && <span>{p.role}</span>}</span>

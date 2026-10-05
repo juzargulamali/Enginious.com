@@ -313,3 +313,6 @@ a { color: inherit; text-decoration: none; }
 .nav-regions a { padding: 0.4rem 0.4rem; }
 .nav-start { padding-inline: 1rem; }
 @media (min-width: 1181px) and (max-width: 1500px) { .bm-lbl { display: none; } }
+
+/* An image that failed to load leaves no broken-image icon or alt text behind: the component's designed fallback takes over (see Photo.tsx). */
+[data-media="failed"] .photo, [data-media="failed"] .photo-tag { display: none; }
