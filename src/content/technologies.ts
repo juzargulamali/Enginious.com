@@ -1,15 +1,35 @@
 // Technology inventory. Descriptions paraphrase the Company Profile 2026 Q2.
 // No specifications, dimensions, availability or lead times are stated: none are confirmed.
 
-export type TechCategory = "kinetic" | "interactive" | "immersive" | "ai" | "robotics";
+/** A category key. The list itself is editable in the CMS (Site settings), so this is a plain string. */
+export type TechCategory = string;
+export interface TechCategoryDef { key: string; label: string; blurb: string }
 
-export const TECH_CATEGORIES: { key: TechCategory; label: string; blurb: string }[] = [
+export const TECH_CATEGORIES: TechCategoryDef[] = [
   { key: "kinetic", label: "Kinetic", blurb: "Screens and structures that move with the story." },
   { key: "interactive", label: "Interactive", blurb: "Touch, presence and gesture that put visitors in control." },
   { key: "immersive", label: "Immersive", blurb: "Rooms, tunnels and volumes that surround an audience." },
   { key: "ai", label: "AI", blurb: "Photobooths, assistants and camera systems with intelligence built in." },
   { key: "robotics", label: "Robotics", blurb: "Robotic arms and robots integrated into the experience." },
+  { key: "games", label: "Interactive Digital Games", blurb: "Playable experiences that turn visitors into players." },
 ];
+
+const catSlug = (s: string) => s.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+
+/** The category list from CMS records (label, optional key, blurb). Empty or invalid input gives the built-in list. */
+export function resolveTechCategories(records: unknown): TechCategoryDef[] {
+  const out: TechCategoryDef[] = [];
+  if (Array.isArray(records)) {
+    for (const r of records as Record<string, unknown>[]) {
+      const label = typeof r?.label === "string" ? r.label.trim() : "";
+      if (!label) continue;
+      const key = catSlug(typeof r.key === "string" && r.key.trim() ? r.key : label);
+      if (!key || out.some((c) => c.key === key)) continue;
+      out.push({ key, label, blurb: typeof r.blurb === "string" ? r.blurb.trim() : "" });
+    }
+  }
+  return out.length ? out : TECH_CATEGORIES;
+}
 
 export interface Technology {
   slug: string;

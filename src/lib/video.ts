@@ -1,8 +1,12 @@
 // Video links for projects and technologies. Pure helpers (server, client and the CMS validator share them).
 // Supported: YouTube (watch, youtu.be, embed, shorts, live; public or unlisted) and direct https video files (.mp4, .webm, .m4v, .mov, .ogv).
-// NOT supported: SharePoint / OneDrive / Google Drive / Dropbox share pages (they are sign-in or preview pages, not video files).
+// Google Drive file links (/file/d/<id>/view): full player on the page only (Drive's own embedded player). Drive cannot loop a muted card preview,
+// so a card shows its poster unless a separate preview file is set. The Drive file must be shared as "Anyone with the link".
+// NOT supported: SharePoint / OneDrive / Dropbox share pages (they are sign-in or preview pages, not video files).
 
-export type ParsedVideo = { kind: "youtube"; id: string } | { kind: "file"; url: string; type: string };
+export type ParsedVideo = { kind: "youtube"; id: string } | { kind: "file"; url: string; type: string } | { kind: "drive"; id: string };
+
+const DRIVE_ID = /^[A-Za-z0-9_-]{15,80}$/;
 
 const FILE_TYPES: Record<string, string> = { mp4: "video/mp4", m4v: "video/mp4", mov: "video/mp4", webm: "video/webm", ogv: "video/ogg" };
 const YT_ID = /^[A-Za-z0-9_-]{11}$/;
@@ -20,6 +24,11 @@ export function parseVideoUrl(raw: string | undefined | null): ParsedVideo | nul
     const m = /^\/(embed|shorts|live|v)\/([A-Za-z0-9_-]{11})/.exec(u.pathname);
     if (m) return { kind: "youtube", id: m[2] };
     return null;
+  }
+  if (host === "drive.google.com") {
+    const m = /^\/file\/d\/([A-Za-z0-9_-]+)/.exec(u.pathname) ?? /^\/(?:open|uc)$/.exec(u.pathname);
+    const id = m && m[1] ? m[1] : u.searchParams.get("id") ?? "";
+    return DRIVE_ID.test(id) ? { kind: "drive", id } : null;
   }
   const ext = /\.([a-z0-9]{3,4})$/i.exec(u.pathname)?.[1]?.toLowerCase();
   if (ext && FILE_TYPES[ext]) return { kind: "file", url: u.toString(), type: FILE_TYPES[ext] };

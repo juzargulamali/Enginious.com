@@ -41,7 +41,7 @@ export interface ListQuery {
   q?: string;
   page?: number;
   pageSize?: number;
-  sort?: "updated" | "title" | "order";
+  sort?: "updated" | "created" | "title" | "order";
 }
 
 export async function listItems(q: ListQuery): Promise<{ rows: ItemListRow[]; count: number; error?: string }> {
@@ -56,7 +56,8 @@ export async function listItems(q: ListQuery): Promise<{ rows: ItemListRow[]; co
   if (term) query = query.or(`title.ilike.*${term}*,slug.ilike.*${term}*`);
   if (q.sort === "title") query = query.order("title", { ascending: true });
   else if (q.sort === "order") query = query.order("sort_order", { ascending: true }).order("title", { ascending: true });
-  else query = query.order("updated_at", { ascending: false });
+  else if (q.sort === "created") query = query.order("created_at", { ascending: false }).order("sort_order", { ascending: true }).order("title", { ascending: true });
+  else query = query.order("updated_at", { ascending: false }).order("created_at", { ascending: false }).order("title", { ascending: true });
   const from = (page - 1) * pageSize;
   const { data, count, error } = await query.range(from, from + pageSize - 1);
   if (error) return { rows: [], count: 0, error: error.message };

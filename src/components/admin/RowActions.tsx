@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { moveItem, setFeatured } from "@/app/(admin)/admin/actions/content";
+import { deleteItem, moveItem, setFeatured } from "@/app/(admin)/admin/actions/content";
 
-export function RowActions({ id, canMove, featurable, featured, first, last }: { id: string; canMove: boolean; featurable: boolean; featured: boolean; first: boolean; last: boolean }) {
+export function RowActions({ id, title, canDelete, canMove, featurable, featured, first, last }: { id: string; title: string; canDelete: boolean; canMove: boolean; featurable: boolean; featured: boolean; first: boolean; last: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState("");
@@ -21,6 +21,10 @@ export function RowActions({ id, canMove, featurable, featured, first, last }: {
         <button type="button" className="adm-btn adm-btn-sm" disabled={pending} aria-pressed={featured} onClick={() => run(() => setFeatured(id, !featured))}>
           {featured ? "★ Featured" : "☆ Feature"}
         </button>
+      )}
+      {canDelete && (
+        <button type="button" className="adm-btn adm-btn-sm adm-btn-danger" disabled={pending} aria-label={`Delete ${title}`}
+          onClick={() => { if (window.confirm(`Permanently delete "${title}" and its history? If it is live it disappears from the public site immediately. This cannot be undone.`)) run(() => deleteItem(id)); }}>Delete</button>
       )}
       {err && <span className="adm-err" role="alert">{err}</span>}
     </span>

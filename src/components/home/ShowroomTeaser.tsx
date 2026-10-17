@@ -6,7 +6,6 @@ import { useEffect, useRef } from "react";
 import { AddToBrief } from "@/components/AddToBrief";
 import { TechForm } from "@/components/TechForm";
 import { Photo } from "@/components/Photo";
-import { TECH_CATEGORIES } from "@/content/technologies";
 import { useContent } from "@/components/ContentProvider";
 import { useStageSteer } from "@/lib/useStageSteer";
 import { reducedMotion } from "@/lib/scrollBus";
@@ -65,7 +64,7 @@ function Fig({ tech, sizes }: { tech: Technology; sizes: string }) {
 }
 
 export function ShowroomTeaser() {
-  const { technologies: TECHNOLOGIES, imageById } = useContent();
+  const { technologies: TECHNOLOGIES, techCategories, imageById } = useContent();
   const router = useRouter();
   const EXHIBITS = ALL_EXHIBITS.filter((s) => TECHNOLOGIES.some((t) => t.slug === s));
   const N = EXHIBITS.length;
@@ -219,7 +218,7 @@ export function ShowroomTeaser() {
       <div className="sr-info" aria-live="polite">
         {EXHIBITS.map((slug, i) => {
           const t = TECHNOLOGIES.find((x) => x.slug === slug)!;
-          const cat = TECH_CATEGORIES.find((c) => c.key === t.category)!;
+          const cat = techCategories.find((c) => c.key === t.category) ?? techCategories[0];
           return (
             <div key={slug} className="sr-i" hidden={i !== MID}>
               <p className="eyebrow">{cat.label}</p>

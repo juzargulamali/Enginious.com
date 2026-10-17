@@ -34,7 +34,7 @@ export function CardMedia({ id, title, video, posterImageId, fallback }: Props) 
 
   const main = video ? parseVideoUrl(video.url) : null;
   const previewFile = video?.previewUrl ? parseVideoUrl(video.previewUrl) : null;
-  const source = previewFile?.kind === "file" ? previewFile : main;
+  const source = previewFile?.kind === "file" ? previewFile : main?.kind === "drive" ? null : main; // Drive cannot loop a muted preview: poster only
   const posterAsset = (video?.poster && imageById(video.poster) ? video.poster : undefined) ?? (posterImageId && imageById(posterImageId) ? posterImageId : undefined);
 
   // Automatic preview on desktop hover / keyboard focus of the whole card (never for reduced motion, never for touch).

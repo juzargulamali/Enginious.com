@@ -72,3 +72,9 @@
 - Which services are delivered locally in Riyadh and Poznań (CMS: Region > services)
 - Confirmed European projects
 - Regional hero videos and fuller Saudi and Europe stories
+
+## CMS corrections (October)
+- Delete: administrators can delete any item (any status) from the list or the editor. Fixed pages (Site settings, page search settings, regions) cannot be deleted.
+- Sort: "Recently added" and "Recently edited" both work; "Recently edited" was ignored on lists that default to display order.
+- Technology categories: Site settings > Technology categories (add, rename, reorder, remove). Interactive Digital Games is built in. Move technologies into it from their own Category field.
+- Videos: Google Drive file links play in the full player on the page; cards show the poster only (add a separate preview file for an automatic card preview).
