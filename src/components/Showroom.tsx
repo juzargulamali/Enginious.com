@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TECH_CATEGORIES, type TechCategory, type Technology } from "@/content/technologies";
+import type { TechCategory, Technology } from "@/content/technologies";
 import { useContent } from "./ContentProvider";
 import { useBrief } from "./BriefProvider";
 import { AddToBrief } from "./AddToBrief";
@@ -49,6 +49,20 @@ function Glyph({ category, seed }: { category: TechCategory; seed: number }) {
           ))}
         </>
       )}
+      {category === "games" && (
+        <>
+          <rect x="18" y="44" width="84" height="44" rx="20" />
+          <path d="M40 58 V74 M32 66 H48" />
+          <circle cx="76" cy="62" r="4" fill="currentColor" />
+          <circle cx="86" cy="72" r="4" />
+        </>
+      )}
+      {!["kinetic", "interactive", "immersive", "ai", "robotics", "games"].includes(category) && (
+        <>
+          {[0, 1, 2].map((i) => <circle key={i} cx="60" cy="60" r={16 + i * 14 + r / 2} opacity={0.9 - i * 0.25} />)}
+          <circle cx="60" cy="60" r="4" fill="currentColor" />
+        </>
+      )}
       {category === "robotics" && (
         <>
           <rect x="40" y="96" width="40" height="8" rx="2" />
@@ -64,8 +78,8 @@ function Glyph({ category, seed }: { category: TechCategory; seed: number }) {
 
 export function Showroom() {
   const brief = useBrief();
-  const { technologies: TECHNOLOGIES } = useContent();
-  const [cat, setCat] = useState<TechCategory>("kinetic");
+  const { technologies: TECHNOLOGIES, techCategories: TECH_CATEGORIES } = useContent();
+  const [cat, setCat] = useState<TechCategory>(TECH_CATEGORIES[0].key);
   const [selected, setSelected] = useState<string | null>(null);
   const stage = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState<TechCategory | "all">("all");
@@ -113,7 +127,7 @@ export function Showroom() {
     setSelected(inCat[next].slug);
   };
 
-  const meta = TECH_CATEGORIES.find((c) => c.key === cat)!;
+  const meta = TECH_CATEGORIES.find((c) => c.key === cat) ?? TECH_CATEGORIES[0];
   const list = TECHNOLOGIES.filter((t) => filter === "all" || t.category === filter);
 
   return (
@@ -197,7 +211,7 @@ export function Showroom() {
           {list.map((t) => (
             <li key={t.slug} id={`cat-${t.category}-${t.slug}`} className="panel tech-item" data-vcard>
               <CardMedia id={`tech-${t.slug}`} title={t.name} video={t.video} posterImageId={t.media?.[0]} />
-              <p className="eyebrow">{TECH_CATEGORIES.find((c) => c.key === t.category)!.label}</p>
+              <p className="eyebrow">{(TECH_CATEGORIES.find((c) => c.key === t.category) ?? TECH_CATEGORIES[0]).label}</p>
               <h3 style={{ marginTop: 6 }}>
                 <Link href={`/technologies/${t.slug}`} className="accent">{t.name}</Link>
               </h3>

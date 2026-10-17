@@ -21,7 +21,7 @@ export default async function ContentList({ params, searchParams }: { params: Pr
   if (!def) notFound();
   const sp = await searchParams;
   const status = (STATUSES.some(([k]) => k === sp.status) ? sp.status : "all") as Status | "all" | "pending";
-  const sort = (sp.sort === "title" || sp.sort === "order" ? sp.sort : def.orderable ? "order" : "updated") as "updated" | "title" | "order";
+  const sort = (sp.sort === "title" || sp.sort === "order" || sp.sort === "updated" || sp.sort === "created" ? sp.sort : def.orderable ? "order" : "updated") as "updated" | "created" | "title" | "order";
   const page = Math.max(1, Number(sp.page) || 1);
   const pageSize = 20;
   const { rows, count, error } = await listItems({ type: def.type, status, q: sp.q, page, pageSize, sort });
@@ -77,6 +77,7 @@ export default async function ContentList({ params, searchParams }: { params: Pr
           <label className="skip" htmlFor="sort">Sort</label>
           <select id="sort" name="sort" defaultValue={sort}>
             {def.orderable && <option value="order">Display order</option>}
+            <option value="created">Recently added</option>
             <option value="updated">Recently edited</option>
             <option value="title">Title A to Z</option>
           </select>
@@ -99,7 +100,7 @@ export default async function ContentList({ params, searchParams }: { params: Pr
               <tr>
                 <th scope="col">{def.titleLabel.replace(/ \(internal\)/, "")}</th><th scope="col">Status</th>
                 {(def.listKeys ?? []).map((k) => <th key={k} scope="col">{def.fields.find((f) => f.key === k)?.label ?? k}</th>)}
-                <th scope="col">Edited</th><th scope="col" className="num">Order and featured</th>
+                <th scope="col">Added</th><th scope="col">Edited</th><th scope="col" className="num">Order and featured</th>
               </tr>
             </thead>
             <tbody>
@@ -110,8 +111,9 @@ export default async function ContentList({ params, searchParams }: { params: Pr
                     <td data-label="Title"><Link className="t" href={`${base}/${r.id}`}>{r.title}</Link><span className="sub adm-mono">{def.path ? def.path(r.slug) : r.slug}</span></td>
                     <td data-label="Status"><span className="adm-badge" data-s={r.status}>{r.status}</span>{pending && <> <span className="adm-badge" data-s="pending">unpublished edits</span></>}</td>
                     {(def.listKeys ?? []).map((k) => <td key={k} data-label={k}>{String(r.draft[k] ?? "") || <span className="muted">-</span>}</td>)}
+                    <td data-label="Added">{timeAgo(r.created_at)}</td>
                     <td data-label="Edited">{timeAgo(r.updated_at)}</td>
-                    <td className="num" data-label="Order"><RowActions id={r.id} canMove={def.orderable && sort === "order" && !sp.q && status === "all"} featurable={def.featurable} featured={r.featured} first={i === 0 && page === 1} last={i === rows.length - 1 && page === pages} /></td>
+                    <td className="num" data-label="Order"><RowActions id={r.id} title={r.title} canDelete={staff.role === "administrator" && !def.fixedSlugs} canMove={def.orderable && sort === "order" && !sp.q && status === "all"} featurable={def.featurable} featured={r.featured} first={i === 0 && page === 1} last={i === rows.length - 1 && page === pages} /></td>
                   </tr>
                 );
               })}

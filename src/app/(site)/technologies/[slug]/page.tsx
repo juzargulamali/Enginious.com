@@ -9,7 +9,6 @@ import { Photo } from "@/components/Photo";
 import { TechForm } from "@/components/TechForm";
 import "@/components/techart.css";
 import { TriHelixDemo } from "@/components/TriHelixDemo";
-import { TECH_CATEGORIES } from "@/content/technologies";
 import { getContent } from "@/lib/content/load";
 import { breadcrumbLd } from "@/lib/seo/jsonld";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -30,7 +29,7 @@ export default async function TechnologyPage({ params }: PageProps<"/technologie
   const c = await getContent();
   const t = c.technologies.find((x) => x.slug === slug);
   if (!t) notFound();
-  const cat = TECH_CATEGORIES.find((x) => x.key === t.category)!;
+  const cat = c.techCategories.find((x) => x.key === t.category) ?? c.techCategories[0];
   const related = t.projects.map((s) => c.projects.find((p) => p.slug === s)).filter((p): p is NonNullable<typeof p> => !!p);
   // The first paragraph of the description is the introduction; the rest is the body.
   const [intro, ...restParts] = (t.description ?? "").split(/\n\s*\n/);

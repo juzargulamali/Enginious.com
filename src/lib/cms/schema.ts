@@ -20,6 +20,8 @@ export interface Field {
   type: FieldType;
   help?: string;
   placeholder?: string;
+  /** Options come from a live list edited elsewhere in the CMS (the editor page fills `options`); any slug-like value is accepted when saving. */
+  optionsFrom?: "tech_categories";
   /** Required to PUBLISH (saving a draft may leave it empty). */
   required?: boolean;
   /** Text length, or the largest allowed value for a number. */
@@ -95,7 +97,7 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
       { key: "experience", label: "The experience", type: "markdown", group: "Story" },
       { key: "technologies", label: "Technologies used", type: "refs", refType: "technology", group: "Links" },
       { key: "case_study", label: "Show as a case study", type: "boolean", group: "Links", help: "Every published project has its own page. This only adds the Case study label and wording." },
-      { key: "video_url", label: "Main video (YouTube link or direct video file)", type: "url", video: true, group: "Video", help: "One link used for both the card preview and the full player on the page. YouTube (public or unlisted) or a direct https link to a .mp4 / .webm file. SharePoint, OneDrive and Google Drive sharing pages do not work. Leave empty for no video." },
+      { key: "video_url", label: "Main video (YouTube, Google Drive or direct video file)", type: "url", video: true, group: "Video", help: "One link used for both the card preview and the full player on the page. YouTube (public or unlisted), a Google Drive file link (shared as Anyone with the link; plays in the full player on the page, cards show the poster and no automatic preview unless you add a separate preview file), or a direct https link to a .mp4 / .webm file. SharePoint and OneDrive sharing pages do not work. Leave empty for no video." },
       { key: "video_preview_start", label: "Card preview start (seconds)", type: "number", min: 0, max: 36000, group: "Video", help: "Where the card preview begins. Default 0. The full player is not affected." },
       { key: "video_preview_seconds", label: "Card preview length (seconds)", type: "number", min: 3, max: 60, group: "Video", help: "How long the preview plays before it repeats. Default 10. Note: this limits what is shown, not what the browser may download." },
       { key: "video_poster", label: "Video poster image", type: "media", mediaKind: "image", group: "Video", help: "Optional. Shown before play. If empty, the first project/technology image is used, then the YouTube thumbnail." },
@@ -116,7 +118,7 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
     description: "The technologies Enginious builds. Appears in the showroom, on technology pages and in enquiries.",
     path: (s) => `/technologies/${s}`, orderable: true, featurable: true, seo: true, listKeys: ["category"],
     fields: [
-      { key: "category", label: "Category", type: "select", required: true, options: TECH_CATEGORY_OPTS, group: "Basics" },
+      { key: "category", label: "Category", type: "select", required: true, options: TECH_CATEGORY_OPTS, optionsFrom: "tech_categories", group: "Basics", help: "Categories are managed in Site settings, under Technology categories." },
       { key: "summary", label: "Summary", type: "textarea", required: true, max: 400, group: "Basics" },
       { key: "detailed", label: "Mark as a fully written page", type: "boolean", group: "Basics", help: "Every published technology has its own page. This only records that the page text is complete; it does not turn the page on or off." },
       { key: "description", label: "Description", type: "markdown", group: "Content" },
@@ -132,7 +134,7 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
       { key: "showcase_animation", label: "Showroom animation (optional, transparent animated WebP)", type: "media", mediaKind: "image", group: "Showroom", help: "Optional. Plays only while this technology is the selected one in the centre; neighbours and reduced-motion visitors see the resting pose. Animated WebP only (not GIF or APNG), same framing as the resting image, up to 4 MB uploaded, 1200 px wide, 240 frames, 3.5 MB after processing. It loops for as long as the exhibit stays selected; it cannot hold the last frame or play backwards." },
       { key: "showcase_scale", label: "Showroom size (%)", type: "number", min: 50, max: 150, group: "Showroom", help: "Optional. 100 is the default. The same value is used for the resting image and the animation, so switching never jumps." },
       { key: "showcase_y", label: "Showroom height offset (%)", type: "number", min: -20, max: 20, group: "Showroom", help: "Optional. Moves the product up (positive) or down (negative) on its podium. 0 is the default." },
-      { key: "video_url", label: "Main video (YouTube link or direct video file)", type: "url", video: true, group: "Video", help: "One link used for both the card preview and the full player on the page. YouTube (public or unlisted) or a direct https link to a .mp4 / .webm file. SharePoint, OneDrive and Google Drive sharing pages do not work. Leave empty for no video." },
+      { key: "video_url", label: "Main video (YouTube, Google Drive or direct video file)", type: "url", video: true, group: "Video", help: "One link used for both the card preview and the full player on the page. YouTube (public or unlisted), a Google Drive file link (shared as Anyone with the link; plays in the full player on the page, cards show the poster and no automatic preview unless you add a separate preview file), or a direct https link to a .mp4 / .webm file. SharePoint and OneDrive sharing pages do not work. Leave empty for no video." },
       { key: "video_preview_start", label: "Card preview start (seconds)", type: "number", min: 0, max: 36000, group: "Video", help: "Where the card preview begins. Default 0. The full player is not affected." },
       { key: "video_preview_seconds", label: "Card preview length (seconds)", type: "number", min: 3, max: 60, group: "Video", help: "How long the preview plays before it repeats. Default 10. Note: this limits what is shown, not what the browser may download." },
       { key: "video_poster", label: "Video poster image", type: "media", mediaKind: "image", group: "Video", help: "Optional. Shown before play. If empty, the first project/technology image is used, then the YouTube thumbnail." },
@@ -301,6 +303,13 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
       { key: "default_seo_description", label: "Default search description", type: "textarea", max: 170, group: "Default search and sharing" },
       { key: "default_seo_image", label: "Default sharing image", type: "media", mediaKind: "image", group: "Default search and sharing" },
       { key: "company_profile", label: "Company profile (PDF)", type: "media", mediaKind: "document", group: "Downloads", help: "Upload the approved PDF in Media, then pick it here. Shown as a download only when set." },
+      { key: "technology_categories", label: "Technology categories", type: "records", group: "Technology categories",
+        help: "The categories on the Technologies page and the homepage showroom. Add, rename, reorder or remove them. Leave Key empty for new rows (it is made from the name). Never change a Key after technologies use it; rename the Name instead. A technology whose category is removed is shown under the first category until you reassign it.",
+        fields: [
+          { key: "label", label: "Name", type: "text", required: true, max: 40 },
+          { key: "key", label: "Key (optional)", type: "text", max: 40 },
+          { key: "blurb", label: "One line description", type: "text", max: 160 },
+        ] },
       { key: "showreel_youtube_id", label: "Showreel YouTube ID", type: "text", max: 20, group: "Video", help: "Privacy-enhanced embed. Leave empty to use the built-in default." },
       { key: "film_youtube_id", label: "Second film YouTube ID", type: "text", max: 20, group: "Video" },
       { key: "showreel_mp4_url", label: "Showreel video file address (optional)", type: "url", group: "Video", help: "An approved MP4 hosted on a video or CDN service (https). Muted looping background, 15 to 30 seconds, at most 12 MB, H.264. When set it replaces the YouTube background; the YouTube film stays available behind the Play button. Large videos are not uploaded here." },
@@ -365,7 +374,7 @@ function cleanField(f: Field, v: unknown, errors: FieldErrors, path: string): un
       if (!/^https:\/\/[^\s]+$/.test(s)) { errors[path] = `${f.label} must be a full https:// address.`; return s; }
       if (f.video) {
         const pv = parseVideoUrl(s);
-        if (!pv || (f.video === "file" && pv.kind !== "file")) errors[path] = f.video === "file" ? `${f.label} must be a direct link to a video file (ending .mp4, .webm, .m4v or .mov), not a sharing page.` : `${f.label} must be a YouTube link or a direct link to a video file (.mp4, .webm, .m4v, .mov). SharePoint, OneDrive and Google Drive sharing pages are not supported.`;
+        if (!pv || (f.video === "file" && pv.kind !== "file")) errors[path] = f.video === "file" ? `${f.label} must be a direct link to a video file (ending .mp4, .webm, .m4v or .mov), not a sharing page.` : `${f.label} must be a YouTube link, a Google Drive file link or a direct link to a video file (.mp4, .webm, .m4v, .mov). SharePoint and OneDrive sharing pages are not supported.`;
       }
       return s;
     }
@@ -383,6 +392,7 @@ function cleanField(f: Field, v: unknown, errors: FieldErrors, path: string): un
     }
     case "select": {
       const s = asStr(v, 80); if (!s) return undefined;
+      if (f.optionsFrom) { if (!/^[a-z0-9-]{1,40}$/.test(s)) errors[path] = `${f.label}: choose one of the listed options.`; return /^[a-z0-9-]{1,40}$/.test(s) ? s : undefined; }
       if (!f.options?.some((o) => o.value === s)) { errors[path] = `${f.label}: choose one of the listed options.`; return undefined; }
       return s;
     }

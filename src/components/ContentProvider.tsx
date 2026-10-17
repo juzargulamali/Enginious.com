@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { Project } from "@/content/projects";
-import type { Technology } from "@/content/technologies";
+import type { Technology, TechCategoryDef } from "@/content/technologies";
 import type { Person } from "@/content/team";
 import type { LeaderInfo } from "@/content/leaders";
 import type { Client } from "@/content/clients";
@@ -18,6 +18,7 @@ export interface LeanRegion { key: RegionKey; name: string; role: string; email:
 export interface ClientContent {
   projects: Project[];
   technologies: Technology[];
+  techCategories: TechCategoryDef[];
   people: Person[];
   leaders: Record<string, LeaderInfo>;
   clients: Client[];

@@ -118,7 +118,7 @@ export function ContentEditor({ item, def, media, refs, revisions, role }: { ite
   const archive = simple(archiveItem, "Archived.", "Archive this item? It is removed from the public site and hidden from lists. You can restore it later.", () => { setStatus("archived"); setPublishedVersion(null); });
   const restore = simple(restoreItem, "Restored as a draft.", undefined, () => setStatus("draft"));
   const remove = () => {
-    if (!window.confirm("Permanently delete this item and its history? This cannot be undone.")) return;
+    if (!window.confirm(`Permanently delete "${item.title}" and its history?${live ? " It is live now and disappears from the public site immediately." : ""} This cannot be undone.`)) return;
     start(async () => { const r = await deleteItem(item.id); if (r.ok) router.push(`/admin/content/${item.type}`); else setBanner({ kind: "error", text: r.error }); });
   };
   const restoreRev = (id: number) => {
@@ -207,7 +207,7 @@ export function ContentEditor({ item, def, media, refs, revisions, role }: { ite
             <div className="adm-actions" style={{ marginTop: 14 }}>
               {live && <button type="button" className="adm-btn" onClick={unpublish} disabled={pending}>Unpublish</button>}
               {status !== "archived" ? <button type="button" className="adm-btn" onClick={archive} disabled={pending}>Archive</button> : <button type="button" className="adm-btn" onClick={restore} disabled={pending}>Restore</button>}
-              {status === "archived" && role === "administrator" && <button type="button" className="adm-btn adm-btn-danger" onClick={remove} disabled={pending}>Delete permanently</button>}
+              {role === "administrator" && !def.fixedSlugs && <button type="button" className="adm-btn adm-btn-danger" onClick={remove} disabled={pending}>Delete permanently</button>}
             </div>
           </section>
 

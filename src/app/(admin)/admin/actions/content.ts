@@ -133,7 +133,7 @@ export async function deleteItem(id: string): Promise<ActionResult> {
   if (!sb) return fail("The CMS is not connected to its database.", "unavailable");
   const item = await getItem(id);
   if (!item) return fail("That item no longer exists.", "not_found");
-  if (item.status !== "archived") return fail("Archive the item first. Only archived items can be deleted.", "validation");
+  if (typeDef(item.type)?.fixedSlugs) return fail("This item is part of the fixed site structure and cannot be deleted. Edit it instead.", "validation");
   const { data, error } = await sb.from("content_items").delete().eq("id", id).select("id");
   if (error) { const f = friendlyDbError(error); return fail(f.error, f.code); }
   if (!data?.length) return fail("You do not have permission to do that.", "forbidden");

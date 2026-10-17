@@ -1,5 +1,5 @@
 import type { Project } from "@/content/projects";
-import type { Technology } from "@/content/technologies";
+import type { Technology, TechCategoryDef } from "@/content/technologies";
 import type { Person } from "@/content/team";
 import type { LeaderInfo } from "@/content/leaders";
 import type { Client } from "@/content/clients";
@@ -70,6 +70,7 @@ export interface SiteContent {
   sources: Record<ContentType, "cms" | "static">;
   projects: Project[];
   technologies: Technology[];
+  techCategories: TechCategoryDef[];
   people: Person[];
   leaders: Record<string, LeaderInfo>;
   clients: Client[];

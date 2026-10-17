@@ -11,7 +11,7 @@ test("YouTube links in every common shape resolve to an id", () => {
 test("direct video files are accepted; sharing pages and unsafe links are not", () => {
   assert.equal(parseVideoUrl("https://cdn.example.com/a/b.mp4")?.kind, "file");
   assert.equal(parseVideoUrl("https://cdn.example.com/a/b.webm?x=1")?.kind, "file");
-  for (const u of ["https://company.sharepoint.com/:v:/s/team/Eabc", "https://1drv.ms/v/s!abc", "https://drive.google.com/file/d/abc/view", "http://cdn.example.com/a.mp4", "javascript:alert(1)", "https://www.youtube.com/watch", "https://www.youtube.com/watch?v=short", "https://cdn.example.com/page.html", ""]) {
+  for (const u of ["https://company.sharepoint.com/:v:/s/team/Eabc", "https://1drv.ms/v/s!abc", "https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUv", "https://drive.google.com/file/d/abc/view", "http://cdn.example.com/a.mp4", "javascript:alert(1)", "https://www.youtube.com/watch", "https://www.youtube.com/watch?v=short", "https://cdn.example.com/page.html", ""]) {
     assert.equal(parseVideoUrl(u), null, u);
   }
 });
@@ -24,4 +24,13 @@ test("video spec: defaults, clamping, and override only when it is a direct file
   const c = toVideoSpec({ video_url: "https://youtu.be/aqz-KE-bpKQ", video_preview_start: -5, video_preview_seconds: 500, video_preview_url: "https://youtu.be/aqz-KE-bpKQ", video_poster: "img-1" })!;
   assert.deepEqual([c.start, c.seconds, c.previewUrl, c.poster], [0, 60, undefined, "img-1"]);
   assert.equal(toVideoSpec({ video_url: "https://youtu.be/aqz-KE-bpKQ", video_preview_url: "https://cdn.example.com/p.mp4" })!.previewUrl, "https://cdn.example.com/p.mp4");
+});
+
+test("Google Drive file links resolve to the Drive player; folders and short ids do not", () => {
+  const id = "1AbCdEfGhIjKlMnOpQrStUvWxYz012345";
+  for (const u of [`https://drive.google.com/file/d/${id}/view?usp=sharing`, `https://drive.google.com/file/d/${id}/preview`, `https://drive.google.com/open?id=${id}`, `https://drive.google.com/uc?id=${id}&export=download`]) {
+    assert.deepEqual(parseVideoUrl(u), { kind: "drive", id }, u);
+  }
+  assert.equal(parseVideoUrl("https://drive.google.com/drive/folders/" + id), null);
+  assert.equal(toVideoSpec({ video_url: `https://drive.google.com/file/d/${id}/view`, video_preview_url: `https://drive.google.com/file/d/${id}/view` })!.previewUrl, undefined);
 });

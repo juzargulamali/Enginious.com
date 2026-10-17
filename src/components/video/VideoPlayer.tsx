@@ -33,7 +33,7 @@ export function VideoPlayer({ video, title, posterImageId }: { video: VideoSpec;
     <div className="vp">
       {on ? (
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${src.id}?autoplay=1&rel=0&playsinline=1&modestbranding=1`}
+          src={src.kind === "drive" ? `https://drive.google.com/file/d/${src.id}/preview` : `https://www.youtube-nocookie.com/embed/${src.id}?autoplay=1&rel=0&playsinline=1&modestbranding=1`}
           title={`Video: ${title}`}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen

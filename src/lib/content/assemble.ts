@@ -6,6 +6,7 @@ import { IMAGES } from "@/content/images";
 import { publicUrl } from "@/lib/media";
 import type { Project } from "@/content/projects";
 import { toVideoSpec } from "@/lib/video";
+import { resolveTechCategories } from "@/content/technologies";
 import type { Technology } from "@/content/technologies";
 import type { Person } from "@/content/team";
 import type { LeaderInfo } from "@/content/leaders";
@@ -74,8 +75,12 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
     media: strs(r.data.media), video: toVideoSpec(r.data), featured: r.featured, seo: seoOf(r.data),
   }));
 
+  const sRow = byType.setting.find((x) => x.slug === "site");
+  const sd: D = sRow?.data ?? {};
+  const techCategories = resolveTechCategories(sd.technology_categories);
+  const catOf = (v: unknown) => { const k = str(v); return k && techCategories.some((c) => c.key === k) ? k : techCategories[0].key; }; // a deleted or unknown category falls back to the first one
   const technologies: Technology[] = byType.technology.map((r) => ({
-    slug: r.slug, name: r.title, category: (str(r.data.category) as Technology["category"]) ?? "interactive", summary: str(r.data.summary) ?? "",
+    slug: r.slug, name: r.title, category: catOf(r.data.category), summary: str(r.data.summary) ?? "",
     projects: strs(r.data.projects), detailed: r.data.detailed === true, description: str(r.data.description), useCases: strs(r.data.use_cases),
     specs: recs(r.data.specs).filter((s) => s.confirmed === true && str(s.label) && str(s.value)).map((s) => ({ label: String(s.label), value: String(s.value) })),
     media: strs(r.data.media), video: toVideoSpec(r.data), showcaseImage: str(r.data.showcase_image), showcaseAnimation: str(r.data.showcase_animation), showcaseScale: num(r.data.showcase_scale), showcaseY: num(r.data.showcase_y), featured: r.featured, seo: seoOf(r.data),
@@ -118,8 +123,6 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
       : { ...base, capabilities: [], projects: [], facts: [], servicesLocal: [], servicesDubai: [], process: [] }; // fixed routes always exist
   }
 
-  const sRow = byType.setting.find((x) => x.slug === "site");
-  const sd: D = sRow?.data ?? {};
   const settings: SiteSettings = {
     companyName: str(sd.company_name) ?? "Enginious", tagline: str(sd.tagline),
     contactEmail: emailOf(sd.contact_email) ?? GENERAL_CONTACT.email, contactPhone: str(sd.contact_phone) ?? GENERAL_CONTACT.phone,
@@ -160,5 +163,5 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
   const images: Record<string, ImageAsset> = { ...IMAGES };
   for (const m of media) { if (m.visibility !== "public") continue; const a = toImageAsset(m); if (a) images[m.id] = a; }
 
-  return { sources, projects, technologies, people, leaders, clients, testimonials, regions, settings, faqs, solutions, articles, roles, company, pageSeo, images, slots };
+  return { sources, projects, technologies, techCategories, people, leaders, clients, testimonials, regions, settings, faqs, solutions, articles, roles, company, pageSeo, images, slots };
 }
