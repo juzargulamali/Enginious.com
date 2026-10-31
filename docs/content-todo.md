@@ -80,7 +80,7 @@
 - Videos: Google Drive file links play in the full player on the page; cards show the poster only (add a separate preview file for an automatic card preview).
 
 ## Site fixes (October, round 2)
-- Showroom: the homepage showroom now lists every technology that has a showroom image (the six starters first), shows at most seven at a time and brings the rest forward with the arrows. The Technologies page showroom uses the same images and the same seven-at-a-time window.
+- Showroom: the homepage showroom lists only the technologies marked ★ "In the homepage showroom" (Technologies list, then Apply order to live site), in the list's Display order; none marked = the built-in six. It shows at most seven at a time. The Technologies page showroom uses the showroom images and the same seven-at-a-time window.
 - Map: projects are found by the Location text (a project in "Dubai, UAE" appears under Dubai). Add other places in Site settings > Extra map locations (name, country, latitude, longitude). A new UAE zoom separates Dubai and Abu Dhabi. Madinah was added.
 - Drive videos: without a poster, the card uses Drive's own thumbnail when Google returns one. A poster uploaded in Media is more reliable.
 - Showroom images must be PNG or WebP with a transparent background and Visibility set to Public.

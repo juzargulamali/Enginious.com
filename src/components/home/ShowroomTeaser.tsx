@@ -27,7 +27,7 @@ import "./gallery.css";
  * PERFORMANCE: all explanations render once; a change writes CSS variables on a handful of elements (no React render) and the move is a
  * compositor transition (transform and opacity). No pointer-driven per-frame motion, no filters, no inherited colour transitions.
  */
-/** The six starter exhibits. Any other technology that has a showroom image in the CMS is added after them automatically. */
+/** Shown until at least one technology is marked "In the homepage showroom" in the CMS. */
 const DEFAULT_EXHIBITS = ["touch-and-throw", "holofan", "tri-helix", "robotic-arm", "ai-photobooth", "circular-dial"];
 
 type Pose = { x: number; y: number; s: number; o: number; z: number; hide?: boolean };
@@ -71,8 +71,9 @@ function Fig({ tech, sizes }: { tech: Technology; sizes: string }) {
 export function ShowroomTeaser() {
   const { technologies: TECHNOLOGIES, techCategories, imageById } = useContent();
   const router = useRouter();
-  const starter = DEFAULT_EXHIBITS.filter((s) => TECHNOLOGIES.some((t) => t.slug === s));
-  const EXHIBITS = [...starter, ...TECHNOLOGIES.filter((t) => t.showcaseImage && imageById(t.showcaseImage) && !starter.includes(t.slug)).map((t) => t.slug)];
+  // The owner picks the exhibits: technologies marked "In the homepage showroom" in the CMS, in the CMS display order. None picked: the built-in six.
+  const picked = TECHNOLOGIES.filter((t) => t.featured).map((t) => t.slug);
+  const EXHIBITS = picked.length ? picked : DEFAULT_EXHIBITS.filter((s) => TECHNOLOGIES.some((t) => t.slug === s));
   const N = EXHIBITS.length;
   const MID = Math.min(2, Math.max(0, N - 1));
   const POSES = arrange(MID, N, 1100); // server pose for a typical desktop; refined to the real stage width on mount

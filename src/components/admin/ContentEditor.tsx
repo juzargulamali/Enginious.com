@@ -14,7 +14,7 @@ export interface EditorItem {
   id: string; type: string; title: string; slug: string; status: "draft" | "published" | "archived"; version: number; publishedVersion: number | null;
   publishedAt: string | null; updatedAt: string; sortOrder: number; featured: boolean; data: Data;
 }
-export interface EditorDef { type: string; label: string; titleLabel: string; fields: Field[]; fixedSlugs?: string[]; orderable: boolean; featurable: boolean; publicPath: string | null; slugPrefix: string }
+export interface EditorDef { type: string; label: string; titleLabel: string; fields: Field[]; fixedSlugs?: string[]; orderable: boolean; featurable: boolean; featureLabel?: string; publicPath: string | null; slugPrefix: string }
 export interface EditorRevision { id: number; kind: "draft" | "published"; version: number; title: string; created_at: string }
 
 interface State { title: string; slug: string; data: Data; sortOrder: number; featured: boolean }
@@ -222,7 +222,7 @@ export function ContentEditor({ item, def, media, refs, revisions, role }: { ite
                     <p className="adm-help">Lower numbers come first. You can also reorder from the list.</p>
                   </div>
                 )}
-                {def.featurable && <label className="adm-check"><input type="checkbox" checked={state.featured} onChange={(e) => setState((s) => ({ ...s, featured: e.target.checked }))} /><span>Featured</span></label>}
+                {def.featurable && <label className="adm-check"><input type="checkbox" checked={state.featured} onChange={(e) => setState((s) => ({ ...s, featured: e.target.checked }))} /><span>{def.featureLabel ?? "Featured"}</span></label>}
                 <p className="adm-help">Order and featured status go live when you publish, or use Apply order on the list page.</p>
               </div>
             </section>

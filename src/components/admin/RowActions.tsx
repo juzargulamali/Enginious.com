@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteItem, moveItem, setFeatured } from "@/app/(admin)/admin/actions/content";
 
-export function RowActions({ id, title, canDelete, canMove, featurable, featured, first, last }: { id: string; title: string; canDelete: boolean; canMove: boolean; featurable: boolean; featured: boolean; first: boolean; last: boolean }) {
+export function RowActions({ id, title, featureLabel, canDelete, canMove, featurable, featured, first, last }: { id: string; title: string; featureLabel?: string; canDelete: boolean; canMove: boolean; featurable: boolean; featured: boolean; first: boolean; last: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState("");
@@ -19,7 +19,7 @@ export function RowActions({ id, title, canDelete, canMove, featurable, featured
       )}
       {featurable && (
         <button type="button" className="adm-btn adm-btn-sm" disabled={pending} aria-pressed={featured} onClick={() => run(() => setFeatured(id, !featured))}>
-          {featured ? "★ Featured" : "☆ Feature"}
+          {featureLabel ? (featured ? `★ ${featureLabel}` : `☆ Add to ${featureLabel.replace(/^In /, "").replace(/^the /, "the ")}`) : featured ? "★ Featured" : "☆ Feature"}
         </button>
       )}
       {canDelete && (

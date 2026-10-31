@@ -50,6 +50,8 @@ export interface TypeDef {
   path: ((slug: string) => string) | null;
   orderable: boolean;
   featurable: boolean;
+  /** What "featured" means for this type, when it is more specific than "Featured" (shown on the list and in the editor). */
+  featureLabel?: string;
   /** Fixed set of slugs managed by the system (settings, page SEO): no new slugs. */
   fixedSlugs?: string[];
   /** Columns shown in the list besides title/status. */
@@ -116,7 +118,7 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
   technology: {
     type: "technology", label: "Technology", plural: "Technologies", titleLabel: "Technology name",
     description: "The technologies Enginious builds. Appears in the showroom, on technology pages and in enquiries.",
-    path: (s) => `/technologies/${s}`, orderable: true, featurable: true, seo: true, listKeys: ["category"],
+    path: (s) => `/technologies/${s}`, orderable: true, featurable: true, featureLabel: "In the homepage showroom", seo: true, listKeys: ["category"],
     fields: [
       { key: "category", label: "Category", type: "select", required: true, options: TECH_CATEGORY_OPTS, optionsFrom: "tech_categories", group: "Basics", help: "Categories are managed in Site settings, under Technology categories." },
       { key: "summary", label: "Summary", type: "textarea", required: true, max: 400, group: "Basics" },

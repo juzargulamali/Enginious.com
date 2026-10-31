@@ -46,7 +46,7 @@ export default async function EditItem({ params }: { params: Promise<{ type: str
   return (
     <ContentEditor
       item={{ id: item.id, type: item.type, title: item.title, slug: item.slug, status: item.status, version: item.version, publishedVersion: item.published_version, publishedAt: item.published_at, updatedAt: item.updated_at, sortOrder: item.sort_order, featured: item.featured, data }}
-      def={{ type: def.type, label: def.label, titleLabel: def.titleLabel, fields, fixedSlugs: def.fixedSlugs, orderable: def.orderable, featurable: def.featurable, publicPath: def.path ? def.path(item.slug) : null, slugPrefix: prefix }}
+      def={{ type: def.type, label: def.label, titleLabel: def.titleLabel, fields, fixedSlugs: def.fixedSlugs, orderable: def.orderable, featurable: def.featurable, featureLabel: def.featureLabel, publicPath: def.path ? def.path(item.slug) : null, slugPrefix: prefix }}
       media={media}
       refs={refs}
       revisions={revisions}

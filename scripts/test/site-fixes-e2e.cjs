@@ -41,22 +41,39 @@ const publish = (p) => p.getByRole("button", { name: /Save and (publish|update l
     await p.locator('[data-field="showcase_image"]').getByRole("button", { name: /Choose/ }).click(); await p.getByRole("dialog").getByRole("button", { name: /Probe showroom cut-out/ }).first().click();
     await pub(p);
   }
-  // homepage showroom
-  const cx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const hp = await cx.newPage();
-  await hp.goto(BASE + "/", { waitUntil: "load" }); await hp.locator(".sr-stage").scrollIntoViewIfNeeded(); await sleep(1200);
-  const hs = await hp.evaluate(() => { const ex = [...document.querySelectorAll(".sr-ex")]; return { n: ex.length, names: ex.map((e) => e.querySelector(".sr-lbl")?.textContent), imgs: ex.filter((e) => e.querySelector("img.sr-cut")).length, shown: ex.filter((e) => getComputedStyle(e).pointerEvents !== "none").length }; });
-  ok("the homepage showroom includes every technology that has a showroom image (8 new + the 6 starters)", hs.n === 14 && NEW.every((n) => hs.names.some((x) => (x || "").includes(n))), JSON.stringify({ n: hs.n, imgs: hs.imgs }));
-  ok("only a window of at most seven exhibits is shown at once (no pile-up) and the rest are inert", hs.shown <= 7 && hs.shown >= 5, `shown ${hs.shown}`);
-  { // visible exhibits never overlap their neighbours' centres and each is clickable
-    const boxes = await hp.evaluate(() => [...document.querySelectorAll(".sr-ex")].filter((e) => getComputedStyle(e).pointerEvents !== "none").map((e) => { const r = e.querySelector(".sr-art, .sr-pod")?.getBoundingClientRect() ?? e.getBoundingClientRect(); return { x: r.x + r.width / 2, w: r.width, n: e.querySelector(".sr-lbl")?.textContent }; }).sort((a, b) => a.x - b.x));
-    let tight = 0; for (let i = 1; i < boxes.length; i++) if (boxes[i].x - boxes[i - 1].x < 60) tight++;
-    ok("visible exhibits are spaced apart (centres at least 60px apart)", tight === 0, JSON.stringify(boxes.map((x) => Math.round(x.x))));
-    const before = await hp.evaluate(() => document.querySelector(".sr-count")?.textContent);
-    await hp.locator('button[aria-label="Next exhibit"]').click(); await sleep(500);
-    const seen = new Set(); for (let i = 0; i < 14; i++) { seen.add(await hp.evaluate(() => document.querySelector(".sr-count")?.textContent)); await hp.locator('button[aria-label="Next exhibit"]').click(); await sleep(250); }
-    ok("the arrows reach every one of the 14 exhibits", seen.size === 14 && before !== undefined, `${seen.size} distinct`);
-  }
-  await cx.close();
+  // homepage showroom: only the technologies the owner marks, in the CMS display order
+  const star = async (title) => { const row = p.locator("table.adm-table tbody tr", { has: p.locator("a.t", { hasText: new RegExp(`^${title}$`) }) }); await row.locator("button", { hasText: /showroom/ }).click(); await sleep(700); };
+  const apply = async () => { await p.getByRole("button", { name: "Apply order to live site" }).click(); await sleep(1500); };
+  const homeShowroom = async () => { const cx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const hp = await cx.newPage();
+    await hp.goto(BASE + "/", { waitUntil: "load" }); await hp.locator(".sr-stage").scrollIntoViewIfNeeded(); await sleep(1200);
+    const r = await hp.evaluate(() => { const ex = [...document.querySelectorAll(".sr-ex")]; return { n: ex.length, names: ex.map((e) => e.querySelector(".sr-lbl")?.textContent), shown: ex.filter((e) => getComputedStyle(e).pointerEvents !== "none").length, xs: ex.filter((e) => getComputedStyle(e).pointerEvents !== "none").map((e) => { const q = e.querySelector(".sr-art, .sr-pod")?.getBoundingClientRect() ?? e.getBoundingClientRect(); return Math.round(q.x + q.width / 2); }).sort((a, c) => a - c) }; });
+    return { r, hp, cx }; };
+  await p.goto(BASE + "/admin/content/technology", { waitUntil: "load" });
+  ok("nothing is marked yet, so the homepage keeps the built-in six exhibits", await (async () => { const { r, cx } = await homeShowroom(); await cx.close(); return r.n === 6; })());
+  await p.goto(BASE + "/admin/content/technology?sort=created", { waitUntil: "load" });
+  ok("the technology list explains the showroom stars", (await p.locator("text=homepage showroom shows only").count()) === 1);
+  for (const n of [NEW[2], NEW[0], NEW[1]]) await star(n);
+  await apply();
+  { const { r, cx } = await homeShowroom();
+    ok("marking three technologies makes the homepage showroom list exactly those three", r.n === 3 && NEW.slice(0, 3).every((n) => r.names.some((x) => (x || "").includes(n))), JSON.stringify(r.names));
+    await cx.close(); }
+  { const { r, hp, cx } = await homeShowroom();
+    const seen = new Set(); for (let i = 0; i < 3; i++) { seen.add(await hp.evaluate(() => document.querySelector(".sr-count")?.textContent)); await hp.locator('button[aria-label="Next exhibit"]').click(); await sleep(250); }
+    ok("with three exhibits the arrows cycle through all three", seen.size === 3 && r.n === 3, [...seen].join(","));
+    await cx.close(); }
+  for (const n of NEW.slice(3)) await star(n);
+  await apply();
+  { const { r, hp, cx } = await homeShowroom();
+    ok("marking all eight shows eight (a window of seven at a time, no pile-up)", r.n === 8 && r.shown <= 7 && r.shown >= 5, `n ${r.n} shown ${r.shown}`);
+    let tight = 0; for (let i = 1; i < r.xs.length; i++) if (r.xs[i] - r.xs[i - 1] < 60) tight++;
+    ok("visible exhibits are spaced apart (centres at least 60px apart)", tight === 0, r.xs.join(","));
+    const seen = new Set(); for (let i = 0; i < 8; i++) { seen.add(await hp.evaluate(() => document.querySelector(".sr-count")?.textContent)); await hp.locator('button[aria-label="Next exhibit"]').click(); await sleep(250); }
+    ok("the arrows reach every one of the 8 exhibits", seen.size === 8, `${seen.size} distinct`);
+    await cx.close(); }
+  await p.goto(BASE + "/admin/content/technology?sort=created", { waitUntil: "load" });
+  for (const n of NEW) await star(n);
+  await apply();
+  { const { r, cx } = await homeShowroom(); ok("un-marking them all returns to the built-in six", r.n === 6, `n ${r.n}`); await cx.close(); }
   // Technologies page showroom: category with 7+ exhibits (kinetic: 7 starters + 8 new)
   const cx2 = await b.newContext({ viewport: { width: 1440, height: 900 } }); const tp = await cx2.newPage();
   await tp.goto(BASE + "/technologies", { waitUntil: "load" }); await sleep(800);
