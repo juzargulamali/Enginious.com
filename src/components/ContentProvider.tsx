@@ -9,6 +9,7 @@ import type { Client } from "@/content/clients";
 import type { ImageAsset } from "@/content/images";
 import { SLOTS } from "@/content/images";
 import type { RegionKey } from "@/content/site";
+import type { MapPlaceInput } from "@/lib/content/types";
 
 /**
  * The slice of published content that client components need, supplied once by the (site) layout from the CMS (or the
@@ -19,6 +20,7 @@ export interface ClientContent {
   projects: Project[];
   technologies: Technology[];
   techCategories: TechCategoryDef[];
+  mapPlaces: MapPlaceInput[];
   people: Person[];
   leaders: Record<string, LeaderInfo>;
   clients: Client[];

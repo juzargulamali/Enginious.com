@@ -3,20 +3,25 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { MAP } from "@/content/map";
-import { OFFICES, PLACES_DATA, PROJECT_PLACES, type Place } from "@/content/places";
+import { PLACES_DATA, type Place } from "@/content/places";
+import { mapGroup, mapPoint } from "@/content/mapProject";
 import { useContent } from "./ContentProvider";
 import { Trace } from "@/components/neon/Trace";
 
-type ViewKey = "world" | "gulf" | "europe";
+type ViewKey = "world" | "gulf" | "uae" | "europe";
 const VIEWS: { key: ViewKey; label: string }[] = [
   { key: "world", label: "World" },
   { key: "gulf", label: "Gulf" },
+  { key: "uae", label: "UAE" },
   { key: "europe", label: "Europe" },
 ];
 const W = MAP.width, H = MAP.height;
 const RM = "(prefers-reduced-motion: reduce)";
 const subRM = (cb: () => void) => { const m = window.matchMedia(RM); m.addEventListener("change", cb); return () => m.removeEventListener("change", cb); };
 const useReducedMotion = () => useSyncExternalStore(subRM, () => window.matchMedia(RM).matches, () => false);
+const fold = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+/** Projects whose Location mentions the place (whole word, accents ignored). Matching the place name keeps "Dubai" from claiming every UAE project. */
+const mentions = (location: string, name: string) => new RegExp(`(^|[^a-z])${fold(name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z]|$)`).test(fold(location));
 const P = (id: string): [number, number] => {
   const p = (MAP.points as Record<string, readonly [number, number]>)[id];
   return [(p[0] / 100) * W, (p[1] / 100) * H];
@@ -28,7 +33,23 @@ const P = (id: string): [number, number] => {
  * Intro: offices appear first, then project locations, once, when the map scrolls into view; then it is all user control.
  */
 export function PlacesMap() {
-  const { projectBySlug } = useContent();
+  const { projectBySlug, projects, mapPlaces } = useContent();
+  // Built-in places plus the ones added in Site settings. Each place lists the recorded projects and every published project whose Location mentions it,
+  // so projects added in the CMS appear on the map without a code change.
+  const { places, pos } = useMemo(() => {
+    const positions: Record<string, [number, number]> = {};
+    for (const id of Object.keys(MAP.points)) positions[id] = [...(MAP.points as Record<string, readonly [number, number]>)[id]] as [number, number];
+    const extra: Place[] = mapPlaces
+      .filter((m) => !PLACES_DATA.some((p) => p.id === m.id || fold(p.name) === fold(m.name)))
+      .map((m) => { positions[m.id] = mapPoint(m.lon, m.lat); return { id: m.id, name: m.name, country: m.country, precision: m.precision, project: true, group: mapGroup(m.lon, m.lat) }; });
+    const all = [...PLACES_DATA, ...extra].map((p) => {
+      const derived = p.project ? projects.filter((x) => x.location && mentions(x.location, p.name)).map((x) => x.slug) : [];
+      return { ...p, related: [...new Set([...(p.related ?? []), ...derived])] };
+    });
+    return { places: all, pos: positions };
+  }, [mapPlaces, projects]);
+  const OFFICES = places.filter((p) => p.office);
+  const PROJECT_PLACES = places.filter((p) => p.project);
   const root = useRef<HTMLDivElement>(null);
   const [sel, setSel] = useState("dubai");
   const [view, setView] = useState<ViewKey>("world");
@@ -56,7 +77,7 @@ export function PlacesMap() {
   const k = Math.min(100 / v.w, 100 / v.h);
   const tx = 50 - (v.x + v.w / 2) * k;
   const ty = 50 - (v.y + v.h / 2) * k;
-  const place = PLACES_DATA.find((p) => p.id === sel)!;
+  const place = places.find((p) => p.id === sel) ?? places[0];
   // World view is crowded around the Gulf, so only the selected place is named there (everything is in the list below).
   const showLabel = (p: Place) => p.id === sel || (view === "world" ? p.id === "poland" : true);
 
@@ -67,7 +88,7 @@ export function PlacesMap() {
 
   const pick = (id: string) => {
     setSel(id);
-    const p = PLACES_DATA.find((x) => x.id === id)!;
+    const p = places.find((x) => x.id === id)!;
     if (view === "world" && p.group !== "world") setView(p.group === "gulf" ? "gulf" : "europe");
   };
 
@@ -89,8 +110,8 @@ export function PlacesMap() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="pm-land" src="/art/map-land.svg" alt="" width={W} height={H} decoding="async" loading="lazy" />
             <Trace points={route} w={W} h={H} duration={7000} nodes={[]} className="pm-trace" />
-            {PLACES_DATA.map((p) => {
-              const pos = (MAP.points as Record<string, readonly [number, number]>)[p.id];
+            {places.map((p) => {
+              const at = pos[p.id];
               const office = !!p.office;
               return (
                 <button
@@ -103,7 +124,7 @@ export function PlacesMap() {
                   data-label={showLabel(p) || undefined}
                   aria-pressed={sel === p.id}
                   aria-label={`${p.name}${office ? `, ${p.office!.label}` : ""}${p.project ? ", project location" : ""}${p.precision === "country" ? ", country level" : ""}`}
-                  style={{ left: `${pos[0]}%`, top: `${pos[1]}%` }}
+                  style={{ left: `${at[0]}%`, top: `${at[1]}%` }}
                   onClick={() => pick(p.id)}
                 >
                   <span className="shape" aria-hidden="true" />

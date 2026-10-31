@@ -23,6 +23,7 @@ export const PLACES_DATA: Place[] = [
   { id: "poland", name: "Poland", country: "Poland", precision: "country", office: { role: "branch", label: "Branch serving Europe", region: "europe", note: "Country-level marker: the branch city is not shown yet." }, group: "europe" },
   { id: "abu-dhabi", name: "Abu Dhabi", country: "UAE", precision: "city", project: true, group: "gulf", related: ["f1-etihad", "world-future-energy-summit", "idex", "fahid-island"] },
   { id: "jeddah", name: "Jeddah", country: "Saudi Arabia", precision: "city", project: true, group: "gulf", related: ["f1-jeddah"] },
+  { id: "madinah", name: "Madinah", country: "Saudi Arabia", precision: "city", project: true, group: "gulf" },
   { id: "doha", name: "Doha", country: "Qatar", precision: "city", project: true, group: "gulf", related: ["invest-qatar", "fifa-arab-cup"], relatedNote: "Recorded for Qatar in our project list." },
   { id: "muscat", name: "Muscat", country: "Oman", precision: "city", project: true, group: "gulf", related: ["fifa-arab-cup"], relatedNote: "Recorded for Oman in our project list." },
   { id: "bahrain", name: "Bahrain", country: "Bahrain", precision: "country", project: true, group: "gulf", related: ["fifa-arab-cup"], relatedNote: "Recorded for Bahrain in our project list." },

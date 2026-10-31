@@ -1,6 +1,7 @@
 import "server-only";
 import { seedItems } from "./seed";
-import { CONTENT_TYPES, type ContentType } from "@/lib/cms/schema";
+import { CONTENT_TYPES, slugify, type ContentType } from "@/lib/cms/schema";
+import { onMap } from "@/content/mapProject";
 import { REGIONS, GENERAL_CONTACT, type RegionKey } from "@/content/site";
 import { IMAGES } from "@/content/images";
 import { publicUrl } from "@/lib/media";
@@ -13,7 +14,7 @@ import type { LeaderInfo } from "@/content/leaders";
 import type { Client } from "@/content/clients";
 import type { Testimonial } from "@/content/testimonials";
 import type { ImageAsset } from "@/content/images";
-import type { Article, CompanySection, Faq, JobRole, MediaRow, PublishedRow, RegionContent, SeoFields, SiteContent, SiteSettings, Solution } from "./types";
+import type { Article, CompanySection, Faq, JobRole, MapPlaceInput, MediaRow, PublishedRow, RegionContent, SeoFields, SiteContent, SiteSettings, Solution } from "./types";
 
 type D = Record<string, unknown>;
 const str = (v: unknown): string | undefined => (typeof v === "string" && v.trim() ? v : undefined);
@@ -79,6 +80,14 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
   const sd: D = sRow?.data ?? {};
   const techCategories = resolveTechCategories(sd.technology_categories);
   const catOf = (v: unknown) => { const k = str(v); return k && techCategories.some((c) => c.key === k) ? k : techCategories[0].key; }; // a deleted or unknown category falls back to the first one
+  const mapPlaces: MapPlaceInput[] = [];
+  for (const r of recs(sd.map_places)) {
+    const name = str(r.name), lon = num(r.longitude), lat = num(r.latitude);
+    if (!name || lon === undefined || lat === undefined || !onMap(lon, lat)) continue;
+    const id = `cms-${slugify(name)}`;
+    if (mapPlaces.some((m) => m.id === id)) continue;
+    mapPlaces.push({ id, name, country: str(r.country) ?? "", lon, lat, precision: r.precision === "country" ? "country" : "city" });
+  }
   const technologies: Technology[] = byType.technology.map((r) => ({
     slug: r.slug, name: r.title, category: catOf(r.data.category), summary: str(r.data.summary) ?? "",
     projects: strs(r.data.projects), detailed: r.data.detailed === true, description: str(r.data.description), useCases: strs(r.data.use_cases),
@@ -163,5 +172,5 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
   const images: Record<string, ImageAsset> = { ...IMAGES };
   for (const m of media) { if (m.visibility !== "public") continue; const a = toImageAsset(m); if (a) images[m.id] = a; }
 
-  return { sources, projects, technologies, techCategories, people, leaders, clients, testimonials, regions, settings, faqs, solutions, articles, roles, company, pageSeo, images, slots };
+  return { sources, projects, technologies, techCategories, mapPlaces, people, leaders, clients, testimonials, regions, settings, faqs, solutions, articles, roles, company, pageSeo, images, slots };
 }

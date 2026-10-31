@@ -218,6 +218,11 @@ a { color: inherit; text-decoration: none; }
   transition: color 0.2s, filter 0.2s;
 }
 .exhibit .glyph { width: 124px; height: 124px; transition: transform 0.25s; }
+.exhibit { transition: color 0.2s, filter 0.2s, left 0.35s, opacity 0.3s; }
+.exhibit[data-far] { opacity: 0; pointer-events: none; visibility: hidden; }
+.exhibit .glyph img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.exhibit[data-media="pending"] .glyph > svg, .exhibit[data-media="loaded"] .glyph > svg { display: none; }
+.exhibit[data-media="failed"] .glyph img { display: none; }
 .exhibit .lbl { color: #cfe3e7; font-size: 0.82rem; text-align: center; line-height: 1.25; }
 .exhibit:hover .glyph, .exhibit[data-on="true"] .glyph { transform: translateY(-8px) scale(1.12); }
 .exhibit[data-on="true"] { color: #6af0f7; }
@@ -225,7 +230,7 @@ a { color: inherit; text-decoration: none; }
 .show-bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 1.25rem; border-top: 1px solid var(--line); }
 .detail { display: flex; gap: 20px; justify-content: space-between; align-items: center; flex-wrap: wrap; flex: 1 1 420px; }
 .detail > div:first-child { flex: 1 1 280px; }
-@media (max-width: 700px) { .exhibit { margin-left: -40px; width: 80px; } .exhibit .glyph { width: 64px; height: 64px; } .exhibit .lbl { font-size: 0.7rem; } }
+@media (max-width: 700px) { .exhibits { --sx: 25%; } .exhibit[data-far2] { opacity: 0; pointer-events: none; visibility: hidden; } .exhibit { margin-left: -40px; width: 80px; } .exhibit .glyph { width: 64px; height: 64px; } .exhibit .lbl { font-size: 0.7rem; } }
 .tech-grid { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .tech-item { padding: 18px; display: flex; flex-direction: column; }
 

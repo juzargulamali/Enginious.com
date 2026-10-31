@@ -8,6 +8,7 @@ import { useBrief } from "./BriefProvider";
 import { AddToBrief } from "./AddToBrief";
 import { PreviewProvider } from "./video/PreviewProvider";
 import { CardMedia } from "./video/CardMedia";
+import { Photo } from "./Photo";
 
 /** Abstract exhibit glyphs: stylised category icons, NOT models of the real equipment. */
 function Glyph({ category, seed }: { category: TechCategory; seed: number }) {
@@ -78,7 +79,7 @@ function Glyph({ category, seed }: { category: TechCategory; seed: number }) {
 
 export function Showroom() {
   const brief = useBrief();
-  const { technologies: TECHNOLOGIES, techCategories: TECH_CATEGORIES } = useContent();
+  const { technologies: TECHNOLOGIES, techCategories: TECH_CATEGORIES, imageById } = useContent();
   const [cat, setCat] = useState<TechCategory>(TECH_CATEGORIES[0].key);
   const [selected, setSelected] = useState<string | null>(null);
   const stage = useRef<HTMLDivElement>(null);
@@ -150,20 +151,25 @@ export function Showroom() {
           <div className="floor" aria-hidden="true" />
           <div className="exhibits">
             {inCat.map((t, i) => {
+              // A window of at most seven exhibits around the centre one, so a long category never overlaps; the arrows and clicks move the window.
               const n = inCat.length;
-              const x = n === 1 ? 0 : (i / (n - 1)) * 2 - 1;
-              const z = (i % 2) * -90;
+              const ci = chosen ? inCat.findIndex((x) => x.slug === chosen.slug) : n > 7 ? 3 : Math.floor((n - 1) / 2);
+              const off = i - ci;
+              const still = t.showcaseImage && imageById(t.showcaseImage) ? t.showcaseImage : undefined;
               return (
                 <button
                   key={t.slug}
                   type="button"
                   className="exhibit"
                   data-on={chosen?.slug === t.slug}
+                  data-far={Math.abs(off) > 3 || undefined}
+                  data-far2={Math.abs(off) > 2 || undefined}
+                  data-media={still ? "pending" : undefined}
                   aria-pressed={chosen?.slug === t.slug}
-                  style={{ transform: `translate3d(0, 0, ${z}px)`, left: `${50 + x * 40}%` }}
+                  style={{ transform: `translate3d(0, 0, ${-Math.min(Math.abs(off), 3) * 40}px)`, left: `calc(50% + ${off} * var(--sx, 15%))`, zIndex: 10 - Math.min(Math.abs(off), 9) }}
                   onClick={() => setSelected(t.slug)}
                 >
-                  <span className="glyph"><Glyph category={t.category} seed={i} /></span>
+                  <span className="glyph"><Glyph category={t.category} seed={i} />{still && <Photo id={still} className="exh-img" label={false} sizes="160px" />}</span>
                   <span className="lbl">{t.name}</span>
                 </button>
               );

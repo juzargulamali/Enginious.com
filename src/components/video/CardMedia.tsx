@@ -6,6 +6,7 @@ import { useContent } from "@/components/ContentProvider";
 import { parseVideoUrl, type VideoSpec } from "@/lib/video";
 import { loadYouTubeApi } from "@/lib/youtubeApi";
 import { usePreview } from "./PreviewProvider";
+import { DriveThumb } from "./DriveThumb";
 import { YtThumb } from "./YtThumb";
 import "./video.css";
 
@@ -61,7 +62,7 @@ export function CardMedia({ id, title, video, posterImageId, fallback }: Props) 
 
   const poster = posterAsset
     ? <Photo id={posterAsset} className="vc-img" sizes="(max-width: 700px) 100vw, 420px" />
-    : main?.kind === "youtube" ? <YtThumb id={main.id} className="vc-img" /> : null;
+    : main?.kind === "youtube" ? <YtThumb id={main.id} className="vc-img" /> : main?.kind === "drive" ? <DriveThumb id={main.id} className="vc-img" /> : null;
   if (!video && !poster) return <>{fallback}</>;
 
   return (

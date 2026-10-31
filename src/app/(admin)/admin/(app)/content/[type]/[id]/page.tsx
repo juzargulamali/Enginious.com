@@ -36,7 +36,10 @@ export default async function EditItem({ params }: { params: Promise<{ type: str
     const sb = await supabaseUser();
     const { data: row } = sb ? await sb.from("content_items").select("draft").eq("type", "setting").eq("slug", "site").maybeSingle() : { data: null };
     const cats = resolveTechCategories((row?.draft as Record<string, unknown> | undefined)?.technology_categories);
-    fields = def.fields.map((f) => f.optionsFrom === "tech_categories" ? { ...f, options: cats.map((c) => ({ value: c.key, label: c.label })) } : f);
+    const have = typeof data.category === "string" ? data.category : "";
+    const options = cats.map((c) => ({ value: c.key, label: c.label }));
+    if (have && !options.some((o) => o.value === have)) options.push({ value: have, label: `${have} (no longer in the category list)` }); // never blank out an existing choice
+    fields = def.fields.map((f) => f.optionsFrom === "tech_categories" ? { ...f, options } : f);
   }
 
   const prefix = def.path ? def.path("{slug}").replace("{slug}", "") : "";
