@@ -20,6 +20,16 @@ const publish = (p) => p.getByRole("button", { name: /Save and (publish|update l
   const create = async (type, title) => { await p.goto(BASE + `/admin/content/${type}/new`, { waitUntil: "load" }); await sleep(300); await p.fill("#title", title); await p.getByRole("button", { name: "Create draft" }).click(); await p.waitForURL(new RegExp(`/admin/content/${type}/[0-9a-f-]{36}$`)); };
   const pub = async (page) => { await publish(page); };
 
+  // ===== 0. an empty category cannot crash the Technologies showroom
+  { const cx = await b.newContext({ viewport: { width: 1280, height: 900 } }); const pg = await cx.newPage(); const errs = []; pg.on("pageerror", (e) => errs.push(String(e)));
+    await pg.goto(BASE + "/technologies", { waitUntil: "load" }); await sleep(800);
+    await pg.locator(".showroom .chip", { hasText: /^Interactive Digital Games$/ }).click(); await sleep(500);
+    ok("an empty category shows a clear message and disabled arrows", (await pg.locator(".exh-empty").count()) === 1 && (await pg.getByRole("button", { name: /Guided tour|Next exhibit/ }).isDisabled()) && (await pg.locator('button[aria-label="Previous exhibit"]').isDisabled()));
+    await pg.locator(".stage").hover(); await pg.keyboard.press("ArrowRight"); await pg.keyboard.press("ArrowLeft"); await pg.mouse.move(100, 400); await pg.mouse.move(1180, 400); await sleep(1500);
+    await pg.locator(".showroom .chip", { hasText: /^Kinetic$/ }).click(); await sleep(400); await pg.getByRole("button", { name: /Guided tour|Next exhibit/ }).click(); await sleep(300);
+    ok("keys, steering and switching back to a full category all work afterwards, with no page error", (await pg.locator('.exhibit[aria-pressed="true"]').count()) === 1 && errs.length === 0, errs.join(" | "));
+    await cx.close(); }
+
   // ===== 1. "Games" is offered as a technology category (untouched Site settings: the built-in list applies)
   await create("technology", "Probe Game Table");
   { const opts = await p.locator('[data-field="category"] select option').evaluateAll((o) => o.map((x) => x.textContent));
@@ -131,6 +141,30 @@ const publish = (p) => p.getByRole("button", { name: /Save and (publish|update l
     const card = pg.locator("[data-vcard]", { hasText: "Drive Poster Probe" }); await card.scrollIntoViewIfNeeded(); await sleep(800);
     ok("if Google does not return the thumbnail the card falls back quietly (no broken image)", (await card.locator('img[src*="drive.google.com/thumbnail"]').count()) === 0);
     await cx5.close(); }
+
+  // ===== 5. saved category list vs the built-in ones; orphaned technologies; photograph messages
+  const admP = admin.p;
+  await admP.goto(BASE + "/admin/content/setting", { waitUntil: "load" }); await admP.locator("table.adm-table a.t").first().click(); await admP.waitForSelector("#ed-title");
+  const cats = admP.locator('[data-field="technology_categories"]');
+  ok("with the full built-in list saved there is no missing-category notice", (await admP.locator("text=do not include").count()) === 0);
+  await cats.locator(".adm-rep-row", { has: admP.locator('input[value="Interactive Digital Games"]') }).getByRole("button", { name: "Remove" }).click(); await sleep(300);
+  ok("removing Interactive Digital Games from the saved list shows a plain notice naming it", (await admP.locator(".adm-alert-warn", { hasText: /do not include: Interactive Digital Games/ }).count()) === 1);
+  await publish(admP);
+  await admP.goto(BASE + "/admin/content/technology?sort=created", { waitUntil: "load" });
+  ok("the Technologies list warns that a technology uses a category that is no longer in the list", (await admP.locator(".adm-alert-warn", { hasText: /no longer in Site settings/ }).count()) === 1);
+  await admP.goto(BASE + "/admin/content/setting", { waitUntil: "load" }); await admP.locator("table.adm-table a.t").first().click(); await admP.waitForSelector("#ed-title");
+  await admP.getByRole("button", { name: /^Add it$/ }).click(); await sleep(300);
+  ok("one click restores it and the notice goes away", (await admP.locator(".adm-alert-warn", { hasText: /do not include/ }).count()) === 0 && (await admP.locator('[data-field="technology_categories"] input[value="Interactive Digital Games"]').count()) === 1);
+  await publish(admP);
+  await admP.goto(BASE + "/admin/content/technology?sort=created", { waitUntil: "load" });
+  ok("and the Technologies list warning is gone", (await admP.locator(".adm-alert-warn", { hasText: /no longer in Site settings/ }).count()) === 0);
+  await create("project", "Photo Message Probe");
+  ok("a project's photographs say to upload in Media and that Drive/SharePoint pages cannot be used", (await p.locator('[data-field="media"]').innerText()).includes("cannot be used as a photograph") && (await p.locator('[data-field="video_poster"]').innerText()).includes("upload the image file in Media"));
+  await p.locator('[data-field="video_poster"]').getByRole("button", { name: /Choose/ }).click();
+  await p.getByRole("dialog").getByRole("searchbox").fill("https://drive.google.com/file/d/1AbC/view?usp=sharing"); await sleep(200);
+  ok("pasting a Drive link into the picker explains that it is a sharing page and points to Media", /sharing page, not an image file/.test(await p.getByRole("dialog").innerText()));
+  await p.getByRole("dialog").getByRole("searchbox").fill("https://example.com/photo.jpg"); await sleep(200);
+  ok("pasting any other image link says photographs cannot be added by link", /cannot be added by link/.test(await p.getByRole("dialog").innerText()));
 
   console.log(`\n${pass} passed, ${fail} failed`); await b.close(); process.exit(fail ? 1 : 0);
 })();

@@ -51,6 +51,7 @@ export default async function EditItem({ params }: { params: Promise<{ type: str
       refs={refs}
       revisions={revisions}
       role={staff.role}
+      builtInCategories={def.type === "setting" ? TECH_CATEGORIES : undefined}
     />
   );
 }

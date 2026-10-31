@@ -319,6 +319,7 @@ export const TYPE_DEFS: Record<ContentType, TypeDef> = {
           { key: "country", label: "Country", type: "text", max: 60 },
           { key: "latitude", label: "Latitude (north is positive)", type: "number", min: -36, max: 62 },
           { key: "longitude", label: "Longitude (east is positive)", type: "number", min: -128, max: 128 },
+          { key: "aliases", label: "Other spellings (optional, separated by commas)", type: "text", max: 160, placeholder: "Medina, Madina" },
           { key: "precision", label: "Precision", type: "select", options: [{ value: "city", label: "City" }, { value: "country", label: "Country only" }] },
         ] },
       { key: "showreel_youtube_id", label: "Showreel YouTube ID", type: "text", max: 20, group: "Video", help: "Privacy-enhanced embed. Leave empty to use the built-in default." },

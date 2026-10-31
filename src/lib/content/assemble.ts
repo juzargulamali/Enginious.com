@@ -86,7 +86,7 @@ export function assemble(rows: PublishedRow[], initialised: ReadonlySet<ContentT
     if (!name || lon === undefined || lat === undefined || !onMap(lon, lat)) continue;
     const id = `cms-${slugify(name)}`;
     if (mapPlaces.some((m) => m.id === id)) continue;
-    mapPlaces.push({ id, name, country: str(r.country) ?? "", lon, lat, precision: r.precision === "country" ? "country" : "city" });
+    mapPlaces.push({ id, name, country: str(r.country) ?? "", lon, lat, precision: r.precision === "country" ? "country" : "city", aliases: (str(r.aliases) ?? "").split(",").map((a) => a.trim()).filter(Boolean).slice(0, 12) });
   }
   const technologies: Technology[] = byType.technology.map((r) => ({
     slug: r.slug, name: r.title, category: catOf(r.data.category), summary: str(r.data.summary) ?? "",

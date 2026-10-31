@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { MAP } from "@/content/map";
 import { PLACES_DATA, type Place } from "@/content/places";
 import { mapGroup, mapPoint } from "@/content/mapProject";
+import { norm, projectsAt } from "@/content/mapMatch";
 import { useContent } from "./ContentProvider";
 import { Trace } from "@/components/neon/Trace";
 
@@ -19,9 +20,6 @@ const W = MAP.width, H = MAP.height;
 const RM = "(prefers-reduced-motion: reduce)";
 const subRM = (cb: () => void) => { const m = window.matchMedia(RM); m.addEventListener("change", cb); return () => m.removeEventListener("change", cb); };
 const useReducedMotion = () => useSyncExternalStore(subRM, () => window.matchMedia(RM).matches, () => false);
-const fold = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-/** Projects whose Location mentions the place (whole word, accents ignored). Matching the place name keeps "Dubai" from claiming every UAE project. */
-const mentions = (location: string, name: string) => new RegExp(`(^|[^a-z])${fold(name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z]|$)`).test(fold(location));
 const P = (id: string): [number, number] => {
   const p = (MAP.points as Record<string, readonly [number, number]>)[id];
   return [(p[0] / 100) * W, (p[1] / 100) * H];
@@ -40,11 +38,12 @@ export function PlacesMap() {
     const positions: Record<string, [number, number]> = {};
     for (const id of Object.keys(MAP.points)) positions[id] = [...(MAP.points as Record<string, readonly [number, number]>)[id]] as [number, number];
     const extra: Place[] = mapPlaces
-      .filter((m) => !PLACES_DATA.some((p) => p.id === m.id || fold(p.name) === fold(m.name)))
+      .filter((m) => !PLACES_DATA.some((p) => p.id === m.id || norm(p.name) === norm(m.name)))
       .map((m) => { positions[m.id] = mapPoint(m.lon, m.lat); return { id: m.id, name: m.name, country: m.country, precision: m.precision, project: true, group: mapGroup(m.lon, m.lat) }; });
+    const extras: Record<string, string[]> = Object.fromEntries(mapPlaces.map((m) => [m.id, m.aliases ?? []]));
     const all = [...PLACES_DATA, ...extra].map((p) => {
-      const derived = p.project ? projects.filter((x) => x.location && mentions(x.location, p.name)).map((x) => x.slug) : [];
-      return { ...p, related: [...new Set([...(p.related ?? []), ...derived])] };
+      const derived = p.project ? projectsAt(p, projects, extras[p.id]) : [];
+      return { ...p, related: [...new Set(derived)] }; // from the published Locations only, so editing a project's Location moves it on the map
     });
     return { places: all, pos: positions };
   }, [mapPlaces, projects]);

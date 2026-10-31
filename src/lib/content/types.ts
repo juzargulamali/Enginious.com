@@ -66,7 +66,7 @@ export interface RegionContent extends Region {
 }
 
 /** A place the owner added in Site settings: shown on the homepage map with the projects whose location mentions it. */
-export interface MapPlaceInput { id: string; name: string; country: string; lon: number; lat: number; precision: "city" | "country" }
+export interface MapPlaceInput { id: string; name: string; country: string; lon: number; lat: number; precision: "city" | "country"; aliases?: string[] }
 
 export interface SiteContent {
   /** "cms" for each type the CMS is authoritative for; "static" for built-in starter content. */

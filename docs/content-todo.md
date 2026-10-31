@@ -84,3 +84,5 @@
 - Map: projects are found by the Location text (a project in "Dubai, UAE" appears under Dubai). Add other places in Site settings > Extra map locations (name, country, latitude, longitude). A new UAE zoom separates Dubai and Abu Dhabi. Madinah was added.
 - Drive videos: without a poster, the card uses Drive's own thumbnail when Google returns one. A poster uploaded in Media is more reliable.
 - Showroom images must be PNG or WebP with a transparent background and Visibility set to Public.
+- Technologies page showroom now uses the showroom animation, size and height offset, and the homepage interactions. Check it with the real product images (wide products may need Showroom size set below 100).
+- Site settings shows a notice when the saved Technology categories lack a built-in one (for example Interactive Digital Games), with an "Add it" button. The Technologies list warns when a technology uses a category that is no longer in the list.

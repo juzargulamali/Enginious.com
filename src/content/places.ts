@@ -1,4 +1,5 @@
-// Offices and delivered-project locations. Locations come from the owner's list; related work is shown ONLY where the
+// NOTE: the map lists projects from their published Location text (src/content/mapMatch.ts); the `related` lists below are the original hand-made
+// record and are no longer used for display. Offices and delivered-project locations. Locations come from the owner's list; related work is shown ONLY where the
 // company profile records that place. Country-level entries (Bahrain, Kuwait, Brazil, Poland) are not given a city.
 
 export type OfficeRole = "hq" | "branch";
