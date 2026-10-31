@@ -139,7 +139,12 @@ export function Showroom() {
 
   // The same interactions as the homepage showroom: hover or edge steering with a mouse, swipe on touch, arrow keys, click.
   const swipe = useRef<{ x: number; done: boolean } | null>(null);
+  // Click suppression after a completed swipe lasts for the whole gesture and the click it produces, however long the finger or mouse is held:
+  // it is set when the swipe passes the threshold and cleared only when that click has been handled, the gesture is cancelled, or the next gesture starts.
   const swiped = useRef(false);
+  const endGesture = useRef<(() => void) | null>(null);
+  const clearSwipe = () => { swiped.current = false; endGesture.current?.(); endGesture.current = null; };
+  useEffect(() => clearSwipe, []);
   useStageSteer(stage, {
     itemSelector: ".exhibit",
     indexOf: (el) => Number((el as HTMLElement).dataset.i ?? -1),
@@ -215,9 +220,19 @@ export function Showroom() {
           ref={stage}
           className="stage"
           style={{ ["--rx" as string]: "16deg", ["--ry" as string]: "0deg" }}
-          onPointerDown={(e) => { swipe.current = { x: e.clientX, done: false }; swiped.current = false; }}
-          onPointerMove={(e) => { const w = swipe.current; if (w && !w.done && Math.abs(e.clientX - w.x) > 48) { w.done = true; swiped.current = true; window.setTimeout(() => { swiped.current = false; }, 500); step(e.clientX < w.x ? 1 : -1); } }}
-          onClickCapture={(e) => { if (swiped.current) { swiped.current = false; e.preventDefault(); e.stopPropagation(); } }} /* the click that ends a completed swipe must not select what is under the pointer */
+          onPointerDown={(e) => { clearSwipe(); swipe.current = { x: e.clientX, done: false }; }}
+          onPointerMove={(e) => {
+            const w = swipe.current;
+            if (!w || w.done || Math.abs(e.clientX - w.x) <= 48) return;
+            w.done = true; swiped.current = true; step(e.clientX < w.x ? 1 : -1);
+            // The gesture ends at pointerup (the click follows at once; a short grace covers a release that produces none) or at pointercancel (no click will follow).
+            const up = () => { off(); window.setTimeout(() => { swiped.current = false; }, 300); };
+            const cancel = () => { off(); swiped.current = false; };
+            const off = () => { window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", cancel); endGesture.current = null; };
+            endGesture.current = off;
+            window.addEventListener("pointerup", up, { once: true }); window.addEventListener("pointercancel", cancel, { once: true });
+          }}
+          onClickCapture={(e) => { if (swiped.current && e.detail > 0) { clearSwipe(); e.preventDefault(); e.stopPropagation(); } /* the click that ends a completed swipe must not select what is under the pointer; keyboard clicks (detail 0) never count */ }}
           onPointerUp={() => { setTimeout(() => { swipe.current = null; }, 0); }}
           onPointerCancel={() => { swipe.current = null; }}
         >

@@ -65,10 +65,40 @@ const publish = (p) => p.getByRole("button", { name: /Save and (publish|update l
   // The browser fires a click when press and release land on the same element. Reproduce exactly that: press on the neighbour, drag 70px (a swipe), release, then the click.
   await pg.evaluate(({ x, y, name }) => { const e = [...document.querySelectorAll(".exhibit")].find((q) => q.querySelector(".lbl").textContent === name); const st = document.querySelector(".stage");
     const ev = (t, cx, el) => el.dispatchEvent(new PointerEvent(t, { bubbles: true, cancelable: true, clientX: cx, clientY: y, pointerType: "mouse", isPrimary: true, button: 0 }));
-    ev("pointerdown", x, e); ev("pointermove", x + 30, st); ev("pointermove", x + 70, st); ev("pointerup", x + 70, e); e.click(); }, { x: nb.x, y: nb.y, name: nb.name });
+    ev("pointerdown", x, e); ev("pointermove", x + 30, st); ev("pointermove", x + 70, st); ev("pointerup", x + 70, e); e.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1, clientX: x + 70, clientY: y })); /* a real pointer click has detail 1; HTMLElement.click() would be detail 0, like a keyboard press */ }, { x: nb.x, y: nb.y, name: nb.name });
   await sleep(500);
   const after = await selected();
   ok("releasing a swipe on an exhibit does not select it: the swipe moved one step (to the previous exhibit) and nothing more", after === prev.name && after !== nb.name, `now "${after}", expected "${prev.name}", the pressed one was "${nb.name}"`);
+  // A long swipe: past the threshold, held for over 500 ms (the old timer expired here), released over an exhibit, then the click the browser fires.
+  await select("Anim Alpha"); await pg.mouse.move(5, 5); await sleep(900);
+  const g2 = await pg.evaluate(() => { const ex = [...document.querySelectorAll(".exhibit:not([data-far])")].map((e) => { const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height * 0.4, name: e.querySelector(".lbl").textContent, on: e.dataset.on === "true" }; }).sort((a, b) => a.x - b.x); const ci = ex.findIndex((e) => e.on); return { right: ex[ci + 1], left: ex[ci - 1] }; });
+  const startSel = await selected();
+  await pg.evaluate(async ({ x, y, name }) => { const e = [...document.querySelectorAll(".exhibit")].find((q) => q.querySelector(".lbl").textContent === name); const st = document.querySelector(".stage");
+    const ev = (t, cx, el) => el.dispatchEvent(new PointerEvent(t, { bubbles: true, cancelable: true, clientX: cx, clientY: y, pointerType: "mouse", isPrimary: true, button: 0 }));
+    ev("pointerdown", x, e); ev("pointermove", x + 30, st); ev("pointermove", x + 70, st); // crosses the 48px threshold: one step
+    await new Promise((r) => setTimeout(r, 900)); // hold well past 500 ms
+    ev("pointermove", x + 80, st); ev("pointermove", x + 90, st); // still the same gesture: must not step again
+    ev("pointerup", x + 70, e); e.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1, clientX: x + 70, clientY: y })); /* a real pointer click has detail 1; HTMLElement.click() would be detail 0, like a keyboard press */ }, { x: g2.right.x, y: g2.right.y, name: g2.right.name });
+  await sleep(500);
+  const longAfter = await selected();
+  ok("a swipe held for over 500 ms moves exactly one step and the release does not select the exhibit under the pointer", longAfter === g2.left.name && longAfter !== g2.right.name && longAfter !== startSel, `start "${startSel}", now "${longAfter}", expected "${g2.left.name}", pressed "${g2.right.name}"`);
+  // cancelled gesture: the next click must not be swallowed
+  await pg.evaluate(({ x, y, name }) => { const e = [...document.querySelectorAll(".exhibit")].find((q) => q.querySelector(".lbl").textContent === name); const st = document.querySelector(".stage");
+    const ev = (t, cx, el) => el.dispatchEvent(new PointerEvent(t, { bubbles: true, cancelable: true, clientX: cx, clientY: y, pointerType: "mouse", isPrimary: true, button: 0 }));
+    ev("pointerdown", x, e); ev("pointermove", x + 30, st); ev("pointermove", x + 70, st); ev("pointercancel", x + 70, st); }, { x: g2.right.x, y: g2.right.y, name: g2.right.name });
+  await sleep(300); await pg.mouse.move(5, 5); await sleep(900);
+  const tg2 = await pg.evaluate(() => { const e = [...document.querySelectorAll(".exhibit:not([data-far])")].find((x) => x.dataset.on !== "true"); return e.querySelector(".lbl").textContent; });
+  await pg.locator(".exhibit:not([data-far])", { hasText: tg2 }).first().click(); await sleep(400);
+  ok("after a cancelled swipe the next click works (nothing is left suppressed)", (await selected()) === tg2, `${await selected()} vs ${tg2}`);
+  // keyboard activation is never suppressed
+  await pg.evaluate(({ x, y, name }) => { const e = [...document.querySelectorAll(".exhibit")].find((q) => q.querySelector(".lbl").textContent === name); const st = document.querySelector(".stage");
+    const ev = (t, cx, el) => el.dispatchEvent(new PointerEvent(t, { bubbles: true, cancelable: true, clientX: cx, clientY: y, pointerType: "mouse", isPrimary: true, button: 0 }));
+    ev("pointerdown", x, e); ev("pointermove", x + 30, st); ev("pointermove", x + 70, st); }, { x: g2.right.x, y: g2.right.y, name: g2.right.name });
+  // gesture never ended (no pointerup); a keyboard Enter on a focused exhibit (click with detail 0) must still work
+  await pg.evaluate(() => { const e = [...document.querySelectorAll(".exhibit:not([data-far])")].find((x) => x.dataset.on !== "true"); window.__kb = e.querySelector(".lbl").textContent; e.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 0 })); });
+  await sleep(300);
+  ok("a keyboard-style click (detail 0) is never swallowed, even mid-gesture", (await selected()) === (await pg.evaluate(() => window.__kb)), `${await selected()}`);
+  await pg.evaluate(() => window.dispatchEvent(new PointerEvent("pointerup", { bubbles: true })));
   // a plain click still selects
   await pg.mouse.move(5, 5); await sleep(1000);
   const target = await pg.evaluate(() => { const ex = [...document.querySelectorAll(".exhibit:not([data-far])")].filter((e) => e.dataset.on !== "true"); const e = ex[0]; const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height * 0.4, name: e.querySelector(".lbl").textContent }; });
