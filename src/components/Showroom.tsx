@@ -139,6 +139,7 @@ export function Showroom() {
 
   // The same interactions as the homepage showroom: hover or edge steering with a mouse, swipe on touch, arrow keys, click.
   const swipe = useRef<{ x: number; done: boolean } | null>(null);
+  const swiped = useRef(false);
   useStageSteer(stage, {
     itemSelector: ".exhibit",
     indexOf: (el) => Number((el as HTMLElement).dataset.i ?? -1),
@@ -173,17 +174,23 @@ export function Showroom() {
     img.onerror = () => { if (playing.current === img) stopAnim(); };
     playing.current = img; slot.appendChild(img); img.src = url;
   };
+  // The observers below live for the whole page, so they call the LATEST play/stop (written after every render), never the first render's
+  // copies (which would still think nothing is selected). Whatever is selected when the stage returns, or the tab, or motion is allowed, plays.
+  const latest = useRef({ play: playAnim, stop: stopAnim });
+  useEffect(() => { latest.current = { play: playAnim, stop: stopAnim }; });
   useEffect(() => {
     const el = stage.current; if (!el) return;
-    const io = new IntersectionObserver(([e]) => { onScreen.current = e.isIntersecting; if (e.isIntersecting) playAnim(); else stopAnim(); }, { threshold: 0.25 });
+    const io = new IntersectionObserver(([e]) => { onScreen.current = e.isIntersecting; if (e.isIntersecting) latest.current.play(); else latest.current.stop(); }, { threshold: 0.25 });
     io.observe(el);
-    const vis = () => { if (document.hidden) stopAnim(); else playAnim(); };
+    const vis = () => { if (document.hidden) latest.current.stop(); else latest.current.play(); };
     document.addEventListener("visibilitychange", vis);
-    return () => { io.disconnect(); document.removeEventListener("visibilitychange", vis); stopAnim(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const rm = () => { if (mq.matches) latest.current.stop(); else latest.current.play(); }; // enabling it stops the animation at once
+    mq.addEventListener("change", rm);
+    return () => { io.disconnect(); document.removeEventListener("visibilitychange", vis); mq.removeEventListener("change", rm); latest.current.stop(); };
   }, []);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { playAnim(); return stopAnim; }, [chosenSlug, cat]);
+  useEffect(() => { playAnim(); return stopAnim; // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chosenSlug, cat]);
 
   const meta = TECH_CATEGORIES.find((c) => c.key === cat) ?? TECH_CATEGORIES[0];
   const list = TECHNOLOGIES.filter((t) => filter === "all" || t.category === filter);
@@ -208,8 +215,9 @@ export function Showroom() {
           ref={stage}
           className="stage"
           style={{ ["--rx" as string]: "16deg", ["--ry" as string]: "0deg" }}
-          onPointerDown={(e) => { swipe.current = { x: e.clientX, done: false }; }}
-          onPointerMove={(e) => { const w = swipe.current; if (w && !w.done && Math.abs(e.clientX - w.x) > 48) { w.done = true; step(e.clientX < w.x ? 1 : -1); } }}
+          onPointerDown={(e) => { swipe.current = { x: e.clientX, done: false }; swiped.current = false; }}
+          onPointerMove={(e) => { const w = swipe.current; if (w && !w.done && Math.abs(e.clientX - w.x) > 48) { w.done = true; swiped.current = true; window.setTimeout(() => { swiped.current = false; }, 500); step(e.clientX < w.x ? 1 : -1); } }}
+          onClickCapture={(e) => { if (swiped.current) { swiped.current = false; e.preventDefault(); e.stopPropagation(); } }} /* the click that ends a completed swipe must not select what is under the pointer */
           onPointerUp={() => { setTimeout(() => { swipe.current = null; }, 0); }}
           onPointerCancel={() => { swipe.current = null; }}
         >

@@ -96,8 +96,10 @@ const publish = (p) => p.getByRole("button", { name: /Save and (publish|update l
   { // clicking any visible exhibit selects it; Next walks through all of them
     const names = []; for (let i = 0; i < 15; i++) { await tp.getByRole("button", { name: /Next exhibit|Guided tour/ }).click(); await sleep(200); names.push(await tp.locator(".detail h3").textContent()); }
     ok("Technologies page: Next exhibit reaches all 15 in order, bringing hidden ones forward", new Set(names).size === 15, `${new Set(names).size} distinct`);
-    await tp.locator(".exhibit:not([data-far])").nth(1).click({ force: false }).catch(() => {}); await sleep(300);
-    ok("Technologies page: clicking a visible exhibit selects it", (await tp.locator('.exhibit[aria-pressed="true"]').count()) === 1); }
+    await tp.mouse.move(5, 5); await sleep(900);
+    const tgt = await tp.evaluate(() => { const e = [...document.querySelectorAll(".exhibit:not([data-far])")].find((x) => x.dataset.on !== "true"); return e.querySelector(".lbl").textContent; });
+    await tp.locator(".exhibit:not([data-far])", { hasText: tgt }).first().click(); await sleep(400);
+    ok("Technologies page: clicking a visible (tilted, behind) exhibit really selects that exhibit", (await tp.locator('.exhibit[data-on="true"] .lbl').textContent()) === tgt, tgt); }
   await cx2.close();
 
   // ===== 3. map: extra locations from Site settings + projects found by their Location text
