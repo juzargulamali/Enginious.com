@@ -211,13 +211,27 @@ a { color: inherit; text-decoration: none; }
   transform: rotateX(calc(var(--rx, 16deg) + 56deg)); transform-origin: 50% 0; will-change: transform;
   mask-image: linear-gradient(transparent, #000 25%);
 }
-.exhibits { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(calc(var(--rx, 16deg) - 16deg)) rotateY(var(--ry, 0deg)); will-change: transform; }
+.exhibits { pointer-events: none; position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(calc(var(--rx, 16deg) - 16deg)) rotateY(var(--ry, 0deg)); will-change: transform; }
 .exhibit {
   position: absolute; top: 14%; margin-left: -72px; width: 144px; display: grid; justify-items: center; gap: 8px;
   background: none; border: 0; color: var(--brand); cursor: pointer; padding: 6px; border-radius: 14px; font: inherit;
   transition: color 0.2s, filter 0.2s;
 }
+.exhibit { pointer-events: auto; } /* the container sits in front of the tilted exhibits and would otherwise swallow their clicks */
 .exhibit .glyph { width: 124px; height: 124px; transition: transform 0.25s; }
+.exhibit { transition: color 0.2s, filter 0.2s, left 0.35s, opacity 0.3s; }
+.exhibit[data-far] { opacity: 0; pointer-events: none; visibility: hidden; }
+.exhibit .glyph { position: relative; }
+.exhibit[data-media] { margin-left: -80px; width: 160px; }
+.exhibit[data-media] .glyph { width: 150px; height: 140px; }
+.exh-fig { position: absolute; inset: 0; display: block; }
+.exh-fig .exh-img, .exh-anim-slot, .exh-anim { position: absolute; inset: 0; width: 100%; height: 100%; }
+.exh-fig .exh-img, .exh-anim { object-fit: contain; object-position: 50% 100%; transform-origin: 50% 100%; transform: translateY(var(--fit-y, 0%)) scale(var(--fit-s, 1)); pointer-events: none; user-select: none; -webkit-user-drag: none; display: block; }
+.exh-fig[data-anim="ready"] .exh-img { visibility: hidden; }
+.exh-empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 0 1rem; margin: 0; z-index: 1; }
+.exhibit .lbl { max-width: 100%; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.exhibit[data-media="pending"] .glyph > svg, .exhibit[data-media="loaded"] .glyph > svg { display: none; }
+.exhibit[data-media="failed"] .glyph img { display: none; }
 .exhibit .lbl { color: #cfe3e7; font-size: 0.82rem; text-align: center; line-height: 1.25; }
 .exhibit:hover .glyph, .exhibit[data-on="true"] .glyph { transform: translateY(-8px) scale(1.12); }
 .exhibit[data-on="true"] { color: #6af0f7; }
@@ -225,7 +239,7 @@ a { color: inherit; text-decoration: none; }
 .show-bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 1.25rem; border-top: 1px solid var(--line); }
 .detail { display: flex; gap: 20px; justify-content: space-between; align-items: center; flex-wrap: wrap; flex: 1 1 420px; }
 .detail > div:first-child { flex: 1 1 280px; }
-@media (max-width: 700px) { .exhibit { margin-left: -40px; width: 80px; } .exhibit .glyph { width: 64px; height: 64px; } .exhibit .lbl { font-size: 0.7rem; } }
+@media (max-width: 700px) { .exhibits { --sx: 30%; } .exhibit[data-far2] { opacity: 0; pointer-events: none; visibility: hidden; } .exhibit { margin-left: -40px; width: 80px; } .exhibit[data-media] { margin-left: -46px; width: 92px; } .exhibit[data-media] .glyph { width: 88px; height: 82px; } .exhibit .glyph { width: 64px; height: 64px; } .exhibit .lbl { font-size: 0.7rem; } }
 .tech-grid { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .tech-item { padding: 18px; display: flex; flex-direction: column; }
 

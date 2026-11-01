@@ -78,3 +78,11 @@
 - Sort: "Recently added" and "Recently edited" both work; "Recently edited" was ignored on lists that default to display order.
 - Technology categories: Site settings > Technology categories (add, rename, reorder, remove). Interactive Digital Games is built in. Move technologies into it from their own Category field.
 - Videos: Google Drive file links play in the full player on the page; cards show the poster only (add a separate preview file for an automatic card preview).
+
+## Site fixes (October, round 2)
+- Showroom: the homepage showroom lists only the technologies marked ★ "In the homepage showroom" (Technologies list, then Apply order to live site), in the list's Display order; none marked = the built-in six. It shows at most seven at a time. The Technologies page showroom uses the showroom images and the same seven-at-a-time window.
+- Map: projects are found by the Location text (a project in "Dubai, UAE" appears under Dubai). Add other places in Site settings > Extra map locations (name, country, latitude, longitude). A new UAE zoom separates Dubai and Abu Dhabi. Madinah was added.
+- Drive videos: without a poster, the card uses Drive's own thumbnail when Google returns one. A poster uploaded in Media is more reliable.
+- Showroom images must be PNG or WebP with a transparent background and Visibility set to Public.
+- Technologies page showroom now uses the showroom animation, size and height offset, and the homepage interactions. Check it with the real product images (wide products may need Showroom size set below 100).
+- Site settings shows a notice when the saved Technology categories lack a built-in one (for example Interactive Digital Games), with an "Add it" button. The Technologies list warns when a technology uses a category that is no longer in the list.

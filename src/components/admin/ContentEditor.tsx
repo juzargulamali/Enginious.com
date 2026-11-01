@@ -9,12 +9,13 @@ import { ShowroomPreview } from "./ShowroomPreview";
 import type { MediaOption, RefMap } from "./fields/types";
 import type { Data, Field } from "@/lib/cms/schema";
 import { dateTime, timeAgo } from "@/lib/cms/format";
+import { resolveTechCategories, type TechCategoryDef } from "@/content/technologies";
 
 export interface EditorItem {
   id: string; type: string; title: string; slug: string; status: "draft" | "published" | "archived"; version: number; publishedVersion: number | null;
   publishedAt: string | null; updatedAt: string; sortOrder: number; featured: boolean; data: Data;
 }
-export interface EditorDef { type: string; label: string; titleLabel: string; fields: Field[]; fixedSlugs?: string[]; orderable: boolean; featurable: boolean; publicPath: string | null; slugPrefix: string }
+export interface EditorDef { type: string; label: string; titleLabel: string; fields: Field[]; fixedSlugs?: string[]; orderable: boolean; featurable: boolean; featureLabel?: string; publicPath: string | null; slugPrefix: string }
 export interface EditorRevision { id: number; kind: "draft" | "published"; version: number; title: string; created_at: string }
 
 interface State { title: string; slug: string; data: Data; sortOrder: number; featured: boolean }
@@ -22,7 +23,7 @@ type Save = { s: "saved" | "dirty" | "saving" | "error"; text: string };
 
 const stateOf = (i: EditorItem): State => ({ title: i.title, slug: i.slug, data: i.data, sortOrder: i.sortOrder, featured: i.featured });
 
-export function ContentEditor({ item, def, media, refs, revisions, role }: { item: EditorItem; def: EditorDef; media: MediaOption[]; refs: RefMap; revisions: EditorRevision[]; role: "administrator" | "editor" }) {
+export function ContentEditor({ item, def, media, refs, revisions, role, builtInCategories }: { item: EditorItem; def: EditorDef; media: MediaOption[]; refs: RefMap; revisions: EditorRevision[]; role: "administrator" | "editor"; builtInCategories?: TechCategoryDef[] }) {
   const router = useRouter();
   const [state, setState] = useState<State>(() => stateOf(item));
   const [baseline, setBaseline] = useState(() => JSON.stringify(stateOf(item)));
@@ -151,6 +152,22 @@ export function ContentEditor({ item, def, media, refs, revisions, role }: { ite
         </div>
       </div>
 
+      {(() => {
+        // Site settings only: the saved category list is what technologies can be assigned to. Say plainly which built-in categories it lacks.
+        if (item.type !== "setting" || !builtInCategories) return null;
+        const saved = Array.isArray(state.data.technology_categories) ? (state.data.technology_categories as Record<string, unknown>[]) : [];
+        if (!saved.length) return null;
+        const have = resolveTechCategories(saved).map((c) => c.key);
+        const missing = builtInCategories.filter((c) => !have.includes(c.key));
+        if (!missing.length) return null;
+        return (
+          <p className="adm-alert adm-alert-warn" role="status" style={{ marginBottom: 14 }}>
+            Your saved Technology categories do not include: <b>{missing.map((c) => c.label).join(", ")}</b>. Technologies cannot be assigned to a category that is not in this list.{" "}
+            <button type="button" className="adm-btn adm-btn-sm" onClick={() => setState((s) => ({ ...s, data: { ...s.data, technology_categories: [...saved, ...missing.map((c) => ({ label: c.label, key: c.key, blurb: c.blurb }))] } }))}>Add {missing.length === 1 ? "it" : "them"}</button>
+          </p>
+        );
+      })()}
+
       <div aria-live="polite">
         {banner && <p className={`adm-alert adm-alert-${banner.kind === "ok" ? "ok" : banner.kind === "warn" ? "warn" : "error"}`} role={banner.kind === "error" ? "alert" : "status"} style={{ marginBottom: 14 }}>{banner.text} {banner.reload && <button type="button" className="adm-btn adm-btn-sm" onClick={() => window.location.reload()}>Reload</button>}</p>}
         {errorCount > 0 && !banner && <p className="adm-alert adm-alert-error" role="alert" style={{ marginBottom: 14 }}>{errorCount} field{errorCount === 1 ? "" : "s"} need attention.</p>}
@@ -222,7 +239,7 @@ export function ContentEditor({ item, def, media, refs, revisions, role }: { ite
                     <p className="adm-help">Lower numbers come first. You can also reorder from the list.</p>
                   </div>
                 )}
-                {def.featurable && <label className="adm-check"><input type="checkbox" checked={state.featured} onChange={(e) => setState((s) => ({ ...s, featured: e.target.checked }))} /><span>Featured</span></label>}
+                {def.featurable && <label className="adm-check"><input type="checkbox" checked={state.featured} onChange={(e) => setState((s) => ({ ...s, featured: e.target.checked }))} /><span>{def.featureLabel ?? "Featured"}</span></label>}
                 <p className="adm-help">Order and featured status go live when you publish, or use Apply order on the list page.</p>
               </div>
             </section>

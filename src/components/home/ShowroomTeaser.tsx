@@ -27,9 +27,10 @@ import "./gallery.css";
  * PERFORMANCE: all explanations render once; a change writes CSS variables on a handful of elements (no React render) and the move is a
  * compositor transition (transform and opacity). No pointer-driven per-frame motion, no filters, no inherited colour transitions.
  */
-const ALL_EXHIBITS = ["touch-and-throw", "holofan", "tri-helix", "robotic-arm", "ai-photobooth", "circular-dial"];
+/** Shown until at least one technology is marked "In the homepage showroom" in the CMS. */
+const DEFAULT_EXHIBITS = ["touch-and-throw", "holofan", "tri-helix", "robotic-arm", "ai-photobooth", "circular-dial"];
 
-type Pose = { x: number; y: number; s: number; o: number; z: number };
+type Pose = { x: number; y: number; s: number; o: number; z: number; hide?: boolean };
 /** Where each exhibit stands when `active` is in front. Stage width w in px; phones keep only the nearest neighbours visible. */
 function arrange(active: number, n: number, w: number): Pose[] {
   const narrow = w < 700;
@@ -41,13 +42,17 @@ function arrange(active: number, n: number, w: number): Pose[] {
     const side = d <= right ? 1 : -1;
     const c = side > 0 ? right : left;
     const j = side > 0 ? d - 1 : n - 1 - d; // 0 = nearest the centre
+    // Only the nearest neighbours stand in the back row (three each side, one on phones); the rest wait out of sight and come forward as the selection moves,
+    // so a long list never piles up. The visible ones are spread over the same width as before.
+    const cap = narrow ? 1 : 3;
+    const shown = Math.min(c, cap);
     const base = narrow ? 0.3 : 0.23, span = narrow ? 0 : 0.25;
-    const u = c <= 1 ? base + span / 2 : base + span * (j / (c - 1));
-    const hide = narrow && j > 0;
-    return { x: side * u * w, y: -(60 + j * 12), s: (narrow ? 0.6 : 0.66) - j * 0.05, o: hide ? 0 : 0.84 - j * 0.1, z: 6 - j };
+    const hide = j >= cap;
+    const u = shown <= 1 ? base + span / 2 : base + span * (Math.min(j, shown - 1) / (shown - 1));
+    return { x: side * u * w, y: -(60 + Math.min(j, cap) * 12), s: (narrow ? 0.6 : 0.66) - Math.min(j, cap) * 0.05, o: hide ? 0 : 0.84 - j * 0.1, z: 6 - Math.min(j, cap), hide };
   });
 }
-const vars = (p: Pose) => ({ ["--x" as string]: `${p.x.toFixed(1)}px`, ["--y" as string]: `${p.y}px`, ["--s" as string]: p.s, ["--o" as string]: p.o, zIndex: p.z });
+const vars = (p: Pose) => ({ ["--x" as string]: `${p.x.toFixed(1)}px`, ["--y" as string]: `${p.y}px`, ["--s" as string]: p.s, ["--o" as string]: p.o, zIndex: p.z, pointerEvents: p.hide ? ("none" as const) : undefined });
 
 const bigUrl = (a: ImageAsset) => `${a.src}-${a.widths[a.widths.length - 1]}.webp`;
 
@@ -66,7 +71,9 @@ function Fig({ tech, sizes }: { tech: Technology; sizes: string }) {
 export function ShowroomTeaser() {
   const { technologies: TECHNOLOGIES, techCategories, imageById } = useContent();
   const router = useRouter();
-  const EXHIBITS = ALL_EXHIBITS.filter((s) => TECHNOLOGIES.some((t) => t.slug === s));
+  // The owner picks the exhibits: technologies marked "In the homepage showroom" in the CMS, in the CMS display order. None picked: the built-in six.
+  const picked = TECHNOLOGIES.filter((t) => t.featured).map((t) => t.slug);
+  const EXHIBITS = picked.length ? picked : DEFAULT_EXHIBITS.filter((s) => TECHNOLOGIES.some((t) => t.slug === s));
   const N = EXHIBITS.length;
   const MID = Math.min(2, Math.max(0, N - 1));
   const POSES = arrange(MID, N, 1100); // server pose for a typical desktop; refined to the real stage width on mount
@@ -114,6 +121,7 @@ export function ShowroomTeaser() {
       const p = poses[k];
       el.style.setProperty("--x", `${p.x.toFixed(1)}px`); el.style.setProperty("--y", `${p.y}px`); el.style.setProperty("--s", String(p.s)); el.style.setProperty("--o", String(p.o)); el.style.zIndex = String(p.z);
       el.tabIndex = k === i ? 0 : -1;
+      el.style.pointerEvents = p.hide ? "none" : "";
     });
   };
   const activate = (i: number) => {

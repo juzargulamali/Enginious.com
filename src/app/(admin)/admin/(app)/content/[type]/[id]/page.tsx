@@ -36,18 +36,22 @@ export default async function EditItem({ params }: { params: Promise<{ type: str
     const sb = await supabaseUser();
     const { data: row } = sb ? await sb.from("content_items").select("draft").eq("type", "setting").eq("slug", "site").maybeSingle() : { data: null };
     const cats = resolveTechCategories((row?.draft as Record<string, unknown> | undefined)?.technology_categories);
-    fields = def.fields.map((f) => f.optionsFrom === "tech_categories" ? { ...f, options: cats.map((c) => ({ value: c.key, label: c.label })) } : f);
+    const have = typeof data.category === "string" ? data.category : "";
+    const options = cats.map((c) => ({ value: c.key, label: c.label }));
+    if (have && !options.some((o) => o.value === have)) options.push({ value: have, label: `${have} (no longer in the category list)` }); // never blank out an existing choice
+    fields = def.fields.map((f) => f.optionsFrom === "tech_categories" ? { ...f, options } : f);
   }
 
   const prefix = def.path ? def.path("{slug}").replace("{slug}", "") : "";
   return (
     <ContentEditor
       item={{ id: item.id, type: item.type, title: item.title, slug: item.slug, status: item.status, version: item.version, publishedVersion: item.published_version, publishedAt: item.published_at, updatedAt: item.updated_at, sortOrder: item.sort_order, featured: item.featured, data }}
-      def={{ type: def.type, label: def.label, titleLabel: def.titleLabel, fields, fixedSlugs: def.fixedSlugs, orderable: def.orderable, featurable: def.featurable, publicPath: def.path ? def.path(item.slug) : null, slugPrefix: prefix }}
+      def={{ type: def.type, label: def.label, titleLabel: def.titleLabel, fields, fixedSlugs: def.fixedSlugs, orderable: def.orderable, featurable: def.featurable, featureLabel: def.featureLabel, publicPath: def.path ? def.path(item.slug) : null, slugPrefix: prefix }}
       media={media}
       refs={refs}
       revisions={revisions}
       role={staff.role}
+      builtInCategories={def.type === "setting" ? TECH_CATEGORIES : undefined}
     />
   );
 }

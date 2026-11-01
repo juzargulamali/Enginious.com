@@ -5,6 +5,7 @@ import { Photo } from "@/components/Photo";
 import { useContent } from "@/components/ContentProvider";
 import { parseVideoUrl, type VideoSpec } from "@/lib/video";
 import { YtThumb } from "./YtThumb";
+import { DriveThumb } from "./DriveThumb";
 import "./video.css";
 
 /**
@@ -18,7 +19,7 @@ export function VideoPlayer({ video, title, posterImageId }: { video: VideoSpec;
   const src = parseVideoUrl(video.url);
   if (!src) return null;
   const posterAsset = (video.poster && imageById(video.poster) ? video.poster : undefined) ?? (posterImageId && imageById(posterImageId) ? posterImageId : undefined);
-  const poster = posterAsset ? <Photo id={posterAsset} className="vc-img" sizes="(max-width: 1000px) 100vw, 980px" /> : src.kind === "youtube" ? <YtThumb id={src.id} className="vc-img" /> : null;
+  const poster = posterAsset ? <Photo id={posterAsset} className="vc-img" sizes="(max-width: 1000px) 100vw, 980px" /> : src.kind === "youtube" ? <YtThumb id={src.id} className="vc-img" /> : src.kind === "drive" ? <DriveThumb id={src.id} className="vc-img" /> : null;
 
   if (src.kind === "file") {
     return (

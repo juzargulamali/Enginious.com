@@ -9,6 +9,7 @@ import { RowActions } from "@/components/admin/RowActions";
 import { ListTools } from "@/components/admin/ListTools";
 import { canImport } from "@/lib/content/seed";
 import { supabaseUser } from "@/lib/supabase/server";
+import { resolveTechCategories } from "@/content/technologies";
 
 export const metadata: Metadata = { title: "Content" };
 
@@ -33,6 +34,19 @@ export default async function ContentList({ params, searchParams }: { params: Pr
     const s = p.toString();
     return s ? `?${s}` : "";
   };
+  // Technologies whose category is not in the saved list (it was removed or renamed in Site settings).
+  let orphaned = 0;
+  if (def.type === "technology") {
+    const sb = await supabaseUser();
+    if (sb) {
+      const [{ data: st }, { data: techs }] = await Promise.all([
+        sb.from("content_items").select("draft").eq("type", "setting").eq("slug", "site").maybeSingle(),
+        sb.from("content_items").select("draft").eq("type", "technology").neq("status", "archived").limit(1000),
+      ]);
+      const keys = resolveTechCategories((st?.draft as Record<string, unknown> | undefined)?.technology_categories).map((c) => c.key);
+      orphaned = (techs ?? []).filter((t) => { const c = (t.draft as Record<string, unknown>)?.category; return typeof c === "string" && c && !keys.includes(c); }).length;
+    }
+  }
   let adopted = !canImport(def.type);
   let pendingImported = 0;
   if (canImport(def.type)) {
@@ -86,6 +100,8 @@ export default async function ContentList({ params, searchParams }: { params: Pr
         </form>
       </div>
 
+      {orphaned > 0 && <p className="adm-alert adm-alert-warn" role="status">{orphaned} technolog{orphaned === 1 ? "y is" : "ies are"} assigned to a category that is no longer in Site settings, so {orphaned === 1 ? "it shows" : "they show"} under the first category on the website. Open {orphaned === 1 ? "it" : "each"} and choose a category, or add the category back under Site settings, Technology categories.</p>}
+      {def.type === "technology" && <p className="adm-help" style={{ margin: "0 0 12px" }}>The homepage showroom shows only the technologies marked ★ here, in the Display order of this list (use the arrows). If none is marked it shows the built-in six. Click <b>Apply order to live site</b> after changing the stars or the order.</p>}
       {error && <p className="adm-alert adm-alert-error" role="alert">Could not load this list. Please reload.</p>}
       {!error && rows.length === 0 ? (
         <div className="adm-empty">
@@ -113,7 +129,7 @@ export default async function ContentList({ params, searchParams }: { params: Pr
                     {(def.listKeys ?? []).map((k) => <td key={k} data-label={k}>{String(r.draft[k] ?? "") || <span className="muted">-</span>}</td>)}
                     <td data-label="Added">{timeAgo(r.created_at)}</td>
                     <td data-label="Edited">{timeAgo(r.updated_at)}</td>
-                    <td className="num" data-label="Order"><RowActions id={r.id} title={r.title} canDelete={staff.role === "administrator" && !def.fixedSlugs} canMove={def.orderable && sort === "order" && !sp.q && status === "all"} featurable={def.featurable} featured={r.featured} first={i === 0 && page === 1} last={i === rows.length - 1 && page === pages} /></td>
+                    <td className="num" data-label="Order"><RowActions id={r.id} title={r.title} featureLabel={def.featureLabel} canDelete={staff.role === "administrator" && !def.fixedSlugs} canMove={def.orderable && sort === "order" && !sp.q && status === "all"} featurable={def.featurable} featured={r.featured} first={i === 0 && page === 1} last={i === rows.length - 1 && page === pages} /></td>
                   </tr>
                 );
               })}

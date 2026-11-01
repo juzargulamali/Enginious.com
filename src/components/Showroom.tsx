@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useStageSteer } from "@/lib/useStageSteer";
+import { reducedMotion } from "@/lib/scrollBus";
+import type { ImageAsset } from "@/content/images";
 import type { TechCategory, Technology } from "@/content/technologies";
 import { useContent } from "./ContentProvider";
 import { useBrief } from "./BriefProvider";
 import { AddToBrief } from "./AddToBrief";
 import { PreviewProvider } from "./video/PreviewProvider";
 import { CardMedia } from "./video/CardMedia";
+import { Photo } from "./Photo";
+
+const bigUrl = (a: ImageAsset) => `${a.src}-${a.widths[a.widths.length - 1]}.webp`;
 
 /** Abstract exhibit glyphs: stylised category icons, NOT models of the real equipment. */
 function Glyph({ category, seed }: { category: TechCategory; seed: number }) {
@@ -78,7 +84,7 @@ function Glyph({ category, seed }: { category: TechCategory; seed: number }) {
 
 export function Showroom() {
   const brief = useBrief();
-  const { technologies: TECHNOLOGIES, techCategories: TECH_CATEGORIES } = useContent();
+  const { technologies: TECHNOLOGIES, techCategories: TECH_CATEGORIES, imageById } = useContent();
   const [cat, setCat] = useState<TechCategory>(TECH_CATEGORIES[0].key);
   const [selected, setSelected] = useState<string | null>(null);
   const stage = useRef<HTMLDivElement>(null);
@@ -121,11 +127,75 @@ export function Showroom() {
     };
   }, []);
 
+  // Empty category: nothing to step through (the arrows are disabled and a message is shown), never an index into an empty list.
+  const centre = chosen ? inCat.findIndex((t) => t.slug === chosen.slug) : -1;
   const step = (d: number) => {
-    const i = Math.max(0, inCat.findIndex((t) => t.slug === chosen?.slug));
-    const next = chosen ? (i + d + inCat.length) % inCat.length : 0;
-    setSelected(inCat[next].slug);
+    const n = inCat.length;
+    if (n === 0) return;
+    const next = centre < 0 ? (d > 0 ? 0 : n - 1) : (centre + d + n) % n;
+    setSelected(inCat[next]?.slug ?? null);
   };
+  const select = (i: number) => { const t = inCat[i]; if (t) setSelected(t.slug); };
+
+  // The same interactions as the homepage showroom: hover or edge steering with a mouse, swipe on touch, arrow keys, click.
+  const swipe = useRef<{ x: number; done: boolean } | null>(null);
+  // Click suppression after a completed swipe lasts for the whole gesture and the click it produces, however long the finger or mouse is held:
+  // it is set when the swipe passes the threshold and cleared only when that click has been handled, the gesture is cancelled, or the next gesture starts.
+  const swiped = useRef(false);
+  const endGesture = useRef<(() => void) | null>(null);
+  const clearSwipe = () => { swiped.current = false; endGesture.current?.(); endGesture.current = null; };
+  useEffect(() => clearSwipe, []);
+  useStageSteer(stage, {
+    itemSelector: ".exhibit",
+    indexOf: (el) => Number((el as HTMLElement).dataset.i ?? -1),
+    current: () => centre,
+    select,
+    step: (d) => step(d),
+  });
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    e.preventDefault(); step(e.key === "ArrowRight" ? 1 : -1);
+    window.requestAnimationFrame(() => stage.current?.querySelector<HTMLElement>('.exhibit[data-on="true"]')?.focus());
+  };
+
+  // The uploaded showroom animation plays only on the selected exhibit, only while the stage is on screen and motion is allowed.
+  const playing = useRef<HTMLImageElement | null>(null);
+  const onScreen = useRef(false);
+  const chosenSlug = chosen?.slug;
+  const stopAnim = () => {
+    const img = playing.current; if (!img) return;
+    playing.current = null; img.onload = null; img.onerror = null; img.removeAttribute("src");
+    const fig = img.closest<HTMLElement>(".exh-fig"); img.remove(); if (fig) delete fig.dataset.anim;
+  };
+  const playAnim = () => {
+    stopAnim();
+    if (!chosenSlug || !onScreen.current || reducedMotion() || document.hidden) return;
+    const ex = stage.current?.querySelector<HTMLElement>('.exhibit[data-on="true"]');
+    const url = ex?.dataset.anim, fig = ex?.querySelector<HTMLElement>(".exh-fig"), slot = fig?.querySelector<HTMLElement>(".exh-anim-slot");
+    if (!url || !fig || !slot || ex?.dataset.media === "failed") return;
+    const img = new Image();
+    img.className = "exh-anim"; img.alt = ""; img.decoding = "async"; img.draggable = false;
+    img.onload = () => { if (playing.current === img) fig.dataset.anim = "ready"; };
+    img.onerror = () => { if (playing.current === img) stopAnim(); };
+    playing.current = img; slot.appendChild(img); img.src = url;
+  };
+  // The observers below live for the whole page, so they call the LATEST play/stop (written after every render), never the first render's
+  // copies (which would still think nothing is selected). Whatever is selected when the stage returns, or the tab, or motion is allowed, plays.
+  const latest = useRef({ play: playAnim, stop: stopAnim });
+  useEffect(() => { latest.current = { play: playAnim, stop: stopAnim }; });
+  useEffect(() => {
+    const el = stage.current; if (!el) return;
+    const io = new IntersectionObserver(([e]) => { onScreen.current = e.isIntersecting; if (e.isIntersecting) latest.current.play(); else latest.current.stop(); }, { threshold: 0.25 });
+    io.observe(el);
+    const vis = () => { if (document.hidden) latest.current.stop(); else latest.current.play(); };
+    document.addEventListener("visibilitychange", vis);
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const rm = () => { if (mq.matches) latest.current.stop(); else latest.current.play(); }; // enabling it stops the animation at once
+    mq.addEventListener("change", rm);
+    return () => { io.disconnect(); document.removeEventListener("visibilitychange", vis); mq.removeEventListener("change", rm); latest.current.stop(); };
+  }, []);
+  useEffect(() => { playAnim(); return stopAnim; // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chosenSlug, cat]);
 
   const meta = TECH_CATEGORIES.find((c) => c.key === cat) ?? TECH_CATEGORIES[0];
   const list = TECHNOLOGIES.filter((t) => filter === "all" || t.category === filter);
@@ -146,24 +216,55 @@ export function Showroom() {
 
         <p className="muted" style={{ padding: "0 1.25rem" }}>{meta.blurb}</p>
 
-        <div ref={stage} className="stage" style={{ ["--rx" as string]: "16deg", ["--ry" as string]: "0deg" }}>
+        <div
+          ref={stage}
+          className="stage"
+          style={{ ["--rx" as string]: "16deg", ["--ry" as string]: "0deg" }}
+          onPointerDown={(e) => { clearSwipe(); swipe.current = { x: e.clientX, done: false }; }}
+          onPointerMove={(e) => {
+            const w = swipe.current;
+            if (!w || w.done || Math.abs(e.clientX - w.x) <= 48) return;
+            w.done = true; swiped.current = true; step(e.clientX < w.x ? 1 : -1);
+            // The gesture ends at pointerup (the click follows at once; a short grace covers a release that produces none) or at pointercancel (no click will follow).
+            const up = () => { off(); window.setTimeout(() => { swiped.current = false; }, 300); };
+            const cancel = () => { off(); swiped.current = false; };
+            const off = () => { window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", cancel); endGesture.current = null; };
+            endGesture.current = off;
+            window.addEventListener("pointerup", up, { once: true }); window.addEventListener("pointercancel", cancel, { once: true });
+          }}
+          onClickCapture={(e) => { if (swiped.current && e.detail > 0) { clearSwipe(); e.preventDefault(); e.stopPropagation(); } /* the click that ends a completed swipe must not select what is under the pointer; keyboard clicks (detail 0) never count */ }}
+          onPointerUp={() => { setTimeout(() => { swipe.current = null; }, 0); }}
+          onPointerCancel={() => { swipe.current = null; }}
+        >
           <div className="floor" aria-hidden="true" />
-          <div className="exhibits">
+          {inCat.length === 0 && <p className="exh-empty muted" role="status">No technologies in this category yet.</p>}
+          <div className="exhibits" onKeyDown={onKey}>
             {inCat.map((t, i) => {
+              // A window of at most seven exhibits around the centre one, so a long category never overlaps; the arrows and clicks move the window.
               const n = inCat.length;
-              const x = n === 1 ? 0 : (i / (n - 1)) * 2 - 1;
-              const z = (i % 2) * -90;
+              const ci = chosen ? inCat.findIndex((x) => x.slug === chosen.slug) : n > 7 ? 3 : Math.floor((n - 1) / 2);
+              // around the centre one, wrapping, so both sides are filled (the same cycle as the homepage showroom)
+              let off = i - ci; if (n > 1) { const half = Math.floor(n / 2); off = ((((off + half) % n) + n) % n) - half; }
+              const still = t.showcaseImage && imageById(t.showcaseImage) ? t.showcaseImage : undefined;
+              const stillAsset = still ? imageById(still) : undefined;
+              const anim = stillAsset && t.showcaseAnimation ? imageById(t.showcaseAnimation) : undefined;
+              const fitS = Math.min(1.5, Math.max(0.5, (t.showcaseScale ?? 100) / 100)), fitY = Math.min(20, Math.max(-20, t.showcaseY ?? 0));
               return (
                 <button
                   key={t.slug}
                   type="button"
                   className="exhibit"
                   data-on={chosen?.slug === t.slug}
+                  data-far={Math.abs(off) > 3 || undefined}
+                  data-far2={Math.abs(off) > 1 || undefined}
+                  data-media={still ? "pending" : undefined}
+                  data-anim={anim ? bigUrl(anim) : undefined}
+                  data-i={i}
                   aria-pressed={chosen?.slug === t.slug}
-                  style={{ transform: `translate3d(0, 0, ${z}px)`, left: `${50 + x * 40}%` }}
+                  style={{ transform: `translate3d(0, 0, ${-Math.min(Math.abs(off), 3) * 40}px)`, left: `calc(50% + ${off} * var(--sx, 15%))`, zIndex: 10 - Math.min(Math.abs(off), 9) }}
                   onClick={() => setSelected(t.slug)}
                 >
-                  <span className="glyph"><Glyph category={t.category} seed={i} /></span>
+                  <span className="glyph"><Glyph category={t.category} seed={i} />{still && <span className="exh-fig" style={{ ["--fit-s" as string]: fitS, ["--fit-y" as string]: `${-fitY}%` }}><Photo id={still} className="exh-img" label={false} sizes="160px" /><span className="exh-anim-slot" aria-hidden="true" /></span>}</span>
                   <span className="lbl">{t.name}</span>
                 </button>
               );
@@ -185,11 +286,11 @@ export function Showroom() {
               </div>
             </div>
           ) : (
-            <p className="muted">Select an exhibit to see what it does, or start the guided tour.</p>
+            <p className="muted">{inCat.length === 0 ? "Choose another category, or browse all technologies below." : "Select an exhibit to see what it does, or start the guided tour."}</p>
           )}
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" className="btn" onClick={() => step(-1)} aria-label="Previous exhibit">←</button>
-            <button type="button" className="btn" onClick={() => step(1)}>{chosen ? "Next exhibit →" : "Guided tour →"}</button>
+            <button type="button" className="btn" onClick={() => step(-1)} aria-label="Previous exhibit" disabled={inCat.length === 0}>←</button>
+            <button type="button" className="btn" onClick={() => step(1)} disabled={inCat.length === 0}>{chosen ? "Next exhibit →" : "Guided tour →"}</button>
           </div>
         </div>
         <p className="eyebrow" style={{ padding: "0 1.25rem 1.1rem", opacity: 0.65 }}>

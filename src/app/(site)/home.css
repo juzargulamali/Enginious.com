@@ -265,7 +265,7 @@
 .pm-stage { position: absolute; left: 0; top: 0; width: 100%; transform-origin: 0 0; transition: transform 1s cubic-bezier(0.22, 0.8, 0.2, 1); will-change: transform; }
 .pm-land { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .pm-trace { position: absolute !important; inset: 0; pointer-events: none; z-index: 1; }
-.pm-mk { position: absolute; width: 36px; height: 36px; margin: 0; padding: 0; background: none; border: 0; cursor: pointer; transform: translate(-50%, -50%) scale(calc(1 / var(--k, 1))); opacity: 0; visibility: hidden; transition: opacity 0.6s, visibility 0s 0.6s; z-index: 2; color: inherit; font: inherit; }
+.pm-mk { position: absolute; width: 28px; height: 28px; margin: 0; padding: 0; background: none; border: 0; cursor: pointer; transform: translate(-50%, -50%) scale(calc(1 / var(--k, 1))); opacity: 0; visibility: hidden; transition: opacity 0.6s, visibility 0s 0.6s; z-index: 2; color: inherit; font: inherit; }
 /* Reveal is one attribute on the container (offices first, then projects); markers are not re-rendered. Hidden markers are also unreachable by keyboard and assistive tech (visibility). */
 .pm[data-stage="1"][data-offices="true"] .pm-mk[data-kind="office"], .pm[data-stage="2"][data-offices="true"] .pm-mk[data-kind="office"], .pm[data-stage="2"][data-projects="true"] .pm-mk[data-kind="project"] { opacity: 1; visibility: visible; transition: opacity 0.6s, visibility 0s; }
 .pm[data-offices="false"] .pm-trace { display: none; }

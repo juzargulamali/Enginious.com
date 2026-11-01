@@ -19,6 +19,10 @@ function Shell({ field, id, error, children, count }: { field: Field; id: string
   );
 }
 
+const SHARING_PAGE = /(drive\.google|docs\.google|sharepoint|onedrive|1drv\.ms|dropbox|icloud|wetransfer)/i;
+/** Photographs always come from the Media library. Said once, in the same words everywhere a photograph is chosen. */
+const PHOTO_NOTE = "To use a photograph, upload the image file in Media, then choose it here. A link to a Google Drive, OneDrive or SharePoint page cannot be used as a photograph: those are web pages, not image files.";
+
 function MediaPicker({ field, value, onChange, media, id, error }: { field: Field; value: string | undefined; onChange: (v: string | undefined) => void; media: MediaOption[]; id: string; error?: string }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -36,6 +40,8 @@ function MediaPicker({ field, value, onChange, media, id, error }: { field: Fiel
         <button type="button" id={id} className="adm-btn adm-btn-sm" aria-label={`${value ? "Change" : "Choose"} ${field.label}`} onClick={() => setOpen(true)}>{value ? "Change" : "Choose"}</button>
         {value && <button type="button" className="adm-btn adm-btn-sm adm-btn-ghost" onClick={() => onChange(undefined)}>Clear</button>}
       </div>
+      {wanted !== "document" && <p className="adm-help">{PHOTO_NOTE} <a href="/admin/media" target="_blank" rel="noopener">Open Media</a></p>}
+      {current && current.visibility !== "public" && <p className="adm-err" role="alert">This image is set to Private in Media, so visitors will not see it. Open it in Media and set Visibility to Public.</p>}
       {open && (
         <div className="adm-dialog" role="dialog" aria-modal="true" aria-label={`Choose media for ${field.label}`} onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}>
           <div>
@@ -44,12 +50,17 @@ function MediaPicker({ field, value, onChange, media, id, error }: { field: Fiel
               <button type="button" className="adm-btn adm-btn-sm" onClick={() => setOpen(false)}>Close</button>
             </div>
             <input type="search" autoFocus placeholder="Search by description" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search media" />
+            {/^https?:\/\//i.test(q.trim()) && (
+              <p className="adm-alert adm-alert-error" role="alert" style={{ marginTop: 10 }}>
+                {SHARING_PAGE.test(q) ? "That is a sharing page, not an image file, so it cannot be used." : "Photographs cannot be added by link."} Upload the image in <a href="/admin/media" target="_blank" rel="noopener">Media</a>, then pick it here.
+              </p>
+            )}
             {options.length === 0 ? <p className="adm-hint" style={{ margin: "14px 0" }}>No matching media. Upload files in the <a href="/admin/media" target="_blank" rel="noopener">media library</a>, then reopen this picker.</p> : (
               <div className="adm-mgrid" style={{ marginTop: 14 }}>
                 {options.map((m) => (
                   <button type="button" key={m.id} className="adm-mcard" style={{ textAlign: "left", cursor: "pointer", color: "inherit", font: "inherit" }} onClick={() => { onChange(m.id); setOpen(false); }}>
                     <span className="im" style={m.thumb ? { backgroundImage: `url(${m.thumb})` } : undefined}>{!m.thumb && (m.kind === "document" ? "PDF" : "No preview")}</span>
-                    <span className="tx"><b style={{ overflowWrap: "anywhere" }}>{m.alt || m.title || m.id}</b><span className="adm-help">{m.status} · {m.kind}</span></span>
+                    <span className="tx"><b style={{ overflowWrap: "anywhere" }}>{m.alt || m.title || m.id}</b><span className="adm-help">{m.status} · {m.kind}{m.visibility !== "public" ? " · private" : ""}</span></span>
                   </button>
                 ))}
               </div>
@@ -127,9 +138,10 @@ export function FieldInput(props: FieldProps) {
           <div className="adm-add">
             <select id={id} value="" onChange={(e) => { if (e.target.value) onChange([...list, e.target.value]); }} aria-describedby={describedBy}>
               <option value="">{options.length ? "Add media..." : "No more media available"}</option>
-              {options.map((m) => <option key={m.id} value={m.id}>{(m.alt || m.title || m.id).slice(0, 70)} ({m.status})</option>)}
+              {options.map((m) => <option key={m.id} value={m.id}>{(m.alt || m.title || m.id).slice(0, 70)} ({m.status}{m.visibility !== "public" ? ", private: not shown publicly" : ""})</option>)}
             </select>
           </div>
+          <p className="adm-help">{PHOTO_NOTE} <a href="/admin/media" target="_blank" rel="noopener">Open Media</a></p>
         </Shell>
       );
     }
